@@ -12,10 +12,11 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 
-GH_RAW_HOST="https://raw.githubusercontent.com"; GH_MAIN_HOST="https://github.com"; GH_PROXY="https://gh-proxy.org/"; GH_CHECK_URL="${GH_RAW_HOST}/StressOzz/Zapret-Manager/refs/heads/main/Zapret-Manager.sh"
-echo -e "${CYAN}Проверяем доступность ${NC}raw.githubusercontent.com"; if wget -q -T 2 -O /dev/null "$GH_CHECK_URL" 2>/dev/null; then GH_OK=1; GH_RAW="$GH_RAW_HOST"
-GH_MAIN="$GH_MAIN_HOST"; echo -e "raw.githubusercontent.com ${GREEN}доступен!${NC}\n"; else GH_OK=0; GH_RAW="${GH_PROXY}${GH_RAW_HOST}"; GH_MAIN="${GH_PROXY}${GH_MAIN_HOST}"
-echo -e "raw.githubusercontent.com ${RED}недоступен${CYAN} — ${YELLOW}используем прокси!${NC}\n"; fi
+MIRROR_BASE_URL="${ZAPRET_MANAGER_MIRROR:-https://mirror.51343.ru}"; MIRROR_BASE_URL="${MIRROR_BASE_URL%/}"; MIRROR_PROXY="${MIRROR_BASE_URL}/zapret-manager/proxy"
+GH_RAW_HOST="${MIRROR_PROXY}/raw.githubusercontent.com"; GH_MAIN_HOST="${MIRROR_PROXY}/github.com"; GH_API_HOST="${MIRROR_PROXY}/api.github.com"
+GH_CHECK_URL="${GH_RAW_HOST}/Screamshow/Zapret-Manager/refs/heads/main/Zapret-Manager.sh"
+wget -q -T 8 -O /dev/null "$GH_CHECK_URL" 2>/dev/null || { echo -e "${MIRROR_BASE_URL} ${RED}недоступно!${NC}\n"; exit 1; }
+GH_OK=1; GH_RAW="$GH_RAW_HOST"; GH_MAIN="$GH_MAIN_HOST"
 
 
 
@@ -215,7 +216,7 @@ install_mihomo() {
 
     echo "Получение номера последней версии"
     local RELEASE_TAG
-    RELEASE_TAG=$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/MetaCubeX/mihomo/releases/latest | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    RELEASE_TAG=$(curl -fsS "${GH_API_HOST}/repos/MetaCubeX/mihomo/releases/latest" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1)
     if [ -z "$RELEASE_TAG" ]; then
         log_error "Не удалось определить версию. Проверьте интернет."
         return 1
@@ -420,10 +421,10 @@ EOF
 
     echo "Определение актуальной версии ACE Editor"
     local LATEST_ACE_VER
-    LATEST_ACE_VER=$(curl -s "https://api.cdnjs.com/libraries/ace" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 | head -1)
+    LATEST_ACE_VER=$(curl -s "${MIRROR_PROXY}/api.cdnjs.com/libraries/ace" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 | head -1)
     if [ -z "$LATEST_ACE_VER" ]; then
         log_warn "cdnjs API недоступен, пробуем GitHub API"
-        LATEST_ACE_VER=$(curl -s "https://api.github.com/repos/ajaxorg/ace/releases/latest" | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//' | head -1)
+        LATEST_ACE_VER=$(curl -s "${GH_API_HOST}/repos/ajaxorg/ace/releases/latest" | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//' | head -1)
     fi
     if [ -z "$LATEST_ACE_VER" ]; then
         log_warn "Используем фиксированную версию ACE Editor"
@@ -438,9 +439,9 @@ EOF
         local dest="${ACE_PATH}/${file}"
         local success=0
         
-        for url in "https://cdn.jsdelivr.net/npm/ace-builds@${LATEST_ACE_VER}/src-min-noconflict/${file}" \
+        for url in "${MIRROR_PROXY}/cdn.jsdelivr.net/npm/ace-builds@${LATEST_ACE_VER}/src-min-noconflict/${file}" \
                    "${GH_RAW}/ajaxorg/ace-builds/master/src-min-noconflict/${file}" \
-                   "https://cdnjs.cloudflare.com/ajax/libs/ace/${CDNJS_ACE_VER}/${file}"; do
+                   "${MIRROR_PROXY}/cdnjs.cloudflare.com/ajax/libs/ace/${CDNJS_ACE_VER}/${file}"; do
             
             log_online "Скачивание $file"
             if curl -Lf -s --connect-timeout 5 --max-time 30 -o "$dest" "$url" || wget -q -T 5 -O "$dest" "$url"; then
@@ -633,7 +634,7 @@ return view.extend({
 		
 		if (isManual) ui.showModal(null, [E('p', { 'class': 'spinning' }, _('Проверка обновлений...'))]);
 		
-		var cmd = 'wget -q -O - "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" 2>/dev/null | grep -m1 \'"tag_name":\' | sed \'s/.*"\\(v[0-9.]*\\)".*/\\1/\'';
+		var cmd = 'wget -q -O - "https://mirror.51343.ru/zapret-manager/proxy/api.github.com/repos/MetaCubeX/mihomo/releases/latest" 2>/dev/null | grep -m1 \'"tag_name":\' | sed \'s/.*"\\(v[0-9.]*\\)".*/\\1/\'';
 		
 		fs.exec('/bin/sh', ['-c', cmd])
 			.then(function(res) {
@@ -662,7 +663,7 @@ return view.extend({
 		this.updateButton.textContent = _('Подождите...');
 		this.updateButton.disabled = true;
 		var arch = 'arm64';
-		var downloadUrl = 'https://github.com/MetaCubeX/mihomo/releases/download/' + latestVersion + '/mihomo-linux-' + arch + '-' + latestVersion + '.gz';
+		var downloadUrl = 'https://mirror.51343.ru/zapret-manager/proxy/github.com/MetaCubeX/mihomo/releases/download/' + latestVersion + '/mihomo-linux-' + arch + '-' + latestVersion + '.gz';
 		var steps = [
 			{ msg: _('Создание бэкапа...'), shell: 'cp -f /usr/bin/mihomo /tmp/mihomo.backup' },
 			{ msg: _('Остановка Mihomo...'), shell: '/etc/init.d/mihomo stop' },
@@ -1326,7 +1327,7 @@ PAUSE() { echo -ne "Нажмите Enter..."; read dummy; }
 INSTALL="opkg install"; RAZ="ipk"; SUF=""
 command -v apk >/dev/null 2>&1 && INSTALL="apk add --allow-untrusted" && RAZ="apk" && SUF="r"
 ARCH_MT=$(grep "^OPENWRT_ARCH=" /etc/os-release | cut -d'"' -f2)
-MT_VERSION="$(curl -Ls -o /dev/null -w '%{url_effective}' https://github.com/MagiTrickle/MagiTrickle/releases/latest | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+MT_VERSION="$(curl -fsS "${GH_API_HOST}/repos/MagiTrickle/MagiTrickle/releases/latest" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v*\([^"]*\)".*/\1/p' | head -n1)"
 # MT_VERSION="0.7.0"
 URL="${GH_MAIN}/MagiTrickle/MagiTrickle/releases/download/${MT_VERSION}/magitrickle_${MT_VERSION}-${SUF}1_openwrt_${ARCH_MT}.$RAZ"
 FILE_MT="/tmp/$(basename "$URL")"; echo -e "Скачиваем и устанавливаем:\n${CYAN}$URL${NC}"
