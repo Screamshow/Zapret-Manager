@@ -11,6 +11,7 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+clear
 
 MIRROR_BASE_URL="${ZAPRET_MANAGER_MIRROR:-https://mirror.51343.ru}"; MIRROR_BASE_URL="${MIRROR_BASE_URL%/}"; MIRROR_PROXY="${MIRROR_BASE_URL}/zapret-manager/proxy"
 GH_RAW_HOST="${MIRROR_PROXY}/raw.githubusercontent.com"; GH_MAIN_HOST="${MIRROR_PROXY}/github.com"; GH_API_HOST="${MIRROR_PROXY}/api.github.com"
@@ -1289,6 +1290,12 @@ fi
 uci set hev-socks5-tunnel.@instance[0].enabled='1'
 uci set hev-socks5-tunnel.@instance[0].conffile='/etc/hev-socks5-tunnel/main.yml'
 uci commit hev-socks5-tunnel
+
+if grep -qE "^[[:space:]]*option[[:space:]]+enabled[[:space:]]+'0'" /etc/config/hev-socks5-tunnel
+then
+sed -i -E "s/^([[:space:]]*option[[:space:]]+enabled[[:space:]]+)'0'/\1'1'/" /etc/config/hev-socks5-tunnel
+fi
+
 /etc/init.d/hev-socks5-tunnel restart
 sleep 2
 
@@ -1407,7 +1414,6 @@ finalize_install() {
 }
 
 main() {
-    clear
     log_done "=== Mixomo OpenWrt от Internet Helper (StressOzz Remix) ==="
     echo ""
 
@@ -1485,6 +1491,15 @@ cp -r /tmp/zashboard/* "$DIR1"/ 2>/dev/null || {
 }
 
 rm -rf "$TMP1" "$TMP2"
+
+if grep -qE "^[[:space:]]*option[[:space:]]+enabled[[:space:]]+'0'" /etc/config/hev-socks5-tunnel; then
+    sed -i -E "s/^([[:space:]]*option[[:space:]]+enabled[[:space:]]+)'0'/\11'/g" /etc/config/hev-socks5-tunnel
+fi
+
+if grep -qE "^[[:space:]]*option[[:space:]]+enabled[[:space:]]+'0'" /etc/config/hev-socks5-tunnel
+then
+sed -i -E "s/^([[:space:]]*option[[:space:]]+enabled[[:space:]]+)'0'/\1'1'/" /etc/config/hev-socks5-tunnel
+fi
 
 /etc/init.d/mihomo restart >/dev/null 2>&1
 /etc/init.d/hev-socks5-tunnel restart >/dev/null 2>&1
