@@ -25,5 +25,7 @@ jobs:
           git config user.email "235684779+Screamshow@users.noreply.github.com"
           git remote add upstream https://github.com/StressOzz/Zapret-Manager.git
           git fetch upstream main
-          git merge --no-edit upstream/main
+          # This fork keeps local launcher and documentation changes that overlap
+          # upstream. Prefer those on conflict so scheduled syncs remain non-blocking.
+          git merge --no-edit -X ours upstream/main
           git push origin main
