@@ -1,5 +1,5 @@
 ### geohide.ru: hosts file
-# Последнее обновление: 03.09.2026 15:55:51
+# Последнее обновление: 04.09.2026 04:14:41
 # Регион серверов: EU
 # Все IP-адреса серверов GeoHide DNS:
 # 193.233.112.67
@@ -4246,24 +4246,24 @@
 143.20.64.192 game.boombeachgame.com
 31.25.239.132 game.boombeachgame.com
 2.27.118.34 game.boombeachgame.com
-108.61.167.26 game.squadbustersgame.com
-34.208.50.108 game.clashroyaleapp.com
-100.22.130.158 game.clashroyaleapp.com
-44.247.74.179 game.clashroyaleapp.com
-52.26.198.162 game.clashroyaleapp.com
-44.255.84.199 game.clashroyaleapp.com
-52.24.110.223 game.clashroyaleapp.com
-44.243.224.93 game.clashroyaleapp.com
-34.222.108.123 game.clashroyaleapp.com
+62.133.62.97 game.clashroyaleapp.com
+54.174.195.209 gamea.clashofclans.com
+54.197.19.151 gamea.clashofclans.com
+54.210.24.40 gamea.clashofclans.com
+3.88.26.198 gamea.clashofclans.com
+34.205.15.69 gamea.clashofclans.com
+13.223.89.67 gamea.clashofclans.com
+3.239.30.32 gamea.clashofclans.com
+3.86.211.25 gamea.clashofclans.com
 44.227.138.182 game.brawlstarsgame.com
 44.241.61.155 game.brawlstarsgame.com
 52.33.95.61 game.brawlstarsgame.com
+108.61.167.26 game.squadbustersgame.com
 217.60.245.219 game.mocogame.com
 217.60.245.233 game.mocogame.com
 143.20.64.192 game.mocogame.com
 31.25.239.132 game.mocogame.com
 2.27.118.34 game.mocogame.com
-193.23.209.189 gamea.clashofclans.com
 217.60.245.219 security.id.supercell.com
 217.60.245.233 security.id.supercell.com
 143.20.64.192 security.id.supercell.com
@@ -6090,4 +6090,34 @@
 2.27.118.34 www.zapier.com
 143.20.64.192 www.zapier.com
 31.25.239.132 www.zapier.com
+217.60.245.219 camelai.com
+217.60.245.233 camelai.com
+143.20.64.192 camelai.com
+31.25.239.132 camelai.com
+2.27.118.34 camelai.com
+217.60.245.233 www.camelai.com
+217.60.245.219 www.camelai.com
+2.27.118.34 www.camelai.com
+31.25.239.132 www.camelai.com
+143.20.64.192 www.camelai.com
+217.60.245.233 freakhosting.com
+217.60.245.219 freakhosting.com
+31.25.239.132 freakhosting.com
+143.20.64.192 freakhosting.com
+2.27.118.34 freakhosting.com
+217.60.245.219 www.freakhosting.com
+217.60.245.233 www.freakhosting.com
+143.20.64.192 www.freakhosting.com
+31.25.239.132 www.freakhosting.com
+2.27.118.34 www.freakhosting.com
+217.60.245.219 opencode.ai
+217.60.245.233 opencode.ai
+143.20.64.192 opencode.ai
+31.25.239.132 opencode.ai
+2.27.118.34 opencode.ai
+217.60.245.233 www.opencode.ai
+217.60.245.219 www.opencode.ai
+2.27.118.34 www.opencode.ai
+31.25.239.132 www.opencode.ai
+143.20.64.192 www.opencode.ai
 ### geohide.ru: end hosts file

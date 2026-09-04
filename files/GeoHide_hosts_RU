@@ -1,5 +1,5 @@
 ### geohide.ru: hosts file
-# Последнее обновление: 03.09.2026 03:44:41
+# Последнее обновление: 04.09.2026 04:14:34
 # Регион серверов: RU
 # Все IP-адреса серверов GeoHide DNS:
 # 193.233.112.67
@@ -2616,28 +2616,24 @@
 143.20.64.192 game.boombeachgame.com
 31.25.239.132 game.boombeachgame.com
 2.27.118.34 game.boombeachgame.com
-54.163.16.190 game.squadbustersgame.com
-184.72.113.234 game.squadbustersgame.com
-35.170.33.227 game.squadbustersgame.com
-18.234.72.227 game.squadbustersgame.com
-34.201.48.129 game.squadbustersgame.com
 62.133.62.97 game.clashroyaleapp.com
+54.174.195.209 gamea.clashofclans.com
+54.197.19.151 gamea.clashofclans.com
+54.210.24.40 gamea.clashofclans.com
+3.88.26.198 gamea.clashofclans.com
+34.205.15.69 gamea.clashofclans.com
+13.223.89.67 gamea.clashofclans.com
+3.239.30.32 gamea.clashofclans.com
+3.86.211.25 gamea.clashofclans.com
+44.227.138.182 game.brawlstarsgame.com
 44.241.61.155 game.brawlstarsgame.com
 52.33.95.61 game.brawlstarsgame.com
-44.227.138.182 game.brawlstarsgame.com
+108.61.167.26 game.squadbustersgame.com
 217.60.245.219 game.mocogame.com
 217.60.245.233 game.mocogame.com
 143.20.64.192 game.mocogame.com
 31.25.239.132 game.mocogame.com
 2.27.118.34 game.mocogame.com
-44.211.223.142 gamea.clashofclans.com
-13.218.246.185 gamea.clashofclans.com
-54.242.241.109 gamea.clashofclans.com
-100.27.1.165 gamea.clashofclans.com
-54.163.203.22 gamea.clashofclans.com
-54.235.4.25 gamea.clashofclans.com
-98.91.204.90 gamea.clashofclans.com
-54.208.87.250 gamea.clashofclans.com
 217.60.245.219 security.id.supercell.com
 217.60.245.233 security.id.supercell.com
 143.20.64.192 security.id.supercell.com
@@ -3754,4 +3750,22 @@
 46.8.158.6 www.zapier.com
 193.233.112.68 www.zapier.com
 193.233.112.67 www.zapier.com
+46.8.158.6 camelai.com
+193.233.112.68 camelai.com
+193.233.112.67 camelai.com
+193.233.112.67 www.camelai.com
+193.233.112.68 www.camelai.com
+46.8.158.6 www.camelai.com
+193.233.112.67 freakhosting.com
+193.233.112.68 freakhosting.com
+46.8.158.6 freakhosting.com
+193.233.112.68 www.freakhosting.com
+193.233.112.67 www.freakhosting.com
+46.8.158.6 www.freakhosting.com
+46.8.158.6 opencode.ai
+193.233.112.68 opencode.ai
+193.233.112.67 opencode.ai
+193.233.112.67 www.opencode.ai
+193.233.112.68 www.opencode.ai
+46.8.158.6 www.opencode.ai
 ### geohide.ru: end hosts file
