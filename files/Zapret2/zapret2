@@ -12,8 +12,8 @@ config zapret2 'main'
 	option desync_mark_postnat '0x20000000'
 	option qnum '300'
 	option ws_user 'daemon'
-	option nfqws_ports_tcp '80,443'
-	option nfqws_ports_udp '443'
+	option nfqws_ports_tcp '80,443,1204-65535'
+	option nfqws_ports_udp '80,88,443,1024-65535'
 	option nfqws_tcp_pkt_out '25'
 	option nfqws_tcp_pkt_in '5'
 	option nfqws_udp_pkt_out '5'
@@ -286,44 +286,6 @@ config luascript 'lua_zapret_wgobfs'
 	option path '/opt/zapret2/lua/zapret-wgobfs.lua'
 	option enabled '0'
 
-config strategy 'Yv_circular'
-	option enabled '1'
-	option port '443'
-	list filter_l3 'ipv4'
-	list filter_l7 'tls'
-	list hostlist 'list_hosts_youtube'
-	option script '--out-range=-s34228
---payload=tls_client_hello
---in-range=-s5556 --lua-desync=circular:fails=3:maxtime=60
---in-range=x
---lua-desync=multidisorder:pos=7,sld+1:ip_autottl=2,2-12:strategy=1
---lua-desync=multidisorder:pos=1,midsld,endhost-1:tcp_md5:strategy=2
---lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:repeats=2:tls_mod=rnd,dupsid,sni=www.google.com:strategy=3
---lua-desync=multisplit:pos=1,midsld:strategy=3
---lua-desync=multidisorder:pos=1,midsld:strategy=4
---lua-desync=multidisorder:pos=2,5,105,host+5,sld-1,endsld-5,endsld:strategy=5
---lua-desync=multidisorder:pos=1,midsld:strategy=6
---lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:strategy=7
---lua-desync=fake:blob=0x0F0F0F0F:tcp_seq=-10000:tcp_ack=-66000:strategy=7
---lua-desync=fake:blob=blob_tls_clienthello_www_google_com:optional:tcp_seq=-10000:tcp_ack=-66000:tls_mod=rnd,dupsid,sni=fonts.google.com:strategy=7
---lua-desync=multidisorder:pos=10,midsld:seqovl=336:seqovl_pattern=blob_tls_clienthello_www_google_com:strategy=7
---lua-desync=hostfakesplit:host=google.com:tcp_ts=-600000:strategy=8
---lua-desync=multidisorder:pos=1,sniext+1,host+1,midsld-2,midsld,midsld+2,endhost-1:strategy=9
---lua-desync=multidisorder:pos=1,2,3,5,105,host+5,sld-1,endsld-5,endsld:strategy=10
---lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:repeats=2:tls_mod=rnd,dupsid,sni=www.google.com:strategy=11
---lua-desync=multisplit:pos=1,sniext+1,host+1,midsld-2,midsld,midsld+2,endhost-1:strategy=11:final'
-	list protocol 'tcp'
-
-config strategy 'Youtube_UDP'
-	option enabled '1'
-	option port '443'
-	list filter_l3 'ipv4'
-	list protocol 'udp'
-	list filter_l7 'quic'
-	list hostlist 'list_hosts_youtube'
-	option script '--payload=quic_initial
---lua-desync=fake:blob=fake_default_quic:repeats=2'
-
 config strategy 'Discord_circular'
 	option enabled '1'
 	option port '443'
@@ -334,12 +296,50 @@ config strategy 'Discord_circular'
 	list hostlist 'list_hosts_discord'
 	option script '--payload=tls_client_hello
 --in-range=-s5556
---lua-desync=circular:fails=3:maxtime=60:nld=2
+--lua-desync=circular:fails=3:maxtime=20:nld=2
 --in-range=x
 --lua-desync=fake:blob=fake_default_tls:tcp_flags_set=SYN:strategy=1
 --lua-desync=multidisorder:pos=2,midsld:seqovl=1:seqovl_pattern=fake_default_tls:strategy=1
 --lua-desync=fake:blob=fake_default_tls:badsum:tcp_seq=10000000:repeats=1:strategy=2
 --lua-desync=multisplit:blob=fake_default_tls:badsum:tcp_ack=-66000:pos=2:nodrop:strategy=2:final'
+
+config strategy 'discord_media'
+	option enabled '1'
+	option port '2053,2083,2087,2096,8443'
+	list filter_l3 'ipv4'
+	list protocol 'tcp'
+	list filter_l7 'tls'
+	option script '--lua-desync=fake:blob=blob_tls_clienthello_www_google_com:repeats=8:tcp_ts=-600000
+--lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=blob_tls_clienthello_www_google_com:repeats=8'
+
+config strategy 'discord_udp'
+	option enabled '1'
+	option port '19294-19344,50000-50100'
+	list filter_l3 'ipv4'
+	list protocol 'udp'
+	list filter_l7 'stun'
+	list filter_l7 'discord'
+	option script '--lua-desync=fake:blob=blob_quic_initial_steamcommunity_com:repeats=6'
+
+config strategy 'Youtube_UDP'
+	option enabled '0'
+	option port '443'
+	list filter_l3 'ipv4'
+	list protocol 'udp'
+	list filter_l7 'quic'
+	list hostlist 'list_hosts_youtube'
+	option script '--payload=quic_initial
+--lua-desync=fake:blob=fake_default_quic:repeats=2'
+
+config strategy 'Yv08'
+	option enabled '1'
+	option port '443'
+	list filter_l3 'ipv4'
+	list protocol 'tcp'
+	list filter_l7 'tls'
+	list hostlist 'list_hosts_youtube'
+	option script '--payload=tls_client_hello
+--lua-desync=hostfakesplit:host=google.com:tcp_ts=-600000'
 
 config strategy 'V_circular'
 	option enabled '1'
@@ -348,7 +348,7 @@ config strategy 'V_circular'
 	list filter_l7 'tls'
 	option script '--out-range=-s34228
 --payload=tls_client_hello
---in-range=-s5556 --lua-desync=circular:fails=3:maxtime=60
+--in-range=-s5556 --lua-desync=circular:fails=3:maxtime=20
 --in-range=x
 --lua-desync=multisplit:pos=2:seqovl=681:seqovl_pattern=blob_stun:strategy=1
 --lua-desync=fake:blob=blob_tls_clienthello_www_google_com:optional:tcp_ts=-600000:repeats=8:tls_mod=rnd,dupsid,sni=www.google.com:strategy=2
@@ -366,6 +366,27 @@ config strategy 'V_circular'
 --lua-desync=multisplit:pos=2:strategy=10:final'
 	list protocol 'tcp'
 	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
+
+config strategy 'games_tcp'
+	option enabled '1'
+	option port '2802,2302,2502,3478-3480,3724,6000-8000,8085,8090,8100,8903,8904,25565,27015-27030,27036-27037,50001,60442'
+	list filter_l3 'ipv4'
+	list protocol 'tcp'
+	option script '--out-range=<n4
+--payload=known,unknown
+--lua-desync=fake:blob=blob_stun2:repeats=8:tcp_ts=-600000:payload=known,unknown
+--lua-desync=fake:blob=blob_tls_clienthello_www_onetrust_com:repeats=8:tcp_ts=-600000:payload=known,unknown
+--lua-desync=multisplit:pos=1:seqovl=664:seqovl_pattern=blob_tls_clienthello_www_onetrust_com:repeats=8:payload=known,unknown'
+
+config strategy 'games_udp'
+	option enabled '1'
+	option port '88,1024-2407,2409-4499,4502-19293,19345-49999,50101-65535'
+	list filter_l3 'ipv4'
+	list protocol 'udp'
+	option script '--out-range=<n4
+--payload=known,unknown
+--lua-desync=fake:blob=blob_quic_initial_4pda_to:repeats=10:payload=known,unknown'
 
 config strategy 'Youtube_circular'
 	option port '443'
@@ -374,7 +395,7 @@ config strategy 'Youtube_circular'
 	list hostlist 'list_hosts_youtube'
 	option script '--out-range=-s34228
 --payload=tls_client_hello
---in-range=-s5556 --lua-desync=circular:fails=3:maxtime=60
+--in-range=-s5556 --lua-desync=circular:fails=3:maxtime=20
 --in-range=x
 --lua-desync=hostfakesplit:host=google.com:tcp_ts=-600000:strategy=1
 --lua-desync=fake:blob=0x0F0F0F0F:tcp_seq=-10000:tcp_ack=-66000:badsum:strategy=2
@@ -418,6 +439,34 @@ config strategy 'Youtube_circular'
 	list protocol 'tcp'
 	option enabled '0'
 
+config strategy 'Yv_circular'
+	option enabled '0'
+	option port '443'
+	list filter_l3 'ipv4'
+	list filter_l7 'tls'
+	list hostlist 'list_hosts_youtube'
+	option script '--out-range=-s34228
+--payload=tls_client_hello
+--in-range=-s5556 --lua-desync=circular:fails=3:maxtime=20
+--in-range=x
+--lua-desync=multidisorder:pos=7,sld+1:ip_autottl=2,2-12:strategy=1
+--lua-desync=multidisorder:pos=1,midsld,endhost-1:tcp_md5:strategy=2
+--lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:repeats=2:tls_mod=rnd,dupsid,sni=www.google.com:strategy=3
+--lua-desync=multisplit:pos=1,midsld:strategy=3
+--lua-desync=multidisorder:pos=1,midsld:strategy=4
+--lua-desync=multidisorder:pos=2,5,105,host+5,sld-1,endsld-5,endsld:strategy=5
+--lua-desync=multidisorder:pos=1,midsld:strategy=6
+--lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:strategy=7
+--lua-desync=fake:blob=0x0F0F0F0F:tcp_seq=-10000:tcp_ack=-66000:strategy=7
+--lua-desync=fake:blob=blob_tls_clienthello_www_google_com:optional:tcp_seq=-10000:tcp_ack=-66000:tls_mod=rnd,dupsid,sni=fonts.google.com:strategy=7
+--lua-desync=multidisorder:pos=10,midsld:seqovl=336:seqovl_pattern=blob_tls_clienthello_www_google_com:strategy=7
+--lua-desync=hostfakesplit:host=google.com:tcp_ts=-600000:strategy=8
+--lua-desync=multidisorder:pos=1,sniext+1,host+1,midsld-2,midsld,midsld+2,endhost-1:strategy=9
+--lua-desync=multidisorder:pos=1,2,3,5,105,host+5,sld-1,endsld-5,endsld:strategy=10
+--lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:repeats=2:tls_mod=rnd,dupsid,sni=www.google.com:strategy=11
+--lua-desync=multisplit:pos=1,sniext+1,host+1,midsld-2,midsld,midsld+2,endhost-1:strategy=11:final'
+	list protocol 'tcp'
+
 config strategy 'Routerich_circular'
 	option enabled '0'
 	option port '443'
@@ -425,7 +474,7 @@ config strategy 'Routerich_circular'
 	list filter_l7 'tls'
 	option script '--out-range=-s34228
 --payload=tls_client_hello
---in-range=-s5556 --lua-desync=circular:fails=3:maxtime=60
+--in-range=-s5556 --lua-desync=circular:fails=3:maxtime=20
 --in-range=x
 --lua-desync=hostfakesplit:midhost=host-2:host=rzd.ru:tcp_seq=0:tcp_ack=-66000:badsum:strategy=1
 --lua-desync=multisplit:seqovl=681:seqovl_pattern=blob_stun:strategy=2
@@ -452,6 +501,7 @@ config strategy 'Routerich_circular'
 --lua-desync=multisplit:pos=1:seqovl=582:seqovl_pattern=blob_stun:strategy=13:final'
 	list protocol 'tcp'
 	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'DoH_DNS'
 	option enabled '0'
@@ -478,9 +528,10 @@ config strategy 'v1'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=multisplit:pos=2:seqovl=681:seqovl_pattern=blob_stun'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v2'
 	option enabled '0'
@@ -488,10 +539,11 @@ config strategy 'v2'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=fake:blob=blob_tls_clienthello_www_google_com:optional:tcp_ts=-600000:repeats=8:tls_mod=rnd,dupsid,sni=www.google.com
 --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=blob_stun'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v3'
 	option enabled '0'
@@ -499,9 +551,10 @@ config strategy 'v3'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=hostfakesplit:host=ozon.ru:tcp_ts=-600000:tcp_md5:repeats=4'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v4'
 	option enabled '0'
@@ -509,9 +562,10 @@ config strategy 'v4'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=multisplit:pos=1:seqovl=582:seqovl_pattern=blob_stun'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v5'
 	option enabled '0'
@@ -519,10 +573,11 @@ config strategy 'v5'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=fake:blob=blob_stun:tcp_seq=0:tcp_ack=-66000:badsum
 --lua-desync=fakeddisorder:pos=1:pattern=blob_tls_clienthello_www_google_com:tcp_seq=0:tcp_ack=-66000:badsum'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v6'
 	option enabled '0'
@@ -530,9 +585,10 @@ config strategy 'v6'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=hostfakesplit:midhost=host-2:host=i2.photo.2gis.com:tcp_seq=0:tcp_ack=-66000:badsum'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v7'
 	option enabled '0'
@@ -540,10 +596,11 @@ config strategy 'v7'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=fake:blob=blob_stun:tcp_seq=-10000:tcp_ack=-66000:badsum:repeats=8
 --lua-desync=multisplit:pos=1:seqovl=654:seqovl_pattern=blob_stun'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v8'
 	option enabled '0'
@@ -551,9 +608,10 @@ config strategy 'v8'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=fake:blob=blob_tls_clienthello_www_4pda_to:optional:tcp_ts=-600000'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v9'
 	option enabled '0'
@@ -561,9 +619,10 @@ config strategy 'v9'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=hostfakesplit:host=ozon.ru:tcp_seq=0:tcp_ack=-66000:badsum'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'v10'
 	option enabled '0'
@@ -571,10 +630,22 @@ config strategy 'v10'
 	list filter_l3 'ipv4'
 	list protocol 'tcp'
 	list filter_l7 'tls'
-	list hostlist_exclude 'list_hosts_user_exclude'
 	option script '--payload=tls_client_hello
 --lua-desync=fake:blob=blob_tls_clienthello_www_google_com:optional:tcp_ts=-600000:tls_mod=rnd,sni=maxcdn.bootstrapcdn.com
 --lua-desync=multisplit:pos=2'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
+
+config strategy 'alt11'
+	option enabled '0'
+	option port '80,443'
+	list filter_l3 'ipv4'
+	list protocol 'tcp'
+	option script '--lua-desync=fake:blob=blob_stun2:repeats=8:tcp_ts=-600000
+--lua-desync=fake:blob=blob_tls_clienthello_www_onetrust_com:repeats=8:tcp_ts=-600000
+--lua-desync=multisplit:pos=1:seqovl=664:seqovl_pattern=blob_tls_clienthello_www_onetrust_com:repeats=8'
+	list hostlist_exclude 'list_hosts_user_exclude'
+	list hostlist_exclude 'list_hosts_youtube'
 
 config strategy 'Yv01'
 	option enabled '0'
@@ -650,16 +721,6 @@ config strategy 'Yv07'
 --lua-desync=fake:blob=blob_tls_clienthello_www_google_com:optional:tcp_seq=-10000:tcp_ack=-66000:tls_mod=rnd,dupsid,sni=fonts.google.com
 --lua-desync=multidisorder:pos=10,midsld:seqovl=336:seqovl_pattern=blob_tls_clienthello_www_google_com'
 
-config strategy 'Yv08'
-	option enabled '0'
-	option port '443'
-	list filter_l3 'ipv4'
-	list protocol 'tcp'
-	list filter_l7 'tls'
-	list hostlist 'list_hosts_youtube'
-	option script '--payload=tls_client_hello
---lua-desync=hostfakesplit:host=google.com:tcp_ts=-600000'
-
 config strategy 'Yv09'
 	option enabled '0'
 	option port '443'
@@ -690,3 +751,4 @@ config strategy 'Yv11'
 	option script '--payload=tls_client_hello
 --lua-desync=fake:blob=0x00000000:tcp_seq=-10000:tcp_ack=-66000:repeats=2:tls_mod=rnd,dupsid,sni=www.google.com
 --lua-desync=multisplit:pos=1,sniext+1,host+1,midsld-2,midsld,midsld+2,endhost-1'
+
