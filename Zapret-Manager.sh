@@ -231,7 +231,7 @@ get_ver() { REPOSITORY="$1"; OUT_FILE="$2"; NAME="$3"; RESPONSE=$(curl -fsS --co
 if [ $? -ne 0 ] || [ -z "$RESPONSE" ]; then echo -e "$NAME: ${RED}ошибка получения версии${NC}"; return 1; fi; VERSION=$(printf '%s' "$RESPONSE" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -n1); VERSION="${VERSION#v}"; [ "$NAME" = "ByeDPI" ] && VERSION="${VERSION%%-*}"
 if [ -z "$VERSION" ]; then echo -e "$NAME - ${RED}не удалось извлечь версию${NC}"; return 1; fi; echo "$VERSION" > "$OUT_FILE"; echo -e "$NAME: ${GREEN}$VERSION${NC}"; }
 
-rm -f "$TMP_VER" "$TMP_VER_POD" "$TMP_VER_TG_MT" "$TMP_VER_TG_GO" "$TMP_VER_TG_RS" "$TMP_MAG_VER" "$TMP_VER_SPL" "$TMP_VER_BYEDPI" "$TMP_VER_Z2"
+rm -f "$TMP_VER" "$TMP_VER_POD" "$TMP_VER_TG_MT" "$TMP_VER_TG_GO" "$TMP_VER_TG_RS" "$TMP_MAG_VER" "$TMP_VER_SPL" "$TMP_VER_BYEDPI" "$TMP_VER_Z2" "$TMP_VER_TGWS"
 
 clear
 
