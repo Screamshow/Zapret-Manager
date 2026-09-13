@@ -1,6 +1,10 @@
 #!/bin/sh
-# Zapret Manager by StressOzz for LuCI — самодостаточный скрипт (все файлы зашиты внутри).
+# Zapret Manager by StressOzz LuCI installer — самодостаточный скрипт (все файлы зашиты внутри).
 set -e
+
+GREEN="\033[1;32m"; CYAN="\033[1;36m"; YELLOW="\033[1;33m"; MAGENTA="\033[1;35m"; BLUE="\033[0;34m"; NC="\033[0m"; DGRAY="\033[38;5;244m"
+
+echo -e "\n${MAGENTA}Устанавливаем Zapret Manager для LuCI${NC}"
 
 rm -rf \
 	/usr/lib/zapret-manager* \
@@ -134,7 +138,7 @@ status() {
 		else
 			zr_ver=$(apk info -v 2>/dev/null | grep '^zapret-' | head -n1 | cut -d- -f2 | sed 's/-r[0-9]\+$//')
 		fi
-		pgrep -f "/opt/zapret" >/dev/null 2>&1 && zr_running="true"
+		pgrep -f "/opt/zapret/" >/dev/null 2>&1 && zr_running="true"
 	fi
 
 	local zr2="not_installed" zr2_running="false"
@@ -143,11 +147,10 @@ status() {
 		/etc/init.d/zapret2 status >/dev/null 2>&1 && zr2_running="true"
 	fi
 
-	local strat="" fs_marker
+	local strat="" fs_marker=""
 	if [ -f "$CONF" ]; then
+		strat=$(sed -n "/^[[:space:]]*option NFQWS_OPT '\$/,/^[[:space:]]*'\$/p" "$CONF" | grep '^#' | sed 's/^#//' | tr '\n' ' ' | sed 's/ $//')
 		fs_marker=$(grep -m1 '^# ZMFS:' "$CONF" | sed 's/^# ZMFS://')
-		strat=$(grep -oE '#v[0-9]+|#Yv[0-9]+|#Gv[1-4]|#Dv[0-9]+' "$CONF" | sed 's/^#//' | tr '\n' ' ' | sed 's/ $//')
-		[ -n "$fs_marker" ] && strat="$fs_marker${strat:+ $strat}"
 	fi
 
 	printf '{"pkg":"%s","zapret":"%s","zapret_running":%s,"zapret_version":"%s","zapret2":"%s","zapret2_running":%s,"strategy":"%s","flowseal":"%s"}\n' \
@@ -187,7 +190,7 @@ do_install_zapret() {
 	if [ -f /etc/init.d/zapret ]; then
 		echo "==> Останавливаем текущий Zapret"
 		/etc/init.d/zapret stop >/dev/null 2>&1
-		for p in $(pgrep -f /opt/zapret 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
+		for p in $(pgrep -f "/opt/zapret/" 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
 	fi
 
 	echo "==> Скачиваем $url"
@@ -273,7 +276,7 @@ do_install_zapret_full() {
 do_remove_zapret() {
 	echo "==> Останавливаем Zapret"
 	/etc/init.d/zapret stop >/dev/null 2>&1
-	for p in $(pgrep -f /opt/zapret 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
+	for p in $(pgrep -f "/opt/zapret/" 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
 	echo "==> Удаляем пакеты"
 	$DELETE luci-app-zapret >/dev/null 2>&1
 	$DELETE zapret >/dev/null 2>&1
@@ -292,7 +295,7 @@ zapret_action() {
 		start)          /etc/init.d/zapret start >/dev/null 2>&1; zapret_restart; status ;;
 		stop)
 			/etc/init.d/zapret stop >/dev/null 2>&1
-			for p in $(pgrep -f /opt/zapret 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
+			for p in $(pgrep -f "/opt/zapret/" 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
 			status ;;
 		*) echo '{"error":"неизвестное действие"}' ;;
 	esac
@@ -1477,7 +1480,10 @@ tg_status() {
 	fi
 
 	[ -f "$TG_SECRET_MT_FILE" ] && secret_mt=$(grep '^SECRET=' "$TG_SECRET_MT_FILE" | cut -d= -f2)
-	[ -f "$TG_SECRET_RS_FILE" ] && secret_rs=$(cat "$TG_SECRET_RS_FILE")
+	if [ -f "$TG_INIT_RS" ]; then
+		secret_rs=$(sed -n 's/.*--secret[[:space:]]*\([0-9a-fA-F]\{32\}\).*/\1/p' "$TG_INIT_RS" | head -n1)
+	fi
+	[ -z "$secret_rs" ] && [ -f "$TG_SECRET_RS_FILE" ] && secret_rs=$(cat "$TG_SECRET_RS_FILE")
 	lan_ip=$(uci -q get network.lan.ipaddr 2>/dev/null | cut -d/ -f1)
 
 	printf '{"mtproto":"%s","mtproto_running":%s,"mtproto_version":"%s","mtproto_latest":"%s","socks5":"%s","socks5_running":%s,"socks5_version":"%s","socks5_latest":"%s","rust":"%s","rust_running":%s,"rust_version":"%s","rust_latest":"%s","lan_ip":"%s","secret_mtproto":"%s","secret_rust":"%s"}\n' \
@@ -2022,7 +2028,29 @@ var callDohInstall = rpc.declare({ object: 'zapret-manager', method: 'doh_instal
 var callDohRemove = rpc.declare({ object: 'zapret-manager', method: 'doh_remove', expect: {} });
 var callDohSet = rpc.declare({ object: 'zapret-manager', method: 'doh_set', params: ['provider'], expect: {} });
 
+function detectMissingThemeVar() {
+	if (document.documentElement.hasAttribute('data-zm-theme-checked')) return;
+	document.documentElement.setAttribute('data-zm-theme-checked', '1');
+	try {
+		var declared = getComputedStyle(document.documentElement).getPropertyValue('--background-color-medium').trim();
+		if (declared) return;
+
+		var el = document.body, bg = '', hops = 0;
+		while (el && hops < 6) {
+			var c = getComputedStyle(el).backgroundColor;
+			if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
+			el = el.parentElement;
+			hops++;
+		}
+		var m = bg.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+		if (!m) return;
+		var luminance = (0.299 * (+m[1]) + 0.587 * (+m[2]) + 0.114 * (+m[3])) / 255;
+		if (luminance < 0.5) document.documentElement.classList.add('zm-theme-dark');
+	} catch (e) { /* определение темы не критично для работы панели — при любой ошибке просто ничего не делаем */ }
+}
+
 function injectCss() {
+	detectMissingThemeVar();
 	if (document.getElementById('zm-css')) return;
 	var l = document.createElement('link');
 	l.id = 'zm-css';
@@ -2039,9 +2067,6 @@ function badge(ok, textOk, textBad) {
 	]);
 }
 
-// Раскрашивает построчный вывод (==> сообщения) для читаемости: стрелки —
-// голубым, обычные шаги — жёлтым, успешные/готово — зелёным, ошибки — красным,
-// !! предупреждения — оранжевым; необработанный вывод команд — приглушённым серым.
 function renderLog(logEl, text) {
 	logEl.innerHTML = '';
 	var lines = (text || '').split('\n');
@@ -2087,11 +2112,6 @@ function pollJob(job, logEl, onDone, onTick) {
 				onDone(st.rc === '0');
 			}
 		}).catch(function() {
-			// Одиночная неудача опроса (роутер занят распаковкой/установкой —
-			// временная заминка) не должна навсегда останавливать поллинг:
-			// сама операция на роутере продолжает идти в фоне независимо от
-			// того, отвечает ли сейчас веб-интерфейс. Останавливаемся только
-			// после нескольких подряд неудач и явно предупреждаем.
 			failCount++;
 			if (failCount >= 8) {
 				clearInterval(timer);
@@ -2107,11 +2127,6 @@ function refreshBanner(message) {
 		E('button', {
 			'class': 'cbi-button cbi-button-positive',
 			'click': function() {
-				// Разрываем сессию в фоне, затем перезагружаем ИМЕННО текущую
-				// страницу (а не отдельный URL logout) — LuCI при недействительной
-				// сессии сама показывает форму входа прямо на этом адресе и после
-				// успешного входа возвращает сюда же (штатное поведение при
-				// истечении сессии, тут просто используем его напрямую).
 				fetch(L.url('admin/logout'), { credentials: 'same-origin' }).catch(function() {}).then(function() {
 					location.reload();
 				});
@@ -2120,7 +2135,6 @@ function refreshBanner(message) {
 	]);
 }
 
-// ---------- собственные всплывающие уведомления (не системные LuCI) ----------
 
 function toastContainer() {
 	var c = document.getElementById('zm-toast-container');
@@ -3223,12 +3237,16 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 	overflow-wrap: break-word;
 	transition: box-shadow .15s;
 }
+
+html.zm-theme-dark .zm-card {
+	background: #1c2128;
+	border-color: rgba(255,255,255,.10);
+	box-shadow: 0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.2);
+}
 .zm-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
 .zm-card h3 { margin: 0 0 12px 0; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
-/* Строка "подпись: значение" — подпись и значение стоят РЯДОМ (умеренный
-   отступ), а не растянуты в разные концы широкой карточки. */
 .zm-row { display: flex; align-items: center; gap: 12px; margin: 7px 0; font-size: 13px; flex-wrap: wrap; }
 .zm-row .zm-label { opacity: .65; flex-shrink: 0; }
 .zm-row > span:last-child { overflow-wrap: anywhere; }
@@ -3248,8 +3266,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 .zm-actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin: 14px 0; }
 .zm-actions .cbi-button { margin: 0; }
 
-/* Плитки: flex вместо grid — компактные "чипы" по контенту, а не растянутые
-   на всю колонку, аккуратно переносятся на новую строку. */
 .zm-grid { display: flex; flex-wrap: wrap; gap: 9px; }
 
 .zm-tile {
@@ -3267,6 +3283,10 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 	transition: border-color .15s, background .15s, transform .1s;
 	background: var(--background-color-low, #fafafa);
 }
+html.zm-theme-dark .zm-tile:not(.zm-active):not(.zm-tile-off) {
+	background: #22272e;
+	border-color: rgba(255,255,255,.12);
+}
 .zm-tile:hover { border-color: #1a7f37; transform: translateY(-1px); }
 .zm-tile.zm-active {
 	border-color: #1a7f37; background: rgba(26,127,55,.16);
@@ -3275,8 +3295,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 }
 .zm-tile.zm-active::before { content: "✓ "; }
 
-/* Отдельное состояние для "выключено/не исключено" (например, Исключения IP) —
-   красным с крестиком, отличное от обычного нейтрального "не активно". */
 .zm-tile.zm-tile-off {
 	border-color: rgba(207,34,46,.35); background: rgba(207,34,46,.08);
 	color: #cf222e; font-weight: 600;
@@ -3286,10 +3304,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 .zm-tile.zm-tile-pending { opacity: .55; border-style: dashed; cursor: not-allowed; }
 .zm-tile.zm-tile-pending:hover { border-color: rgba(0,0,0,.1); transform: none; }
 
-/* Живой вывод действий (установка/тест/и т.д.) — большая, ясно видимая
-   консоль вместо мелкой полоски: крупнее шрифт, больше высоты, чёткая рамка.
-   white-space: pre-wrap — длинные строки (URL и т.п.) переносятся ВНИЗ,
-   а не вылезают вправо за пределы карточки. */
 .zm-log {
 	background: #0d1117; color: #e6edf3;
 	font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
@@ -3305,7 +3319,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 .zm-log.zm-show { display: block; }
 .zm-log:empty::before { content: "Ожидание вывода..."; opacity: .4; }
 
-/* Раскраска построчного вывода (==> сообщения) для читаемости. */
 .zm-log-arrow { color: #56d4dd; font-weight: 700; }
 .zm-log-msg-info { color: #e3c04a; }
 .zm-log-msg-ok { color: #3fb950; font-weight: 600; }
@@ -3315,8 +3328,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 
 .zm-hint { font-size: 12px; opacity: .65; margin-top: 6px; line-height: 1.5; overflow-wrap: break-word; }
 
-/* Уведомление о необходимости обновить страницу LuCI после установки/удаления
-   пакетов, добавляющих собственные меню (luci-app-*). */
 .zm-refresh-banner {
 	display: flex; align-items: center; justify-content: space-between; gap: 14px;
 	background: rgba(191,135,0,.12); border: 2px solid rgba(191,135,0,.35);
@@ -3325,8 +3336,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 }
 .zm-refresh-banner button { flex-shrink: 0; }
 
-/* Собственные всплывающие уведомления — вместо системных баннеров LuCI.
-   Сделаны крупными и заметными по запросу (увеличены повторно). */
 #zm-toast-container {
 	position: fixed; top: 20px; right: 20px; z-index: 10000;
 	display: flex; flex-direction: column; gap: 14px;
@@ -3351,8 +3360,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 .zm-toast-warning .zm-toast-icon { color: #e3b341; }
 .zm-toast-text { overflow-wrap: anywhere; }
 
-/* Крупная плитка со ссылкой для вставки в Telegram (tg://proxy / tg://socks) —
-   отдельно от узких карточек статуса, чтобы длинная ссылка помещалась целиком. */
 .zm-tg-link-card {
 	background: rgba(26,127,55,.06);
 	border: 1px solid rgba(26,127,55,.25);
@@ -3373,8 +3380,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 .zm-tg-link-row { display: flex; align-items: flex-start; gap: 10px; }
 .zm-tg-link-row .zm-tg-link-box { flex: 1 1 auto; }
 
-/* Заметный индикатор "что сейчас используется/применено" на страницах
-   стратегий/DoH/hosts/fake. */
 .zm-current-banner {
 	display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 	background: rgba(26,127,55,.07); border: 1px solid rgba(26,127,55,.22);
@@ -3385,12 +3390,6 @@ cat > '/www/luci-static/resources/view/zapret-manager/style.css' << 'ZM_INSTALLE
 	background: rgba(110,118,129,.08); border-color: rgba(110,118,129,.2);
 }
 
-/* Наши страницы не используют UCI-формы LuCI (никакие uci.set/save не
-   вызываются) — стандартная панель "Save & Apply / Save / Reset" здесь
-   ничего не делает и только сбивает с толку. Скрываем её, пока наш CSS
-   загружен (то есть только на страницах Zapret Manager — при переходе на
-   любую другую страницу LuCI загружается заново без нашего style.css, и
-   панель снова появится там, где она реально нужна). */
 .cbi-page-actions { display: none !important; }
 ZM_INSTALLER_EOF
 
@@ -3631,9 +3630,6 @@ function copyToClipboard(text) {
 }
 
 function fallbackCopy(text) {
-	// LuCI обычно открыт по обычному http:// (не https), а Clipboard API работает
-	// только в защищённом контексте — используем старый, но надёжный способ через
-	// скрытое текстовое поле + document.execCommand('copy'), он работает и по http.
 	var ta = document.createElement('textarea');
 	ta.value = text;
 	ta.setAttribute('readonly', '');
@@ -3718,8 +3714,6 @@ return view.extend({
 						'class': 'cbi-button cbi-button-remove',
 						'click': function() { doAction(v.id, 'remove'); }
 					}, 'Удалить'));
-					// "Обновить" показываем только если реально есть более новая версия —
-					// иначе кнопка вводит в заблуждение, будто обновляться есть на что.
 					if (st.version && st.latest && st.version !== st.latest) {
 						actions.push(E('button', {
 							'class': 'cbi-button',
@@ -3908,3 +3902,5 @@ if command -v apk >/dev/null 2>&1; then PM="apk"; INSTALL="apk add"
 else PM="opkg"; INSTALL="opkg install"; fi
 command -v curl >/dev/null 2>&1 || $INSTALL curl >/dev/null 2>&1 || true
 command -v unzip >/dev/null 2>&1 || $INSTALL unzip >/dev/null 2>&1 || true
+
+echo -e "Zapret Manager ${GREEN}для ${NC}LuCI ${GREEN}установлен!${NC}\n"

@@ -15,8 +15,16 @@ echo -e "${MIRROR_BASE_URL} ${GREEN}доступно!${NC}\n"; else echo -e "${M
 TGWS_BASE="https://gitlab.com/xyzmean/brb/-/raw/main"
 TGWS_INSTALL_URL="${TGWS_BASE}/install-tgws.sh"
 
-ZAPRET_VERSION="72.20260307"; PODKOP_LATEST_VER="0.9.6"; TG_MTProto="0.10"; MT_VERSION="0.8.2"; ZAPRET2_VERSION="1.0.4"
-SPL_VER="26.8.1.3"; TG_GO_VERSION="1.4.1"; TG_RS_VERSION="2.2.5"; BYEDPI_LATEST_VER="0.17.3"; TGWS_VERSION="0.2.3"
+ZAPRET_VERSION="72.20260307"
+ZAPRET2_VERSION="1.0.4"
+PODKOP_LATEST_VER="0.9.7"
+BYEDPI_LATEST_VER="0.17.3"
+MT_VERSION="0.8.2"
+SPL_VER="26.8.1.3"
+TG_RS_VERSION="2.3.3"
+TG_GO_VERSION="1.4.1"
+TG_MTProto="0.10"
+TGWS_VERSION="0.2.4"
 
 echo "sh <(wget -q -O - ${GH_RAW}/Screamshow/Zapret-Manager/main/Zapret-Manager.sh)" > /usr/bin/zms; chmod +x /usr/bin/zms
 echo "sh <(wget -q -O - ${GH_RAW}/Screamshow/Zapret-Manager/main/Zapret-Manager.sh) \"\$@\"" > /usr/bin/zmsA; chmod +x /usr/bin/zmsA
@@ -492,6 +500,7 @@ echo -e "${CYAN}Скачиваем архив ${NC}$FILE_NAME"; wget -q -U "Mozi
 unzip -o "$FILE_NAME" >/dev/null; if [ "$PKG_IS_APK" -eq 1 ]; then PKG_PATH="$TMP_SF/apk"; for PKG in "$PKG_PATH"/zapret*; do [ -f "$PKG" ] || continue; echo "$PKG" | grep -q "luci" && continue; install_pkg "$(basename "$PKG")" "$PKG" || return; done
 for PKG in "$PKG_PATH"/luci*; do [ -f "$PKG" ] || continue; install_pkg "$(basename "$PKG")" "$PKG" || return; done; else PKG_PATH="$TMP_SF"; for PKG in "$PKG_PATH"/zapret_*.ipk; do [ -f "$PKG" ] || continue; install_pkg "$(basename "$PKG")" "$PKG" || return; done
 for PKG in "$PKG_PATH"/luci-app-zapret_*.ipk; do [ -f "$PKG" ] || continue; install_pkg "$(basename "$PKG")" "$PKG" || return; done; fi; ADD_FAKE_FLOW
+uci set zapret.@main[0].DISABLE_CUSTOM='0'; uci commit zapret; ZAPRET_RESTART
 echo -e "${CYAN}Удаляем временные файлы${NC}"; cd /; rm -rf "$TMP_SF" /tmp/*.ipk /tmp/*.zip /tmp/*zapret* 2>/dev/null; mkdir -p "$TMP_SF"; echo -e "Zapret ${GREEN}установлен!${NC}\n"; [ "$NO_PAUSE" != "1" ] && PAUSE; }
 # ==========================================
 # Меню настройки Discord
@@ -833,12 +842,23 @@ LUCI_EDITION="/usr/libexec/rpcd/zapret-manager"
 install_zapret_manager_luci() {
     if [ -e "$LUCI_EDITION" ]; then
         echo -e "\n${MAGENTA}Удаляем Zapret Manager для LuCI${NC}"
-        rm -rf /usr/lib/zapret-manager /usr/libexec/rpcd/zapret-manager /usr/share/luci/menu.d/luci-app-zapret-manager.json /usr/share/rpcd/acl.d/luci-app-zapret-manager.json /www/luci-static/resources/view/zapret-manager /www/luci-static/resources/zapret-manager /tmp/zapret-manager /tmp/luci-indexcache* /tmp/luci-modulecache/* && /etc/init.d/rpcd restart && /etc/init.d/uhttpd restart
+rm -rf \
+	/usr/lib/zapret-manager* \
+	/usr/libexec/rpcd/zapret-manager* \
+	/usr/share/luci/menu.d/luci-app-zapret-manager.json \
+	/usr/share/rpcd/acl.d/luci-app-zapret-manager.json \
+	/www/luci-static/resources/view/zapret-manager* \
+	/www/luci-static/resources/zapret-manager* \
+	/etc/zapret_manager_expert_mode* \
+	/tmp/zapret-manager* \
+	/tmp/zm_uninstall_panel.sh \
+	/tmp/luci-indexcache* \
+	/tmp/luci-modulecache/* 2>/dev/null
+/etc/init.d/rpcd restart >/dev/null 2>&1
+/etc/init.d/uhttpd restart >/dev/null 2>&1             
         echo -e "Zapret Manager ${GREEN}для ${NC}LuCI ${GREEN}удалён!${NC}\n"
     else
-        echo -e "\n${MAGENTA}Устанавливаем Zapret Manager LuCI${NC}"
         sh <(wget -qO - https://raw.githubusercontent.com/StressOzz/Zapret-Manager/main/ZapretManager_LuCI.sh)
-        echo -e "Zapret Manager ${GREEN}для ${NC}LuCI ${GREEN}установлен!${NC}\n"
     fi
     PAUSE
 }
@@ -1820,7 +1840,7 @@ show_menu() { get_versions; get_doh_status; show_current_strategy; RKN_Check; mk
 if [ -f /etc/init.d/zapret ] && [ -f "$CONF" ] && grep -Eq "^[[:space:]]*option DISABLE_IPV6 '1'" "$CONF" && ping -6 -c 1 -W 2 google.com >/dev/null 2>&1; then echo -e "${RED}Обнаружен IPv6! ${GREEN}Включите ${NC}IPv6${GREEN} в системном меню!${NC}\n"; fi
 if [ ! -f /etc/init.d/zapret2 ]; then Z2_ACTION_TEXT="Установить"; Z2_ACTION_FUNC="install_zapret2"; elif [ "$INSTALLED_VER2" = "$ZAPRET2_VERSION" ]; then Z2_ACTION_TEXT="Удалить"; Z2_ACTION_FUNC="remove_zapret2"; else Z2_ACTION_TEXT="Обновить"; Z2_ACTION_FUNC="install_zapret2"; fi
 for pkg in byedpi youtubeUnblock; do if [ "$PKG_IS_APK" -eq 1 ]; then apk info -e "$pkg" >/dev/null 2>&1 && echo -e "${RED}Найден установленный ${NC}$pkg${RED}!${NC}\nZapret${RED} может работать некорректно с ${NC}$pkg${RED}!${NC}\n"
-else opkg list-installed | grep -q "^$pkg" && echo -e "${RED}Найден установленный ${NC}$pkg${RED}!${NC}\nZapret${RED} может работать некорректно с ${NC}$pkg${RED}!${NC}\n"; fi; done; if is_expert_mode && [ -f /etc/init.d/zapret2 ] && [ -f /etc/init.d/zapret ]; then SHOW_S=2
+else opkg list-installed | grep -q "^$pkg" && echo -e "${RED}Найден установленный ${NC}$pkg${RED}!${NC}\nZapret${RED} может работать некорректно с ${NC}$pkg${RED}!${NC}\n"; fi; done; if [ -f /etc/init.d/zapret2 ] && [ -f /etc/init.d/zapret ]; then SHOW_S=2
 pgrep -f "/opt/zapret" >/dev/null 2>&1 && S1_ACTION="Остановить" || S1_ACTION="Запустить"; /etc/init.d/zapret2 status >/dev/null 2>&1 && S2_ACTION="Остановить" || S2_ACTION="Запустить"
 elif [ -f /etc/init.d/zapret2 ]; then S_NAME="Zapret2"; /etc/init.d/zapret2 status >/dev/null 2>&1 && S_ACTION="Остановить" || S_ACTION="Запустить"; SHOW_S=1; elif [ -f /etc/init.d/zapret ]; then S_NAME="Zapret"; pgrep -f "/opt/zapret" >/dev/null 2>&1 && S_ACTION="Остановить" || S_ACTION="Запустить"; SHOW_S=1; else SHOW_S=0; fi
 if uci get firewall.@defaults[0].flow_offloading 2>/dev/null | grep -q '^1$' || uci get firewall.@defaults[0].flow_offloading_hw 2>/dev/null | grep -q '^1$'; then if ! grep -q 'meta l4proto { tcp, udp } ct original packets ge 30 flow offload @ft;' /usr/share/firewall4/templates/ruleset.uc
