@@ -225,7 +225,7 @@ install_mihomo() {
     echo "Последняя версия: $RELEASE_TAG"
 
     local FILENAME="mihomo-linux-${MIHOMO_ARCH}-${RELEASE_TAG}.gz"
-    local DOWNLOAD_URL="${GH_MAIN}/MetaCubeX/mihomo/releases/download/${RELEASE_TAG}/${FILENAME}"
+    local DOWNLOAD_URL="https://github.com/MetaCubeX/mihomo/releases/download/${RELEASE_TAG}/${FILENAME}"
     local TMP_FILE="/tmp/mihomo.gz"
 
     log_online "Скачивание архива $FILENAME"
@@ -1336,7 +1336,7 @@ command -v apk >/dev/null 2>&1 && INSTALL="apk add --allow-untrusted" && RAZ="ap
 ARCH_MT=$(grep "^OPENWRT_ARCH=" /etc/os-release | cut -d'"' -f2)
 MT_VERSION="$(curl -fsS "${GH_API_HOST}/repos/MagiTrickle/MagiTrickle/releases/latest" | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v*\([^"]*\)".*/\1/p' | head -n1)"
 # MT_VERSION="0.7.0"
-URL="${GH_MAIN}/MagiTrickle/MagiTrickle/releases/download/${MT_VERSION}/magitrickle_${MT_VERSION}-${SUF}1_openwrt_${ARCH_MT}.$RAZ"
+URL="https://github.com/MagiTrickle/MagiTrickle/releases/download/${MT_VERSION}/magitrickle_${MT_VERSION}-${SUF}1_openwrt_${ARCH_MT}.$RAZ"
 FILE_MT="/tmp/$(basename "$URL")"; echo -e "Скачиваем и устанавливаем:\n${CYAN}$URL${NC}"
 curl -Lf --retry 3 --retry-delay 2 -o "$FILE_MT" "$URL" >/dev/null 2>&1 || { echo -e "\n${RED}Ошибка скачивания${NC}\n"; PAUSE; exit 1; }
 $INSTALL "$FILE_MT" >/dev/null 2>&1 || { echo -e "\n${RED}Ошибка установки${NC}\n"; PAUSE; rm -f "$FILE_MT"; exit 1; }
@@ -1414,6 +1414,7 @@ finalize_install() {
 }
 
 main() {
+    clear
     log_done "=== Mixomo OpenWrt от Internet Helper (StressOzz Remix) ==="
     echo ""
 
@@ -1433,7 +1434,7 @@ main() {
     install_magitrickle || step_fail
 ###################################################################################################
 CONFIG_PATH="/etc/magitrickle/state/config.yaml"
-confGIT="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml"
+confGIT="https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml"
 
 echo "Установка списка для MagiTrickle"
 
@@ -1457,12 +1458,12 @@ done
 
 ###################################################################################################
 
-TMP1="/tmp/zashboard.zip"
-TMP2="/tmp/zashboard"
+TMP1="/tmp/metacubexd.tgz"
+TMP2="/tmp/metacubexd"
 DIR1="/etc/mihomo/ui"
-URL1="${GH_MAIN}/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip"
+URL1="https://github.com/MetaCubeX/metacubexd/releases/latest/download/compressed-dist.tgz"
 
-echo "Устанавка панели Zashboard для Mihomo"
+echo "Установка панели MetaCubeXD для Mihomo"
 
 for i in 1 2 3; do
     curl -fL --connect-timeout 3 --max-time 7 -o "$TMP1" "$URL1" >/dev/null 2>&1 && break
@@ -1476,7 +1477,7 @@ done
 rm -rf "$TMP2"
 mkdir -p "$TMP2"
 
-unzip -oq "$TMP1" -d "$TMP2" || {
+tar -xzf "$TMP1" -C "$TMP2" || {
     echo -e "\n${RED}Ошибка распаковки WEB UI!${NC}\n"
     rm -rf "$TMP1" "$TMP2"
 }
@@ -1484,8 +1485,7 @@ unzip -oq "$TMP1" -d "$TMP2" || {
 rm -rf "$DIR1"
 mkdir -p "$DIR1"
 
-cp -r /tmp/zashboard/dist/* "$DIR1"/ 2>/dev/null || \
-cp -r /tmp/zashboard/* "$DIR1"/ 2>/dev/null || {
+cp -r "$TMP2"/* "$DIR1"/ 2>/dev/null || {
     echo -e "\n${RED}Не удалось установить WEB UI!${NC}\n"
     rm -rf "$TMP1" "$TMP2"
 }
