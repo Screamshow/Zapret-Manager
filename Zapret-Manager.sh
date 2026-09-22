@@ -40,7 +40,7 @@ URL_DEFAULT="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/MagiTrick
 URL_ITDOG="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml"
 EXCLUDE_URL="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/zapret-hosts-user-exclude.txt"
 
-PORTS_UDP="88,1024-2407,2409-4499,4502-19293,19345-49999,50101-65535"; PORTS_TCP="2802,2302,2502,3478-3480,3724,6000-8000,8085,8090,8100,8903,8904,25565,27015-27030,27036-27037,35500-35600,50001,60442"
+PORTS_UDP="88,1024-2407,2409-4499,4502-19293,19345-49999,50101-65535"; PORTS_TCP="2099,2802,2302,2502,3478-3480,3724,6000-8000,8085,8090,8100,8903,8904,25565,27015-27030,27036-27037,35500-35600,50001,60442"
 
 DOMAINS="youtu.be youtube.com i.ytimg.com i9.ytimg.com yt3.ggpht.com yt4.ggpht.com googleapis.com jnn-pa.googleapis.com googleusercontent.com signaler-pa.youtube.com youtubei.googleapis.com manifest.googlevideo.com yt3.googleusercontent.com rr4---sn-4g5e6nze.googlevideo.com rr4---sn-5go7yner.googlevideo.com rr4---sn-q4flrnsl.googlevideo.com rr5---sn-n8v7knez.googlevideo.com rr2---sn-q4fl6ndl.googlevideo.com rr1---sn-q4fl6n6y.googlevideo.com rr1---sn-aj5go5-53.googlevideo.com rr1---sn-4axm-n8vs.googlevideo.com rr14---sn-n8v7kn7r.googlevideo.com rr16---sn-axq7sn76.googlevideo.com rr4---sn-jvhnu5g-c35d.googlevideo.com rr1---sn-8ph2xajvh-5xge.googlevideo.com rr1---sn-xguxaxjvh-gufl.googlevideo.com rr1---sn-gvnuxaxjvh-jx3z.googlevideo.com rr1---sn-gvnuxaxjvh-jx3l.googlevideo.com rr1---sn-gvnuxaxjvh-o8ge.googlevideo.com rr5---sn-gvnuxaxjvh-n8vk.googlevideo.com rr10---sn-gvnuxaxjvh-304z.googlevideo.com rr12---sn-gvnuxaxjvh-bvwz.googlevideo.com rr3---sn-ug5onuxaxjvh-n8v6.googlevideo.com rr1---sn-ug5onuxaxjvh-p5ge.googlevideo.com rr1---sn-ug5onuxaxjvh-p3ul.googlevideo.com rr1---sn-ug5onuxaxjvh-n8v6.googlevideo.com rr1---sn-u5uuxaxjvhg0-ocje.googlevideo.com"
 
@@ -68,7 +68,7 @@ TGWeb="#TelegramWeb\n149.154.167.220 core.telegram.org api.telegram.org flora.we
 149.154.167.220 telegram.me telegram.org telegram.space telesco.pe venus.web.telegram.org web.telegram.org zws1-1.web.telegram.org zws1.web.telegram.org
 149.154.167.220 tg.dev t.me zws2-1.web.telegram.org zws2.web.telegram.org zws4-1.web.telegram.org zws5-1.web.telegram.org zws5.web.telegram.org"
 NTC="#ntc.party\n130.255.77.28 ntc.party"; TWCH="#Twitch\n45.155.204.190 usher.ttvnw.net gql.twitch.tv"; NALOG="#Nalog\n213.24.64.175 lkfl2.nalog.ru\n213.24.64.181 lknpd.nalog.ru"
-RUTOR="#rutor\n173.245.58.219 rutor.info d.rutor.info"; LIBRUSEC="#lib.rus.ec\n185.39.18.98 lib.rus.ec www.lib.rus.ec"
+RUTOR="#rutor\n172.66.159.63 rutor.info d.rutor.info"; LIBRUSEC="#lib.rus.ec\n185.39.18.98 lib.rus.ec www.lib.rus.ec"
 AI="#Gemini\n45.155.204.190 gemini.google.com\n#Grok\n45.155.204.190 grok.com accounts.x.ai assets.grok.com
 #OpenAI\n45.155.204.190 chatgpt.com ab.chatgpt.com auth.openai.com auth0.openai.com platform.openai.com cdn.oaistatic.com
 45.155.204.190 tcr9i.chat.openai.com webrtc.chatgpt.com android.chat.openai.com api.openai.com operator.chatgpt.com
@@ -116,7 +116,7 @@ updDIShost="#updates.discord.com\n162.159.138.232 updates.discord.com\n162.159.1
 ROBLOXhost="#tr.rbxcdn.com\n108.156.22.8 tr.rbxcdn.com\n108.157.32.114 tr.rbxcdn.com\n18.65.147.108 tr.rbxcdn.com\n18.65.147.112 tr.rbxcdn.com\n13.224.181.18 tr.rbxcdn.com\n13.224.181.74 tr.rbxcdn.com\n
 54.230.253.22 tr.rbxcdn.com\n54.230.253.81 tr.rbxcdn.com\n54.230.253.48 tr.rbxcdn.com\n54.230.253.59 tr.rbxcdn.com\n143.204.214.34 tr.rbxcdn.com\n143.204.214.67 tr.rbxcdn.com\n
 143.204.214.92 tr.rbxcdn.com\n99.84.181.25 tr.rbxcdn.com\n99.84.181.63 tr.rbxcdn.com\n65.8.158.45 tr.rbxcdn.com\n65.8.158.112 tr.rbxcdn.com"
-ALL_BLOCKS="$AI\n$INSTAGRAM\n$NTC\n$LIBRUSEC\n$TGWeb\n$TWCH\n$SCell\n$SPFY"; TMP_ARCHIVE_RS="/tmp/tg-ws-proxy-rs.tar.gz"; TMP_DIR_RS="/tmp/tg-ws-proxy-rs"
+ALL_BLOCKS="$AI\n$INSTAGRAM\n$NTC\n$LIBRUSEC\n$TGWeb\n$TWCH\n$SCell\n$SPFY\n$RUTOR"; TMP_ARCHIVE_RS="/tmp/tg-ws-proxy-rs.tar.gz"; TMP_DIR_RS="/tmp/tg-ws-proxy-rs"
 hosts_enabled() { if grep -q "### dns.malw.link" /etc/hosts; then hosts_echo="Malw.link"; return 0; elif grep -q "#mafioznik" /etc/hosts; then hosts_echo="Mafioznik"; return 0
 elif grep -q "### geohide.ru: hosts file" /etc/hosts; then if grep -q "^# Регион серверов: US$" /etc/hosts; then hosts_echo="GeoHide US"; elif grep -q "^# Регион серверов: EU$" /etc/hosts
 then hosts_echo="GeoHide EU"; elif grep -q "^# Регион серверов: RU$" /etc/hosts; then hosts_echo="GeoHide RU"; else hosts_echo="GeoHide"; fi; return 0
