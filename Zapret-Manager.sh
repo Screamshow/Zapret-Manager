@@ -57,6 +57,7 @@ RESULTS="/opt/zapret/tmp/zapret_bench.txt"; BACK="$TMP_SF/zapret_back.txt"; TMP_
 FINAL_STR="$TMP_SF/StrFINAL.txt"; NEW_STR="$TMP_SF/StrNEW.txt"; OLD_STR="$TMP_SF/StrOLD.txt"; SECRET_FILE="/etc/tg-ws-proxy/secret.conf"
 ARCH_FULL="$(cat /etc/openwrt_release | grep DISTRIB_ARCH | cut -d"'" -f2)"; MODEL="$(cat /tmp/sysinfo/model 2>/dev/null)"
 RES1="/opt/zapret/tmp/results_flowseal.txt"; RES2="/opt/zapret/tmp/results_versions.txt"; RES3="/opt/zapret/tmp/results_all.txt"
+LUCI_EDITION="/usr/libexec/rpcd/zapret-manager"
 RES_CUSTOM="/opt/zapret/tmp/results_custom.txt"; CUSTOM_STR_FILE="/root/custom_test.txt"; CUSTOM_RESULTS="$RES_CUSTOM"; CUSTOM_BACK="$TMP_SF/zapret_custom_backup.conf"
 RES_DOMAIN="/opt/zapret/tmp/results_domain.txt"; RES_YOUTUBE="/opt/zapret/tmp/results_youtube.txt"; Fin_IP_Dis="104\.25\.158\.178 finland[0-9]\{5\}\.discord\.media"; PARALLEL=8
 EXCLUDE_FILE="/opt/zapret/ipset/zapret-hosts-user-exclude.txt"; fileDoH="/etc/config/https-dns-proxy"; EXPERT_MODE_FILE="/etc/zapret_manager_expert_mode"
@@ -136,8 +137,8 @@ X1="68747470733a2f2f7767636c692e76657263656c2e617070"; X2="68747470733a2f2f73616
 REPO="xyzmean/splify"; WARP_EP="engage.cloudflareclient.com:4500"; WARP_IFACE="warp0"; TMP_SPL="/tmp/splify"; S101="$(D "$X1")"; S102="$(D "$X2")"; W1="$S101"; II="$S102"
 AWG_JC=4; AWG_JMIN=40; AWG_JMAX=70; AWG_H1=1; AWG_H2=2; AWG_H3=3; AWG_H4=4; AWG_S1=0; AWG_S2=0; AWG_JMAX=70; AWG_H1=1; AWG_H2=2; AWG_H3=3; AWG_H4=4; AWG_S1=0; AWG_S2=0
 AWG_I1="<b 0xce000000010897a297ecc34cd6dd000044d0ec2e2e1ea2991f467ace4222129b5a098823784694b4897b9986ae0b7280135fa85e196d9ad980b150122129ce2a9379531b0fd3e871ca5fdb883c369832f730e272d7b8b74f393f9f0fa43f11e510ecb2219a52984410c204cf875585340c62238e14ad04dff382f2c200e0ee22fe743b9c6b8b043121c5710ec289f471c91ee414fca8b8be8419ae8ce7ffc53837f6ade262891895f3f4cecd31bc93ac5599e18e4f01b472362b8056c3172b513051f8322d1062997ef4a383b01706598d08d48c221d30e74c7ce000cdad36b706b1bf9b0607c32ec4b3203a4ee21ab64df336212b9758280803fcab14933b0e7ee1e04a7becce3e2633f4852585c567894a5f9efe9706a151b615856647e8b7dba69ab357b3982f554549bef9256111b2d67afde0b496f16962d4957ff654232aa9e845b61463908309cfd9de0a6abf5f425f577d7e5f6440652aa8da5f73588e82e9470f3b21b27b28c649506ae1a7f5f15b876f56abc4615f49911549b9bb39dd804fde182bd2dcec0c33bad9b138ca07d4a4a1650a2c2686acea05727e2a78962a840ae428f55627516e73c83dd8893b02358e81b524b4d99fda6df52b3a8d7a5291326e7ac9d773c5b43b8444554ef5aea104a738ed650aa979674bbed38da58ac29d87c29d387d80b526065baeb073ce65f075ccb56e47533aef357dceaa8293a523c5f6f790be90e4731123d3c6152a70576e90b4ab5bc5ead01576c68ab633ff7d36dcde2a0b2c68897e1acfc4d6483aaaeb635dd63c96b2b6a7a2bfe042f6aed82e5363aa850aace12ee3b1a93f30d8ab9537df483152a5527faca21efc9981b304f11fc95336f5b9637b174c5a0659e2b22e159a9fed4b8e93047371175b1d6d9cc8ab745f3b2281537d1c75fb9451871864efa5d184c38c185fd203de206751b92620f7c369e031d2041e152040920ac2c5ab5340bfc9d0561176abf10a147287ea90758575ac6a9f5ac9f390d0d5b23ee12af583383d994e22c0cf42383834bcd3ada1b3825a0664d8f3fb678261d57601ddf94a8a68a7c273a18c08aa99c7ad8c6c42eab67718843597ec9930457359dfdfbce024afc2dcf9348579a57d8d3490b2fa99f278f1c37d87dad9b221acd575192ffae1784f8e60ec7cee4068b6b988f0433d96d6a1b1865f4e155e9fe020279f434f3bf1bd117b717b92f6cd1cc9bea7d45978bcc3f24bda631a36910110a6ec06da35f8966c9279d130347594f13e9e07514fa370754d1424c0a1545c5070ef9fb2acd14233e8a50bfc5978b5bdf8bc1714731f798d21e2004117c61f2989dd44f0cf027b27d4019e81ed4b5c31db347c4a3a4d85048d7093cf16753d7b0d15e078f5c7a5205dc2f87e330a1f716738dce1c6180e9d02869b5546f1c4d2748f8c90d9693cba4e0079297d22fd61402dea32ff0eb69ebd65a5d0b687d87e3a8b2c42b648aa723c7c7daf37abcc4bb85caea2ee8f55bec20e913b3324ab8f5c3304f820d42ad1b9f2ffc1a3af9927136b4419e1e579ab4c2ae3c776d293d397d575df181e6cae0a4ada5d67ecea171cca3288d57c7bbdaee3befe745fb7d634f70386d873b90c4d6c6596bb65af68f9e5121e67ebf0d89d3c909ceedfb32ce9575a7758ff080724e1ab5d5f43074ecb53a479af21ed03d7b6899c36631c0166f9d47e5e1d4528a5d3d3f744029c4b1c190cbfbad06f5f83f7ad0429fa9a2719c56ffe3783460e166de2d8>"
-AUTO_RESULTS="/opt/zapret/tmp/results_auto.txt"; AUTO_BACK="$TMP_SF/zapret_auto_back.txt"; AUTO_LOG="/opt/zapret/tmp/auto_best.log"; AUTO_CRON_CMD="/usr/bin/zmsA --auto-best"
-AUTO_LOCK="/tmp/zapret_auto_best.lock"; AUTO_STOP_FLAG="$TMP_SF/zapret_auto_best.stop"; LOCAL_ARCH="$(awk -F\' '/DISTRIB_ARCH/ {print $2}' /etc/openwrt_release)"
+AUTO_RESULTS="/opt/zapret/tmp/results_auto.txt"; AUTO_BACK="/opt/zapret/tmp/zapret_auto_back.txt"; AUTO_LOG="/opt/zapret/tmp/auto_best.log"; AUTO_CRON_CMD="/usr/bin/zmsA --auto-best"
+AUTO_LOCK="/tmp/zapret_auto_best.lock"; AUTO_STOP_FLAG="/opt/zapret/tmp/zapret_auto_best.stop"; LOCAL_ARCH="$(awk -F\' '/DISTRIB_ARCH/ {print $2}' /etc/openwrt_release)"
 BIN_VER_GO="/usr/bin/tg-ws-proxy-go_ver"; BIN_VER_RS="/usr/bin/tg-ws-proxy-rs_ver"; BYEDPI_DNS_BACKUP="/etc/byedpi_dns_localuse"
 
 if command -v opkg >/dev/null 2>&1; then PKG="opkg"; GO_SUF="1"; CONFZ="/etc/opkg/distfeeds.conf"; PKG_IS_APK=0; UPDATE="opkg update"; INSTALL="opkg install"
@@ -300,11 +301,12 @@ echo -e "${CYAN}Удаляем пакеты${NC}"; $DELETE luci-app-zapret2 >/de
 # ==========================================
 # Автоподбор
 # ==========================================
-AUTO_MODE_FILE="$TMP_SF/auto_best_mode"
-get_auto_best_mode() { if [ -f "$AUTO_MODE_FILE" ]; then MODE_VAL=$(cat "$AUTO_MODE_FILE" 2>/dev/null); fi; case "$MODE_VAL" in 1|2|3) echo "$MODE_VAL" ;; *) echo 3 ;; esac; }
+AUTO_MODE_FILE="/opt/zapret/tmp/auto_best_mode"; AUTO_MODE_OLD="$TMP_SF/auto_best_mode"
+get_auto_best_mode() { local MODE_VAL=""; if [ ! -s "$AUTO_MODE_FILE" ] && [ -s "$AUTO_MODE_OLD" ] && [ -d /opt/zapret ]; then mkdir -p /opt/zapret/tmp; mv -f "$AUTO_MODE_OLD" "$AUTO_MODE_FILE" 2>/dev/null; fi
+[ -f "$AUTO_MODE_FILE" ] && MODE_VAL=$(head -n1 "$AUTO_MODE_FILE" 2>/dev/null | tr -cd '0-9'); case "$MODE_VAL" in 1|2|3) echo "$MODE_VAL" ;; *) echo 3 ;; esac; }
 auto_best_mode_text() { case "$(get_auto_best_mode)" in 1) echo "v" ;; 2) echo "Flowseal" ;; *) echo "v + Flowseal" ;; esac; }
 set_auto_best_mode() { echo -e "\n${MAGENTA}Выберите стратегии для автоподбора${NC}"; echo -e "${CYAN}1) ${GREEN}Стратегии ${NC}v\n${CYAN}2) ${GREEN}Стратегии ${NC}Flowseal\n${CYAN}3) ${GREEN}Стратегии ${NC}v ${GREEN}+ ${NC}Flowseal"
-echo -ne "${CYAN}Enter) ${GREEN}Оставить текущую${NC}\n\n${YELLOW}Выберите пункт:${NC} "; read -r choiceMode; case "$choiceMode" in 1|2|3) mkdir -p "$TMP_SF"; echo "$choiceMode" > "$AUTO_MODE_FILE"; echo -e "\n${GREEN}Выбраны стратегии: ${NC}$(auto_best_mode_text)\n"; PAUSE;; *) return ;; esac; }
+echo -ne "${CYAN}Enter) ${GREEN}Оставить текущую${NC}\n\n${YELLOW}Выберите пункт:${NC} "; read -r choiceMode; case "$choiceMode" in 1|2|3) mkdir -p /opt/zapret/tmp; echo "$choiceMode" > "$AUTO_MODE_FILE"; rm -f "$AUTO_MODE_OLD"; echo -e "\n${GREEN}Выбраны стратегии: ${NC}$(auto_best_mode_text)\n"; PAUSE;; *) return ;; esac; }
 sync_ntp() { echo -e "\n${MAGENTA}Синхронизируем время через NTP${NC}"; if command -v ntpd >/dev/null 2>&1; then ntpd -n -q -p 0.openwrt.pool.ntp.org -p 1.openwrt.pool.ntp.org >/dev/null 2>&1
 else /etc/init.d/sysntpd restart >/dev/null 2>&1; sleep 3; fi; command -v hwclock >/dev/null 2>&1 && hwclock -w >/dev/null 2>&1; echo -e "${GREEN}Время синхронизировано!${NC}\n"; PAUSE; }
 set_timezone() { CUR_TZ=$(uci -q get system.@system[0].zonename); echo -e "\n${MAGENTA}Выберите часовой пояс${NC}\n ${CYAN}1) ${GREEN}Калининград  ${NC}(UTC+2)\n ${CYAN}2) ${GREEN}Москва       ${NC}(UTC+3)"
@@ -333,7 +335,7 @@ awk '{if(skip){if($0=="--new"||$0~/\047/){skip=0;next}if($0~/^[[:space:]]*$/)nex
 awk -v sel="$SELECTED_NAME" -v savedfile="$SAVED" 'BEGIN{inserted=0;has_google=0} $0=="--hostlist=/opt/zapret/ipset/zapret-hosts-google.txt"{has_google=1} $0~/^[[:space:]]*option NFQWS_OPT '\''$/&&!has_google&&!inserted{print;print sel;while((getline l<savedfile)>0)if(l!~/^[[:space:]]*$/)print l;print "--new";inserted=1;next} {print}' "$NEW_TMP" > "$FINAL_TMP"
 grep -q "^[[:space:]]*'[[:space:]]*\$" "$FINAL_TMP" || echo "'" >> "$FINAL_TMP"; mv "$FINAL_TMP" "$CONF"; }
 auto_apply_best_strategy() { echo $$ > "$AUTO_LOCK"; rm -f "$AUTO_STOP_FLAG"; trap 'rm -f "$AUTO_LOCK"' EXIT; trap 'touch "$AUTO_STOP_FLAG" 2>/dev/null' INT; mkdir -p "$TMP_SF" "/opt/zapret/tmp"; : > "$AUTO_LOG"; { echo "===> Автоподбор стратегии запущен <==="; if [ ! -f /etc/init.d/zapret ]; then echo "Zapret не установлен, выход"; exit 0; fi
-STR_FILE_AUTO="$TMP_SF/str_auto.txt"; TEMP_FILE_AUTO="$TMP_SF/str_temp_auto.txt"; : > "$STR_FILE_AUTO"; cp "$CONF" "$AUTO_BACK"; ORIG_YV_NUM=$(grep -o '^#Yv[0-9]\+' "$AUTO_BACK" | head -n1 | sed 's/#Yv//')
+STR_FILE_AUTO="/opt/zapret/tmp/str_auto.txt"; TEMP_FILE_AUTO="/opt/zapret/tmp/str_temp_auto.txt"; : > "$STR_FILE_AUTO"; cp "$CONF" "$AUTO_BACK"; ORIG_YV_NUM=$(grep -o '^#Yv[0-9]\+' "$AUTO_BACK" | head -n1 | sed 's/#Yv//')
 ORIG_DV_NUM=$(grep -o '^#Dv[0-9]\+' "$AUTO_BACK" | head -n1 | sed 's/#Dv//'); ORIG_GV_NUM=$(grep -o '^#Gv[0-9]\+$' "$AUTO_BACK" | head -n1 | sed 's/#Gv//'); MODE_SEL=$(get_auto_best_mode); case "$MODE_SEL" in
 1) echo "Тестируем стратегии: v" ;; 2) echo "Тестируем стратегии: Flowseal" ;; *) echo "Тестируем стратегии: v + Flowseal" ;; esac; if [ "$MODE_SEL" != "1" ]; then echo "Собираем Flowseal стратегии"; download_strategies 1; cat "$OUT" >> "$STR_FILE_AUTO"; fi
 if [ "$MODE_SEL" != "2" ]; then echo "Собираем v стратегии"; for N in $(seq 1 100); do strategy_v"$N" >> "$STR_FILE_AUTO" 2>/dev/null || break; done; fi; sed -i '/#Y/d' "$STR_FILE_AUTO"
@@ -667,7 +669,7 @@ while read START; do CUR=$((CUR+1)); test_interrupted && break; NEXT=$(echo "$LI
 sed -n "${START},\$p" "$STR_FILE" > "$TEMP_FILE"; else sed -n "${START},$((NEXT-1))p" "$STR_FILE" > "$TEMP_FILE"; fi; BLOCK=$(cat "$TEMP_FILE"); NAME=$(head -n1 "$TEMP_FILE"); NAME="${NAME#\#}"
 awk -v block="$BLOCK" 'BEGIN{skip=0} /option NFQWS_OPT '\''/ {printf "\toption NFQWS_OPT '\''\n%s\n'\''\n", block; skip=1; next} skip && /^'\''$/ {skip=0; next} !skip {print}' "$CONF" > "${CONF}.tmp" && mv "${CONF}.tmp" "$CONF"
 echo -e "\n${CYAN}Тестируем стратегию: ${YELLOW}${NAME}${NC} ($CUR/$TOTAL_STR)"; ZAPRET_RESTART; OK=0; LOG_TMP="/tmp/zapret_log_yt_${CUR}"; : > "$LOG_TMP"; check_all_urls
-test_interrupted && break; if [ "$OK" -eq "$TOTAL" ]; then COLOR="${GREEN}"; elif [ "$OK" -lt "$CTRL_OK" ]; then COLOR="${RED}"; else COLOR="${YELLOW}"; fi; echo -e "${CYAN}Результат теста: ${COLOR}$OK/$TOTAL${NC}"; echo -e "${NAME} → ${OK}/${TOTAL}" >> "$RESULTS"; done < <(printf '%s\n' "$LINES")
+test_interrupted && break; result_color "$OK" "$TOTAL" "$CTRL_OK"; echo -e "${CYAN}Результат теста: ${COLOR}$OK/$TOTAL${NC}"; echo -e "${NAME} → ${OK}/${TOTAL}" >> "$RESULTS"; done < <(printf '%s\n' "$LINES")
 if test_interrupted; then restore_after_test_interrupt "$BACK"; return 1; fi
 stop_test_trap; sort -t'/' -k1 -nr "$RESULTS" -o "$RESULTS"; mv -f "$BACK" "$CONF"; ZAPRET_RESTART; BEST_LINE=$(grep -v '^Контрольный тест' "$RESULTS" | head -n1)
 [ -n "$BEST_LINE" ] && echo -e "\n${GREEN}Лучшая стратегия для YouTube: ${NC}${BEST_LINE}"; show_single_result "$RESULTS"; }
@@ -909,7 +911,6 @@ uci commit firewall >/dev/null 2>&1; /etc/init.d/firewall restart >/dev/null 2>&
 # ==========================================
 # Системное меню
 # ==========================================
-LUCI_EDITION="/usr/libexec/rpcd/zapret-manager"
 install_zapret_manager_luci() {
     if [ -e "$LUCI_EDITION" ]; then
         echo -e "\n${MAGENTA}Удаляем Zapret Manager для LuCI${NC}"
@@ -947,11 +948,10 @@ ping -6 -c 1 -W 2 google.com >/dev/null 2>&1 && echo -e "${CYAN}9) ${GREEN}Вк�
 FO=$(uci get firewall.@defaults[0].flow_offloading 2>/dev/null); FOHW=$(uci get firewall.@defaults[0].flow_offloading_hw 2>/dev/null); FIX=$(grep -q 'ct original packets ge 30 flow offload @ft;' /usr/share/firewall4/templates/ruleset.uc && echo 1 || echo 0)
 if [ "$FO" = 1 ] || [ "$FOHW" = 1 ] || [ "$FIX" = 1 ]; then if [ "$FIX" = 1 ]; then echo -e "${CYAN}0) ${GREEN}Отключить${NC} FIX ${GREEN}для${NC} Flow Offloading"; else echo -e "${CYAN}0) ${GREEN}Применить${NC} FIX ${GREEN}для${NC} Flow Offloading"; fi; fi
 echo -e "${CYAN}i) ${GREEN}Меню исключения ${NC}устройств${GREEN} из ${NC}Zapret\n${CYAN}e) ${GREEN}$EXPERT_TEXT${NC}"; echo -e "${CYAN}y) ${GREEN}Установить пакеты из ${NC}/root/"
-echo -e "${CYAN}w)${GREEN} $( [ -e "$LUCI_EDITION" ] && echo -e "Удалить ${NC}Zapret Manager ${GREEN}для ${NC}LuCI" || echo -e "Установить ${NC}Zapret Manager ${GREEN}для ${NC}LuCI" )"
 echo -ne "${CYAN}Enter) ${GREEN}Вернуться в предыдущее меню${NC}\n\n${YELLOW}Выберите пункт:${NC} " && read -r choiceMN; case "$choiceMN" in 1) Sys_Info;; 2) toggle_web;; 3) toggle_quic;; 4) menu_MIR;; e|Е|у|У) toggle_expert_mode;;
 5) [ ! -f /etc/init.d/zapret ] && { echo -e "\nZapret ${RED}не установлен!${NC}\n"; PAUSE; continue; }; stop_zapret "1"; grep -q 'echo "Start Zapret"' /opt/zapret/blockcheck.sh || sed -i $'/^[[:space:]]*read A/a\\\t\techo "Start Zapret"; /etc/init.d/zapret restart >/dev/null 2>&1' /opt/zapret/blockcheck.sh
 echo -e "${GREEN}Ctrl+C - oстановить blockcheck${NC}\n"; chmod +x /opt/zapret/blockcheck.sh; /opt/zapret/blockcheck.sh; start_zapret;; 6) uninstall_zapret_all;; 9) toggle_ipv6;; i|I|Ш|ш) Exclusions_menu;;
-ц|Ц|W|w) install_zapret_manager_luci;; 7) if [ -f "$DATE_FILE" ] && [ -f "$BACKUP_DIR/zapret.tar.gz" ] && [ -f "$BACKUP_DIR/zapret" ]; then CREATE_DATE=$(cat "$DATE_FILE"); delete_backup; else save_backup; fi;; 8) restore_backup ;;
+7) if [ -f "$DATE_FILE" ] && [ -f "$BACKUP_DIR/zapret.tar.gz" ] && [ -f "$BACKUP_DIR/zapret" ]; then CREATE_DATE=$(cat "$DATE_FILE"); delete_backup; else save_backup; fi;; 8) restore_backup ;;
  н|Н|Y|y) PAKET_INSTALL;; 0) FO=$(uci get firewall.@defaults[0].flow_offloading 2>/dev/null); FOHW=$(uci get firewall.@defaults[0].flow_offloading_hw 2>/dev/null); if grep -q 'ct original packets ge 30 flow offload @ft;' /usr/share/firewall4/templates/ruleset.uc; then echo -e "\n${MAGENTA}Отключаем FIX для Flow Offloading${NC}"
 sed -i 's/meta l4proto { tcp, udp } ct original packets ge 30 flow offload @ft;/meta l4proto { tcp, udp } flow offload @ft;/' /usr/share/firewall4/templates/ruleset.uc; fw4 restart >/dev/null 2>&1; echo -e "FIX ${GREEN}отключён!${NC}\n"; PAUSE; elif [ "$FO" = 1 ] || [ "$FOHW" = 1 ]; then echo -e "\n${MAGENTA}Применяем FIX для Flow Offloading${NC}"
 sed -i 's/meta l4proto { tcp, udp } flow offload @ft;/meta l4proto { tcp, udp } ct original packets ge 30 flow offload @ft;/' /usr/share/firewall4/templates/ruleset.uc; fw4 restart >/dev/null 2>&1; echo -e "FIX ${GREEN}успешно применён!${NC}\n"; PAUSE; fi;; *) return;; esac; done; }
@@ -1021,12 +1021,20 @@ menu_GEO_HOSTS() {
 # ==========================================
 # Тест стратегий
 # ==========================================
+# Цвет результата: полное совпадение - зелёный, выше контрольного теста - жёлтый, не выше контрольного - красный
+result_color() { local _ok="${1:-0}" _tot="${2:-0}" _ctrl="${3:-0}"; case "$_ok" in ''|*[!0-9]*) _ok=0;; esac; case "$_tot" in ''|*[!0-9]*) _tot=0;; esac; case "$_ctrl" in ''|*[!0-9]*) _ctrl=0;; esac
+if [ "$_tot" -gt 0 ] && [ "$_ok" -eq "$_tot" ]; then COLOR="$GREEN"; elif [ "$_ok" -gt "$_ctrl" ]; then COLOR="$YELLOW"; else COLOR="$RED"; fi; }
+print_results_colored() { awk -v G="$(printf "$GREEN")" -v Y="$(printf "$YELLOW")" -v R="$(printf "$RED")" -v C="$(printf "$CYAN")" -v N="$(printf "$NC")" '
+function parse(l,  r, a) { if (index(l, "→") == 0) return 0; r = l; sub(/^.*→[[:space:]]*/, "", r); if (split(r, a, "/") < 2) return 0; pok = a[1] + 0; ptot = a[2] + 0; return 1 }
+{ if (!parse($0)) next; if ($0 ~ /^Контрольный тест/) { if (!hc) { hc = 1; ctrl = pok; cl = $0 } next } n++; txt[n] = $0; ok[n] = pok; tot[n] = ptot }
+END { for (i = 2; i <= n; i++) { t = txt[i]; o = ok[i]; s = tot[i]; j = i - 1; while (j >= 1 && ok[j] < o) { txt[j+1] = txt[j]; ok[j+1] = ok[j]; tot[j+1] = tot[j]; j-- } txt[j+1] = t; ok[j+1] = o; tot[j+1] = s }
+for (i = 1; i <= n; i++) { if (hc && ok[i] <= ctrl) { printf "%s%s%s\n", C, cl, N; hc = 0 } if (tot[i] > 0 && ok[i] == tot[i]) c = G; else if (ok[i] > ctrl) c = Y; else c = R; printf "%s%s%s\n", c, txt[i], N } if (hc) printf "%s%s%s\n", C, cl, N }' "$1"; }
 show_domain_results(){ clear; echo -e "${MAGENTA}Результат тестирования по домену${NC}\n"; FILE="$RES_DOMAIN"; [ ! -s "$FILE" ] && { echo -e "${RED}Результат не найден!${NC}\n"; PAUSE; return; }
 DOM_CTRL_OK=0; while IFS= read -r line; do if echo "$line" | grep -q "^Контрольный тест"; then LEFT=$(echo "$line" | cut -d'→' -f1); RIGHT=$(echo "$line" | cut -d'→' -f2); RIGHT_CLEAN=$(echo "$RIGHT" | tr -cd '0-9/')
 OK=$(echo "$RIGHT_CLEAN" | cut -d'/' -f1); TOTAL=$(echo "$RIGHT_CLEAN" | cut -d'/' -f2); [ -z "$OK" ] && OK=0; [ -z "$TOTAL" ] && TOTAL=0; DOM_CTRL_OK=$OK; if [ "$OK" -eq "$TOTAL" ] && [ "$TOTAL" -ne 0 ]; then COLOR="$GREEN"
 elif [ "$OK" -eq 0 ]; then COLOR="$RED"; else COLOR="$YELLOW"; fi; echo -e "${CYAN}${LEFT}→ ${COLOR}${OK}/${TOTAL}${NC}"; continue; fi; if echo "$line" | grep -q "→"; then LEFT=$(echo "$line" | cut -d'→' -f1)
 RIGHT=$(echo "$line" | cut -d'→' -f2); RIGHT_CLEAN=$(echo "$RIGHT" | tr -cd '0-9/'); OK=$(echo "$RIGHT_CLEAN" | cut -d'/' -f1); TOTAL=$(echo "$RIGHT_CLEAN" | cut -d'/' -f2); [ -z "$OK" ] && OK=0
-[ -z "$TOTAL" ] && TOTAL=0; if [ "$OK" -eq "$TOTAL" ] && [ "$TOTAL" -ne 0 ]; then COLOR="$GREEN"; elif [ "$OK" -lt "$DOM_CTRL_OK" ]; then COLOR="$RED"; else COLOR="$YELLOW"; fi; echo -e "${LEFT}→ ${COLOR}${OK}/${TOTAL}${NC}"; continue; fi
+[ -z "$TOTAL" ] && TOTAL=0; result_color "$OK" "$TOTAL" "$DOM_CTRL_OK"; echo -e "${LEFT}→ ${COLOR}${OK}/${TOTAL}${NC}"; continue; fi
 if echo "$line" | grep -q "\[ OK \]"; then echo -e "${GREEN}${line}${NC}"; elif echo "$line" | grep -q "\[FAIL\]"; then echo -e "${RED}${line}${NC}"; else echo "$line"; fi; done < "$FILE"; PAUSE; }
 run_test_by_domain() { MODE="domain"; clear; echo -e "${MAGENTA}Тестирование стратегий по домену${NC}\n\n${CYAN}Введите один или несколько доменов через пробел (${NC}x.com vk.com${CYAN})${NC}\n"; echo -ne "${YELLOW}Введите домен: ${NC}"; read -r INPUT
 INPUT="$(printf "%s" "$INPUT" | tr -s ' ')"; [ -z "$INPUT" ] && return; URLS=""; COUNT=0; for item in $INPUT; do item="$(printf "%s" "$item" | tr -d ' \t\r\n')"; [ -z "$item" ] && continue; case "$item" in http://*|https://*) TARGET="$item" ;; *) TARGET="https://$item" ;; esac
@@ -1038,7 +1046,7 @@ sed -n "${START},\$p" "$STR_FILE" > "$TEMP_FILE"; else sed -n "${START},$((NEXT-
 /option NFQWS_OPT '\''/ {printf "\toption NFQWS_OPT '\''\n%s\n'\''\n", block; skip=1; next}
 skip && /^'\''$/ {skip=0; next}
 !skip {print}' "$CONF" > "${CONF}.tmp"; mv "${CONF}.tmp" "$CONF"; echo -e "\n${CYAN}Тестируем стратегию:${NC} ${YELLOW}${NAME}${NC} ($CUR/$TOTAL_STR)"; ZAPRET_RESTART; OK=0;
-LOG_TMP="/tmp/zapret_log_${CUR}"; : > "$LOG_TMP"; check_all_urls; test_interrupted && break; if [ "$OK" -eq "$TOTAL" ]; then COLOR="${GREEN}"; elif [ "$OK" -lt "$CTRL_OK" ]; then COLOR="${RED}"; else COLOR="${YELLOW}"; fi; echo -e "${CYAN}Результат теста:${NC} ${COLOR}$OK/$TOTAL${NC}"
+LOG_TMP="/tmp/zapret_log_${CUR}"; : > "$LOG_TMP"; check_all_urls; test_interrupted && break; result_color "$OK" "$TOTAL" "$CTRL_OK"; echo -e "${CYAN}Результат теста:${NC} ${COLOR}$OK/$TOTAL${NC}"
 { echo "${NAME} → ${OK}/${TOTAL}"; cat "$LOG_TMP"; echo; } >> "$RESULTS"; done < <(printf '%s\n' "$LINES")
 if test_interrupted; then restore_after_test_interrupt "$BACK"; return 1; fi
 stop_test_trap; [ -f "$BACK" ] && mv -f "$BACK" "$CONF"; ZAPRET_RESTART; show_single_result "$RESULTS"; }
@@ -1061,14 +1069,8 @@ echo -e "\n${MAGENTA}Тестируем текущую стратегию по �
 "; done; YT_TOTAL=$(echo $DOMAINS | wc -w); URLS="$YT_URLS"; TOTAL="$YT_TOTAL"; OK=0; LOG_TMP="/tmp/zapret_log_cur_yt"; : > "$LOG_TMP"
 check_all_urls; if [ "$OK" -eq "$TOTAL" ]; then COLOR="${GREEN}"; elif [ "$OK" -ge $((TOTAL/2)) ]; then COLOR="${YELLOW}"; else COLOR="${RED}"; fi; echo -e "\n${CYAN}Результат теста YouTube: ${COLOR}$OK/$TOTAL${NC}\n"; rm -f "$OUT_DPI"; PAUSE; }
 show_test_results() { clear; echo -e "${MAGENTA}Результаты тестирования стратегий${NC}\n"; TMP_RES="/tmp/zapret_results_show.$$"; : > "$TMP_RES"; if [ -s "$RES3" ]; then cat "$RES3" > "$TMP_RES"; else [ -s "$RES1" ] && cat "$RES1" >> "$TMP_RES"
-[ -s "$RES2" ] && cat "$RES2" >> "$TMP_RES"; [ ! -s "$TMP_RES" ] && { rm -f "$TMP_RES"; echo -e "${RED}Результаты не найдены!${NC}\n"; PAUSE; return; }; fi; awk '!seen && /^Контрольный тест/ {print; seen=1; next} !/^Контрольный тест/ {print}' "$TMP_RES" > "${TMP_RES}.u"
-mv "${TMP_RES}.u" "$TMP_RES"; TOTAL=$(head -n1 "$TMP_RES" | cut -d'/' -f2); SHOW_CTRL_OK=$(head -n1 "$TMP_RES" | awk -F'[/ ]' '{for(i=1;i<=NF;i++) if($i~/^[0-9]+$/){print $i; break}}'); [ -z "$SHOW_CTRL_OK" ] && SHOW_CTRL_OK=0; awk -F'[/ ]' '{for(i=1;i<=NF;i++) if($i~/^[0-9]+$/){print $i "/" $(i+1), $0; break}}' "$TMP_RES" | sort -nr -k1,1 | while read -r line; do COUNT=$(echo "$line" | awk -F'/' '{print $1}')
-TEXT=$(echo "$line" | cut -d' ' -f2-); if echo "$TEXT" | grep -q Zapret; then COLOR="$CYAN"; elif [ "$COUNT" -eq "$TOTAL" ]; then COLOR="$GREEN"; elif [ "$COUNT" -lt "$SHOW_CTRL_OK" ]; then COLOR="$RED"; else COLOR="$YELLOW"; fi
-echo -e "${COLOR}${TEXT}${NC}"; done; rm -f "$TMP_RES"; echo; PAUSE; }
-show_single_result() { clear; echo -e "${MAGENTA}Результат тестирования стратегии${NC}\n"; local FILE="$1"; [ ! -s "$FILE" ] && { echo -e "${RED}Результат не найден!${NC}\n"; [ -z "$NO_PAUSE" ] && PAUSE; return; }; TMP_RES="/tmp/zapret_results_single.$$"
-cat "$FILE" > "$TMP_RES"; awk '!seen && /^Контрольный тест/ {print; seen=1; next} !/^Контрольный тест/ {print}' "$TMP_RES" > "${TMP_RES}.u"; mv "${TMP_RES}.u" "$TMP_RES"; TOTAL=$(head -n1 "$TMP_RES" | cut -d'/' -f2); SHOW_CTRL_OK=$(head -n1 "$TMP_RES" | awk -F'[/ ]' '{for(i=1;i<=NF;i++) if($i~/^[0-9]+$/){print $i; break}}'); [ -z "$SHOW_CTRL_OK" ] && SHOW_CTRL_OK=0; awk -F'[/ ]' '{for(i=1;i<=NF;i++) if($i~/^[0-9]+$/){print $i "/" $(i+1), $0; break}}' "$TMP_RES" |
-sort -nr -k1,1 | while read -r line; do COUNT=$(echo "$line" | awk -F'/' '{print $1}'); TEXT=$(echo "$line" | cut -d' ' -f2-); if echo "$TEXT" | grep -q Zapret; then COLOR="$CYAN"; elif [ "$COUNT" -eq "$TOTAL" ]; then COLOR="$GREEN"; elif [ "$COUNT" -lt "$SHOW_CTRL_OK" ]; then
-COLOR="$RED"; else COLOR="$YELLOW"; fi; echo -e "${COLOR}${TEXT}${NC}"; done; rm -f "$TMP_RES"; [ -z "$NO_PAUSE" ] && echo && PAUSE; }
+[ -s "$RES2" ] && cat "$RES2" >> "$TMP_RES"; [ ! -s "$TMP_RES" ] && { rm -f "$TMP_RES"; echo -e "${RED}Результаты не найдены!${NC}\n"; PAUSE; return; }; fi; print_results_colored "$TMP_RES"; rm -f "$TMP_RES"; echo; PAUSE; }
+show_single_result() { clear; echo -e "${MAGENTA}Результат тестирования стратегии${NC}\n"; local FILE="$1"; [ ! -s "$FILE" ] && { echo -e "${RED}Результат не найден!${NC}\n"; [ -z "$NO_PAUSE" ] && PAUSE; return; }; print_results_colored "$FILE"; [ -z "$NO_PAUSE" ] && echo && PAUSE; }
 run_test_flowseal() { clear; echo -e "${MAGENTA}Тестирование стратегий Flowseal${NC}\n\n${CYAN}Собираем стратегии для теста${NC}"; RESULTS="/opt/zapret/tmp/results_flowseal.txt"; rm -rf "$TMP_SF"; mkdir -p "$TMP_SF"
 download_strategies 1; cp "$OUT" "$STR_FILE"; cp "$CONF" "$BACK"; sed -i '/#Y/d' "$STR_FILE"; run_test_core "$RESULTS"; }
 run_test_versions() { clear; echo -e "${MAGENTA}Тестирование стратегий v${NC}\n\n${CYAN}Собираем стратегии для теста${NC}"; RESULTS="/opt/zapret/tmp/results_versions.txt"; : > "$STR_FILE"; cp "$CONF" "$BACK"
@@ -1084,7 +1086,7 @@ BLOCK=$(cat "$TEMP_FILE"); NAME=$(head -n1 "$TEMP_FILE"); NAME="${NAME#\#}"; awk
 /option NFQWS_OPT '\''/ {printf "\toption NFQWS_OPT '\''\n%s\n'\''\n", block; skip=1; next}
 skip && /^'\''$/ {skip=0; next}
 !skip {print}' "$CONF" > "${CONF}.tmp"; mv "${CONF}.tmp" "$CONF"; echo -e "\n${CYAN}Тестируем стратегию: ${YELLOW}${NAME}${NC} ($CUR/$TOTAL_STR)"; ZAPRET_RESTART; OK=0; LOG_TMP="/tmp/zapret_log_${CUR}"; : > "$LOG_TMP"; check_all_urls
-test_interrupted && break; if [ "$OK" -eq "$TOTAL" ]; then COLOR="${GREEN}"; elif [ "$OK" -lt "$CTRL_OK" ]; then COLOR="${RED}"; else COLOR="${YELLOW}"; fi; echo -e "${CYAN}Результат теста: ${COLOR}$OK/$TOTAL${NC}"; echo -e "${NAME} → ${OK}/${TOTAL}" >> "$RESULTS"; done < <(printf '%s\n' "$LINES")
+test_interrupted && break; result_color "$OK" "$TOTAL" "$CTRL_OK"; echo -e "${CYAN}Результат теста: ${COLOR}$OK/$TOTAL${NC}"; echo -e "${NAME} → ${OK}/${TOTAL}" >> "$RESULTS"; done < <(printf '%s\n' "$LINES")
 if test_interrupted; then rm -f "$OUT_DPI"; restore_after_test_interrupt "$BACK"; return 1; fi
 stop_test_trap; sort -t'/' -k1 -nr "$RESULTS" -o "$RESULTS"; mv -f "$BACK" "$CONF"; rm -f "$OUT_DPI"; ZAPRET_RESTART; [ -z "$NO_PAUSE" ] && show_single_result "$RESULTS"; }
 TEST_CUSTOM() { if [ ! -f "$CUSTOM_STR_FILE" ]; then echo -e "\n${RED}Файл ${NC}$CUSTOM_STR_FILE${RED} не найден!${NC}\n"; PAUSE; return; fi; if [ ! -s "$CUSTOM_STR_FILE" ]; then echo -e "\n${RED}Файл ${NC}$CUSTOM_STR_FILE ${RED}пустой!${NC}\n"; PAUSE; return; fi
@@ -1928,6 +1930,7 @@ if grep -qE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' "$EXCL_FILE" 2>/dev
 fi
 echo -e "\n${CYAN}1) ${GREEN}Меню${NC} Zapret\n${CYAN}2) ${GREEN}$Z2_ACTION_TEXT${NC} Zapret2\n${CYAN}3) ${GREEN}Меню ${NC}splify\n${CYAN}4) ${GREEN}Меню ${NC}Mixomo\n${CYAN}5) ${GREEN}Меню ${NC}NetShift\n${CYAN}6) ${GREEN}Меню ${NC}TG WS Proxy\n${CYAN}7) ${GREEN}Меню ${NC}DNS over HTTPS\n${CYAN}8) ${GREEN}Меню управления доменами в ${NC}hosts"
 echo -e "${CYAN}f) ${GREEN}Удалить ${NC}→${GREEN} установить ${NC}→${GREEN} настроить${NC} Zapret\n${CYAN}m) ${GREEN}Системное меню${NC}"; [ "$SHOW_S" = "1" ] && echo -e "${CYAN}s) ${GREEN}$S_ACTION${NC} $S_NAME"
+echo -e "${CYAN}w)${GREEN} $( [ -e "$LUCI_EDITION" ] && echo -e "Удалить ${NC}Zapret Manager ${GREEN}для ${NC}WEB ${GREEN}+ ${NC}LuCI" || echo -e "Установить ${NC}Zapret Manager ${GREEN}для ${NC}WEB ${GREEN}+ ${NC}LuCI" )"
 [ "$SHOW_S" = "2" ] && echo -e "${CYAN}s1) ${GREEN}$S1_ACTION${NC} Zapret\n${CYAN}s2) ${GREEN}$S2_ACTION${NC} Zapret2"; echo -ne "${CYAN}Enter) ${GREEN}Выход${NC}\n\n${YELLOW}Выберите пункт:${NC} " && read choice
 case "$choice" in 999) echo; uninstall_zapret "1"; install_Zapret "1"; curl -fsSL ${GH_RAW}/StressOzz/Test/refs/heads/main/zapret -o "$CONF"; hosts_add "$ALL_BLOCKS"; rm -f "$EXCLUDE_FILE"; wget -q -U "Mozilla/5.0" -O "$EXCLUDE_FILE" "$EXCLUDE_URL"; ZAPRET_RESTART; PAUSE;;
 1) MENU_ZAPRET;;
@@ -1944,5 +1947,6 @@ s|S|ы|Ы) toggle_zapret;;
 s1|S1|ы1|Ы1) toggle_zapret1_only;;
 s2|S2|ы2|Ы2) toggle_zapret2_only;; 
 r|R|к|К) show_menu;;
+ц|Ц|W|w) install_zapret_manager_luci;;
 *) echo; exit 0;; esac; }
 case "$1" in --auto-best) auto_apply_best_strategy; exit 0 ;; esac; while true; do show_menu; done
