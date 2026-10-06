@@ -1,10 +1,10 @@
 #!/bin/sh
-# Version: 2.41
+# Version: 2.48
 set -e
 
 GREEN="\033[1;32m"; CYAN="\033[1;36m"; YELLOW="\033[1;33m"; MAGENTA="\033[1;35m"; BLUE="\033[0;34m"; NC="\033[0m"; DGRAY="\033[38;5;244m"
 
-ZM_NEW_VER="2.41"
+ZM_NEW_VER="2.48"
 _zmi_say() { echo -e "${CYAN}==>${NC} $*"; }
 _zmi_ok() { echo -e "   ${GREEN}✓${NC} $*"; }
 _zmi_step() { echo -e "   → $*"; }
@@ -79,7 +79,7 @@ cat > '/opt/zapret-manager-luci/backend.sh.zm-new' << 'ZM_INSTALLER_EOF'
 umask 022
 
 CONF="/etc/config/zapret"
-ZM_VERSION="2.41"
+ZM_VERSION="2.48"
 ZM_SCRIPT_URL="https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh"
 GH_RAW="https://raw.githubusercontent.com"
 GH_MAIN="https://github.com"
@@ -799,6 +799,7 @@ zm_watch() {
 	rpcd_watch
 	_zm_net_orphan && _zm_net_restore force >/dev/null 2>&1
 	_fk_watch
+	_fk_fast_patch
 	_st_legacy_check
 	_st_vpn_watch
 	_tg_watch
@@ -1241,6 +1242,11 @@ zapret_action() {
 		update)         job_start install_zapret do_install_zapret ;;
 		remove)         job_start remove_zapret  do_remove_zapret ;;
 		start)          /etc/init.d/zapret start >/dev/null 2>&1; zapret_restart; status ;;
+		restart)
+			[ -x /etc/init.d/zapret ] || { echo '{"error":"Zapret не установлен"}'; return 1; }
+			zapret_restart
+			for p in 1 2 3 4 5; do pgrep -f "/opt/zapret/" >/dev/null 2>&1 && break; sleep 1; done
+			status ;;
 		stop)
 			/etc/init.d/zapret stop >/dev/null 2>&1
 			for p in $(pgrep -f "/opt/zapret/" 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
@@ -1350,6 +1356,11 @@ zapret2_action() {
 		remove)         job_start remove_zapret2  do_remove_zapret2 ;;
 		start)          /etc/init.d/zapret2 start >/dev/null 2>&1; status ;;
 		stop)           /etc/init.d/zapret2 stop >/dev/null 2>&1; status ;;
+		restart)
+			[ -x /etc/init.d/zapret2 ] || { echo '{"error":"Zapret2 не установлен"}'; return 1; }
+			/etc/init.d/zapret2 restart >/dev/null 2>&1
+			for p in 1 2 3 4 5; do /etc/init.d/zapret2 status >/dev/null 2>&1 && break; sleep 1; done
+			status ;;
 		*) echo '{"error":"неизвестное действие"}' ;;
 	esac
 }
@@ -2099,6 +2110,30 @@ _hosts_block() {
 			"199.232.210.248 scdn.co i.scdn.co line-up.scdn.co mosaic.scdn.co daily-mix.scdn.co lineup-images.scdn.co encore.scdn.co image-cdn-fa.scdn.co accounts.scdn.co www.scdn.co www-growth.scdn.co av.scdn.co seafoam.scdn.co" \
 			"23.48.23.145 heads-ak-spotify-com.akamaized.net" \
 			"45.155.204.190 xpui.app.spotify.com" ;;
+		roblox) printf '%s\n' \
+			"#tr.rbxcdn.com" \
+			"108.156.22.8 tr.rbxcdn.com" \
+			"108.157.32.114 tr.rbxcdn.com" \
+			"18.65.147.108 tr.rbxcdn.com" \
+			"18.65.147.112 tr.rbxcdn.com" \
+			"13.224.181.18 tr.rbxcdn.com" \
+			"13.224.181.74 tr.rbxcdn.com" \
+			"54.230.253.22 tr.rbxcdn.com" \
+			"54.230.253.81 tr.rbxcdn.com" \
+			"54.230.253.48 tr.rbxcdn.com" \
+			"54.230.253.59 tr.rbxcdn.com" \
+			"143.204.214.34 tr.rbxcdn.com" \
+			"143.204.214.67 tr.rbxcdn.com" \
+			"143.204.214.92 tr.rbxcdn.com" \
+			"99.84.181.25 tr.rbxcdn.com" \
+			"99.84.181.63 tr.rbxcdn.com" \
+			"65.8.158.45 tr.rbxcdn.com" \
+			"65.8.158.112 tr.rbxcdn.com" ;;
+		riot) printf '%s\n' \
+			"#Riotgames" \
+			"159.194.200.33 auth.riotgames.com authenticate.riotgames.com entitlements.auth.riotgames.com clientconfig.rpg.riotgames.com" \
+			"159.194.200.33 playerpreferences.riotgames.com login.riotgames.com riotgames.com www.riotgames.com account.riotgames.com" \
+			"159.194.200.33 recovery.riotgames.com riot-client.riotgames.com playvalorant.com leagueoflegends.com" ;;
 		rutracker) printf '%s\n' \
 			"#Rutracker" \
 			"172.67.182.196 rutracker.org" ;;
@@ -2134,7 +2169,7 @@ _hosts_has_line() {
 }
 
 hosts_status() {
-	local blocks="nalog ntc instagram librusec ai twitch telegram spotify spotifyext rutor rutracker scell githubraw github tapeop finland" b first=1
+	local blocks="nalog ntc instagram librusec ai twitch telegram spotify spotifyext rutor rutracker scell roblox riot githubraw github tapeop finland" b first=1
 	local geohide=""
 	if grep -q '^### geohide.ru: hosts file' "$HOSTS_FILE" 2>/dev/null; then
 		if grep -q '^# Регион серверов: US$' "$HOSTS_FILE" 2>/dev/null; then geohide="us"
@@ -2520,6 +2555,164 @@ system_toggle_flow_offloading_fix() {
 }
 
 
+ZM_FLASH_PATHS="/opt/zapret-manager-luci /usr/libexec/rpcd/zapret-manager /usr/share/rpcd/acl.d/luci-app-zapret-manager.json /usr/share/luci/menu.d/luci-app-zapret-manager.json /www/luci-static/resources/view/zapret-manager /www/luci-static/resources/zapret-manager /www/luci-static/resources/bytetube /www/luci-static/resources/view/bytetube /www/zm /www/zm-webui.html /usr/share/zm-redbtn"
+
+_zm_kb() {
+	[ $# -gt 0 ] || { echo 0; return 0; }
+	du -sk "$@" 2>/dev/null | awk '{ s += $1 } END { print s + 0 }'
+}
+
+_zm_aged() {
+	[ -e "$1" ] || [ -L "$1" ] || return 1
+	[ "${2:-0}" -gt 0 ] || return 0
+	[ -n "$(find "$1" -maxdepth 0 -mmin +"$2" 2>/dev/null)" ]
+}
+
+_zm_junk() {
+	local age=0 f n d
+	for f in /tmp/zm-run.* /tmp/zm-wait.* /tmp/zm-quiet.* /tmp/zm-pkg.* /tmp/ytb-ct.* /tmp/ytb-diag.* /tmp/ytb-ins.* /tmp/ytb-dl /tmp/zm-zash /tmp/netshift-sbext.* \
+		/tmp/mihomo.gz /tmp/zashboard.zip /tmp/zashboard /tmp/metacubexd.tgz /tmp/metacubexd /tmp/tg-ws-proxy.ipk /tmp/tg-ws-proxy.apk /tmp/zm_uninstall_panel.sh \
+		"$JOBS_DIR"/install_tmp "$JOBS_DIR"/install_z2_tmp "$JOBS_DIR"/flowseal.zip "$JOBS_DIR"/flowseal_src "$JOBS_DIR"/tg-ws-proxy-rs.tar.gz \
+		"$JOBS_DIR"/netshift-src "$JOBS_DIR"/forkop-src "$JOBS_DIR"/forkop-import "$JOBS_DIR"/zm_head.* "$JOBS_DIR"/steer-list.* "$JOBS_DIR"/tgws_install.* \
+		"$JOBS_DIR"/geohide_hosts.tmp "$JOBS_DIR"/cleanup.* "$ST_RUN"/*.src "$ST_RUN"/cat.flat \
+		/opt/zapret-manager-luci/*.zm-new /www/luci-static/resources/zapret-manager/*.zm-new "$ZM_STATE_DIR"/*.tmp "$ST_DIR"/*.tmp "$ST_DIR"/lists/*.tmp \
+		"$ST_USER_DIR"/*.tmp "$ST_USER_DIR"/*.tmp.* "$HOSTS_FILE.zmtmp" "$HOSTS_FILE.zmdrop"; do
+		[ "$f" = "$JOBS_DIR/cleanup.$$" ] && continue
+		_zm_aged "$f" "$age" && echo "$f"
+	done
+	[ "$1" = install ] || { [ -e /tmp/zm_update_install.log ] && echo /tmp/zm_update_install.log; }
+	[ -e "$ZM_UP_FILE" ] && echo "$ZM_UP_FILE"
+	for f in /tmp/zm-rpc.*; do _zm_aged "$f" 10 && echo "$f"; done
+	if ! _job_running strategy_test; then
+		for f in "$JOBS_DIR"/strategy_test/results_*.txt "$JOBS_DIR"/strategy_test/detail_*.txt "$JOBS_DIR"/strategy_test/log_*.txt "$JOBS_DIR"/strategy_test/urls.txt \
+			"$JOBS_DIR"/strategy_test/candidates.txt "$JOBS_DIR"/strategy_test/block.txt "$JOBS_DIR"/strategy_test/sort.* "$JOBS_DIR"/strategy_test/ok.* "$JOBS_DIR"/strategy_test/pids.*; do
+			[ -e "$f" ] && echo "$f"
+		done
+	fi
+	n="$(cat /tmp/bytetube-test/job.pid 2>/dev/null)"
+	case "$n" in ''|*[!0-9]*) n="" ;; esac
+	if [ -z "$n" ] || ! kill -0 "$n" 2>/dev/null; then
+		for f in /tmp/bytetube-test/results.txt /tmp/bytetube-test/results.raw /tmp/bytetube-test/job.log /tmp/bytetube-test/job.pid /tmp/bytetube-test/stop; do
+			[ -e "$f" ] && echo "$f"
+		done
+	fi
+	for f in "$JOBS_DIR"/*.pid; do
+		[ -f "$f" ] || continue
+		n="$(basename "$f" .pid)"
+		_job_running "$n" || [ -f "$JOBS_DIR/$n.log" ] || echo "$f"
+	done
+	for f in "$JOBS_DIR"/install_z* "$JOBS_DIR"/sysinfo.json "$JOBS_DIR"/sysinfo.res "$JOBS_DIR"/sysinfo.urls "$JOBS_DIR"/tzdet.* "$JOBS_DIR"/excl_arp_tmp \
+		"$JOBS_DIR"/yv_* "$JOBS_DIR"/nfq_drop_old "$JOBS_DIR"/nfq_drop_new "$JOBS_DIR"/steer.hide.in "$JOBS_DIR"/mixomo.hide.in "$JOBS_DIR"/forkop-svc.out "$JOBS_DIR"/forkop-lists.out \
+		"$ST_RUN"/dl.* "$ST_RUN"/used.* "$ST_RUN"/srs.*.done "$ST_RUN"/lists.json "$ZM_STATE_DIR"/latest.* "$ZM_STATE_DIR"/versions.json "$ZM_STATE_DIR"/steer.latest; do
+		case "$f" in "$JOBS_DIR"/sysinfo.*) _job_running sysinfo && continue ;; esac
+		[ -e "$f" ] && echo "$f"
+	done
+	for f in /opt/zapret-manager-luci/forkop.uc /usr/lib/zapret-manager* /etc/zapret_manager_expert_mode* /usr/share/zm-redbtn/lists \
+		/www/luci-static/resources/view/zapret-manager/test.js /www/luci-static/resources/view/zapret-manager/redbtn.js \
+		/www/luci-static/resources/view/zapret-manager/youtube.js /www/luci-static/resources/view/zapret-manager/game.js \
+		/www/luci-static/resources/view/zapret-manager/discord.js /www/luci-static/resources/view/zapret-manager/exclusions.js \
+		/www/luci-static/resources/view/zapret-manager/forkop.js; do
+		[ -e "$f" ] || [ -L "$f" ] && echo "$f"
+	done
+	for f in "$JOBS_DIR"/*.log; do
+		[ -f "$f" ] || continue
+		n="$(basename "$f" .log)"
+		_job_running "$n" && continue
+		echo "$f"
+		[ -f "$JOBS_DIR/$n.pid" ] && echo "$JOBS_DIR/$n.pid"
+	done
+	if [ -d "$ZM_LISTS_DIR" ]; then
+		for f in "$ZM_LISTS_DIR"/.*; do
+			[ -f "$f" ] || continue
+			echo "$f"
+		done
+		if [ -s "$RB_SHARE/services.conf" ]; then
+			d=" $(grep -v '^#' "$RB_SHARE/services.conf" | cut -d'|' -f3,4 | tr ',|\n' '   ') "
+			for f in "$ZM_LISTS_DIR"/*.lst; do
+				[ -f "$f" ] || continue
+				case "$d" in *" ${f##*/} "*) ;; *) echo "$f" ;; esac
+			done
+		fi
+	fi
+	if [ -d "$ST_DIR/lists" ] && [ -s "$RB_SHARE/services.conf" ] && ! _st_running; then
+		ls "$ST_DIR/lists" 2>/dev/null | awk -F'|' -v sel="$ST_SEL" -v conf="$RB_SHARE/services.conf" -v rem="$ST_CAT_SVC" -v dir="$ST_DIR/lists" '
+			function load(file,    l, a, c, m, i) { while ((getline l < file) > 0) { if (l ~ /^#/) continue; split(l, a, "|"); if (!(a[1] in on)) continue; m = split(a[8], c, ","); for (i = 1; i <= m; i++) if (c[i] != "") keep[c[i]] = 1 } close(file) }
+			BEGIN { while ((getline l < sel) > 0) if (l != "") { on[l] = 1; keep[l] = 1 } close(sel); load(conf); load(rem) }
+			{ n = $0; sub(/\..*$/, "", n); if (n == "" || (n in keep)) next; print dir "/" $0 }' | while IFS= read -r f; do
+			grep -qF "$f" "$STL_SPEC" "$STL_YAML" 2>/dev/null || echo "$f"
+		done
+	fi
+	return 0
+}
+
+_zm_mem_kb() { awk '/^MemAvailable:/ { print $2; f = 1; exit } /^MemFree:/ { m = $2 } END { if (!f) print m + 0 }' /proc/meminfo 2>/dev/null; }
+_zm_df_kb() { df -kP "$1" 2>/dev/null | awk 'NR == 2 { print $4 + 0; f = 1 } END { if (!f) print 0 }'; }
+
+_zm_usage_json() {
+	local list="$JOBS_DIR/cleanup.$$" jk=0 jn=0
+	mkdir -p "$JOBS_DIR"
+	_zm_junk "$1" > "$list" 2>/dev/null
+	if [ -s "$list" ]; then
+		jn="$(grep -c . "$list")"
+		jk="$(_zm_kb $(cat "$list"))"
+	fi
+	rm -f "$list"
+	printf '"flash_kb":%s,"lists_kb":%s,"tmp_kb":%s,"junk_kb":%s,"junk_n":%s,"flash_free_kb":%s,"tmp_free_kb":%s,"mem_free_kb":%s' \
+		"$(_zm_kb $ZM_FLASH_PATHS)" "$(_zm_kb "$ST_DIR/lists" "$ZM_LISTS_DIR")" "$(_zm_kb "$JOBS_DIR")" "${jk:-0}" "${jn:-0}" \
+		"$(_zm_df_kb /opt/zapret-manager-luci)" "$(_zm_df_kb /tmp)" "$(_zm_mem_kb)"
+}
+
+zm_cleanup_status() {
+	printf '{%s}\n' "$(_zm_usage_json)"
+}
+
+zm_cleanup() {
+	local mode="$1" j f k n=0 tk=0 fk=0 m0 m1 list="$JOBS_DIR/cleanup.$$"
+	if [ "$mode" != install ]; then
+		if j="$(_zm_busy_job)"; then
+			printf '{"error":"%s"}\n' "$(esc "идёт операция «$j» — дождитесь её окончания и запустите очистку")"
+			return 1
+		fi
+		if [ -f /tmp/zm_update_install.sh ]; then
+			echo '{"error":"идёт обновление панели — дождитесь его окончания"}'
+			return 1
+		fi
+	fi
+	mkdir -p "$JOBS_DIR"
+	m0="$(_zm_mem_kb)"
+	_zm_junk "$mode" > "$list" 2>/dev/null
+	while IFS= read -r f; do
+		case "$f" in
+			/tmp/zm_update_install.sh) continue ;;
+			/tmp/zm[-_]*|/tmp/ytb-*|/tmp/bytetube-test/?*|/tmp/netshift-sbext.*|/tmp/mihomo.gz|/tmp/zashboard|/tmp/zashboard.zip|/tmp/metacubexd|/tmp/metacubexd.tgz|/tmp/tg-ws-proxy.ipk|/tmp/tg-ws-proxy.apk) ;;
+			/tmp/zapret-manager-luci/?*|/opt/zapret-manager-luci/?*|/etc/zm-steer/?*|/etc/hosts.zmtmp|/etc/hosts.zmdrop) ;;
+			/usr/lib/zapret-manager*|/etc/zapret_manager_expert_mode*|/usr/share/zm-redbtn/lists|/www/luci-static/resources/zapret-manager/?*|/www/luci-static/resources/view/zapret-manager/?*) ;;
+			*) continue ;;
+		esac
+		case "$f" in */../*|*/..) continue ;; esac
+		[ -e "$f" ] || [ -L "$f" ] || continue
+		k="$(_zm_kb "$f")"
+		rm -rf "$f" 2>/dev/null
+		[ -e "$f" ] && continue
+		n=$((n + 1))
+		case "$f" in /tmp/*) tk=$((tk + k)) ;; *) fk=$((fk + k)) ;; esac
+	done < "$list"
+	rm -f "$list"
+	for f in "$ZM_STATE_DIR"/*.lock; do
+		[ -d "$f" ] && _zm_aged "$f" 5 && rmdir "$f" 2>/dev/null
+	done
+	_st_running || rm -f "$ST_RUN"/dl.* "$ST_RUN"/used.* "$ST_RUN"/srs.*.done 2>/dev/null
+	rmdir "$ST_DIR/lists" "$ZM_LISTS_DIR" 2>/dev/null
+	rm -f /tmp/luci-indexcache* /tmp/luci-modulecache/* 2>/dev/null
+	if [ "$mode" != install ]; then
+		sync
+		echo 3 > /proc/sys/vm/drop_caches 2>/dev/null
+	fi
+	m1="$(_zm_mem_kb)"
+	k=$(( ${m1:-0} - ${m0:-0} )); [ "$k" -gt 0 ] || k=0
+	printf '{"ok":true,"removed":%s,"freed_flash_kb":%s,"freed_tmp_kb":%s,"freed_mem_kb":%s,%s}\n' "$n" "$fk" "$tk" "$k" "$(_zm_usage_json "$mode")"
+}
+
 system_uninstall_panel() {
 	local script="/tmp/zm_uninstall_panel.sh" j
 	if j="$(_zm_busy_job)"; then
@@ -2537,6 +2730,8 @@ ZM_PATHS="/opt/zapret-manager-luci /usr/libexec/rpcd/zapret-manager \
 	/www/luci-static/resources/bytetube \
 	/www/luci-static/resources/view/bytetube \
 	/tmp/zapret-manager-luci /tmp/luci-indexcache* /tmp/luci-modulecache/* \
+	/tmp/zm-run.* /tmp/zm-wait.* /tmp/zm-quiet.* /tmp/zm-pkg.* /tmp/zm-rpc.* /tmp/zm_update_install.log \
+	/usr/lib/zapret-manager* /etc/zapret_manager_expert_mode* /etc/hosts.zmtmp /etc/hosts.zmdrop \
 	/www/zm /www/zm-webui.html /etc/zm-warp-own.conf"
 zm_try=0
 while :; do
@@ -5609,7 +5804,23 @@ health() {
 	local fw=false v6=false
 	[ "$(uci -q get firewall.@defaults[0].flow_offloading)" = 1 ] && [ -f /usr/share/firewall4/templates/ruleset.uc ] && [ "$(_flow_offloading_fix_applied)" = false ] && fw=true
 	[ -f "$CONF" ] && [ "$(_ipv6_enabled_in_zapret)" = false ] && ip -6 route show default 2>/dev/null | grep -q . && v6=true
-	printf '{"zapret":%s,"zapret2":%s,"bytetube":%s,"tg":%s,"mixomo":%s,"doh":%s,"hosts":%s,"steer":%s,"steer_off":%s,"steer_exit":"%s","awg":%s,"forkop":%s,"flow_warn":%s,"ipv6_warn":%s,"reboot_hint":"%s"}\n' \
+	local d_zr="$zr" d_zr2="$zr2" d_bt="$bt" d_tg="$tg" d_mx="$mx" d_doh="$doh" d_sr="$sr" d_fk d_awg d_term=0 awgj
+	[ "$zr" = 2 ] && d_zr=4
+	[ "$zr2" = 2 ] && d_zr2=4
+	if [ "$bt" = 2 ]; then case "$(/usr/bin/bytetube status 2>/dev/null)" in *'"enabled":true'*) ;; *) d_bt=4 ;; esac; fi
+	[ "$tg" = 2 ] && ! ls /etc/rc.d/S*tg-ws-proxy* /etc/rc.d/S*tgws >/dev/null 2>&1 && d_tg=4
+	[ "$mx" = 2 ] && ! ls /etc/rc.d/S*mihomo >/dev/null 2>&1 && d_mx=4
+	if [ "$doh" = 2 ]; then { [ -f "$DOH_OFF_FLAG" ] || ! ls /etc/rc.d/S*https-dns-proxy >/dev/null 2>&1; } && d_doh=4; fi
+	[ "$sr" = 5 ] && d_sr=4
+	d_fk="$(_fk_health)"; [ "$d_fk" = 5 ] && d_fk=4
+	awgj="$(_awg_health)"; d_awg="${awgj%%,*}"
+	case "$awgj" in *'"awg_total":0') [ "$d_awg" = 1 ] && d_awg=4; [ "$d_awg" = 3 ] && d_awg=2 ;; esac
+	if _term_installed; then
+		if _term_running; then d_term=1; elif _term_enabled; then d_term=2; else d_term=4; fi
+	fi
+	printf '{"dots":{"zapret":%s,"zapret2":%s,"bytetube":%s,"tg":%s,"mixomo":%s,"doh":%s,"hosts":%s,"steer":%s,"forkop":%s,"awg":%s,"term":%s},' \
+		"$d_zr" "$d_zr2" "$d_bt" "$d_tg" "$d_mx" "$d_doh" "$hs" "$d_sr" "${d_fk:-0}" "${d_awg:-0}" "$d_term"
+	printf '"zapret":%s,"zapret2":%s,"bytetube":%s,"tg":%s,"mixomo":%s,"doh":%s,"hosts":%s,"steer":%s,"steer_off":%s,"steer_exit":"%s","awg":%s,"forkop":%s,"flow_warn":%s,"ipv6_warn":%s,"reboot_hint":"%s"}\n' \
 		"$zr" "$zr2" "$bt" "$tg" "$mx" "$doh" "$hs" "$sr" \
 		"$([ -f /etc/zm-steer/stopped ] && echo true || echo false)" "$sx" "$(_awg_health)" "$(_fk_health)" "$fw" "$v6" "$(esc "$(_zm_reboot_hint_get)")"
 }
@@ -7492,7 +7703,7 @@ _rb_list_get() {
 
 _rb_say() { echo "==> $*"; }
 _rb_warn() { echo "!! $*"; }
-_rb_svc_src() { grep -hv '^#' "$RB_SHARE/services.conf" 2>/dev/null; [ -f "$ST_CAT_OFF" ] || awk -F'|' -v skip="$ST_CAT_SKIP" '$9 != "" && $9 != "Свои списки каталога" { k = $1; sub(/^c_/, "", k); if (!index(skip, " " k " ")) print }' "$ST_CAT_SVC" 2>/dev/null; }
+_rb_svc_src() { grep -hv '^#' "$RB_SHARE/services.conf" 2>/dev/null; [ -f "$ST_CAT_OFF" ] || awk -F'|' -v skip="$ST_CAT_SKIP" -v conf="$RB_SHARE/services.conf" 'BEGIN { while ((getline l < conf) > 0) { if (l ~ /^#/) continue; split(l, a, "|"); if (a[1] == "") continue; b[a[1]] = 1; m = split(a[8], c, ","); for (i = 1; i <= m; i++) if (c[i] != "") b[c[i]] = 1 } } $9 != "" && $9 != "Свои списки каталога" { k = $1; sub(/^c_/, "", k); if (index(skip, " " k " ")) next; if (k ~ /^itdoginfo_/ && (substr(k, 11) in b)) next; print }' "$ST_CAT_SVC" 2>/dev/null; }
 _rb_svc_field() { _rb_svc_src | grep "^$1|" | head -n1 | cut -d'|' -f"$2"; }
 _rb_svc_names() { local id; for id in $1; do printf '%s, ' "$(_rb_svc_field "$id" 2)"; done | sed 's/, $//'; }
 _rb_routable() { [ "$1" = custom ] && [ -n "$(_rb_svc_field custom 1)" ] && return 0; [ -n "$(_rb_svc_field "$1" 3)$(_rb_svc_field "$1" 4)$(_rb_svc_field "$1" 8)" ]; }
@@ -8242,8 +8453,9 @@ _st_sel_remap() {
 	local f
 	for f in "$ST_SEL" "$ST_SKIP"; do
 		grep -q '^c_itdoginfo_' "$f" 2>/dev/null || continue
-		awk -v conf="$RB_SHARE/services.conf" 'BEGIN { while ((getline l < conf) > 0) { split(l, a, "|"); if (a[1] != "" && a[1] !~ /^#/) b[a[1]] = 1 } }
-			{ k = $0; if (k ~ /^c_itdoginfo_/ && (substr(k, 13) in b)) k = substr(k, 13); if (k != "" && !(k in s)) { s[k] = 1; print k } }' "$f" > "$f.tmp" && mv -f "$f.tmp" "$f"
+		awk -v conf="$RB_SHARE/services.conf" -v ex="$([ "$f" = "$ST_SEL" ] && echo 1)" 'BEGIN { while ((getline l < conf) > 0) { split(l, a, "|"); if (a[1] != "" && a[1] !~ /^#/) { b[a[1]] = 1; m = split(a[8], c, ","); for (i = 1; i <= m; i++) if (c[i] != "") bs[c[i]] = bs[c[i]] " " a[1] } } }
+			function put(k) { if (k != "" && !(k in s)) { s[k] = 1; print k } }
+			{ k = $0; if (k ~ /^c_itdoginfo_/) { x = substr(k, 13); if (x in b) { put(x); next } if (ex && (x in bs)) { m = split(bs[x], q, " "); for (i = 1; i <= m; i++) put(q[i]); next } } put(k) }' "$f" > "$f.tmp" && mv -f "$f.tmp" "$f"
 	done
 }
 _st_migrate
@@ -9252,7 +9464,7 @@ _st_cat_build() {
 			grp = clean(f[e, "source_name"])
 			if (grp == "" && fo[e]) grp = (tolower(f[e, "id"] " " f[e, "source"]) ~ /b4geoip/) ? "b4geoip" : "itdoginfo (allow-domains)"
 			if (grp == "") return
-			if (!fo[e] && f[e, "source"] == "itdoginfo/allow-domains") {
+			if (tolower(f[e, "id"] " " f[e, "source"]) ~ /itdoginfo/) {
 				u = f[e, "url"]; b = u; sub(/.*\//, "", b); sub(/\.srs$/, "", b)
 				if (index(bsets, " " b " ") || index(bnames, "|" tolower(nm) "|")) return
 			}
@@ -10414,11 +10626,6 @@ steer_list_set() {
 	[ "$n" -gt 0 ] || { rm -f "$tmp" "$tmp.pfx"; echo '{"error":"в списке нет ни одного домена или IP-адреса"}'; return 1; }
 	if [ -s "$tmp" ]; then mv "$tmp" "$f"; else rm -f "$tmp" "$f"; fi
 	if [ -s "$tmp.pfx" ]; then mv "$tmp.pfx" "$ST_USER_DIR/$id.pfx"; else rm -f "$tmp.pfx" "$ST_USER_DIR/$id.pfx"; fi
-	if [ "$id" = custom ]; then
-		mkdir -p "$ST_DIR"
-		[ -f "$ST_SKIP" ] && sed -i '/^custom$/d' "$ST_SKIP"
-		_rb_in custom "$ST_SEL" || echo custom >> "$ST_SEL"
-	fi
 	_st_list_changed "$id" "$n"
 }
 
@@ -13036,6 +13243,132 @@ _fk_ip_clean() {
 	return 0
 }
 
+_fk_fast_patch() {
+	local f=/usr/lib/netshift/rulesets.sh n
+	[ -f "$f" ] && [ -f /usr/lib/netshift/nft.sh ] && [ -f /usr/lib/netshift/helpers.sh ] || return 0
+	grep -q '^# zm-fast-begin 1$' "$f" && return 0
+	for n in patch_source_ruleset_rules import_plain_domain_list_to_local_source_ruleset_chunked import_plain_subnet_list_to_local_source_ruleset_chunked extract_ip_cidr_from_json_ruleset_to_file; do
+		grep -q "^$n() {" "$f" || return 0
+	done
+	grep -q '^nft_add_set_elements() {' /usr/lib/netshift/nft.sh && grep -q '^nft_add_set_elements_from_file_chunked() {' /usr/lib/netshift/nft.sh || return 0
+	grep -q '^comma_string_to_json_array() {' /usr/lib/netshift/helpers.sh || return 0
+	grep -q '^# zm-fast-begin' "$f" && sed -i '/^# zm-fast-begin/,/^# zm-fast-end$/d' "$f"
+	cat >> "$f" << 'ZM_FK_FAST_EOF'
+# zm-fast-begin 1
+_zm_fast_subnets() {
+	awk -v n="$2" '{ gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 == "") next
+		m = split($0, p, "/"); if (m > 2) next
+		if (m == 2 && (p[2] !~ /^[0-9]+$/ || length(p[2]) > 2 || p[2] + 0 > 32)) next
+		if (split(p[1], o, ".") != 4) next
+		ok = 1; for (i = 1; i <= 4; i++) if (o[i] !~ /^(0|[1-9][0-9]?[0-9]?)$/ || o[i] + 0 > 255) ok = 0
+		if (!ok || ($0 in seen)) next
+		seen[$0] = 1; buf = buf (c ? "," : "") $0
+		if (++c == n) { print buf; buf = ""; c = 0 } }
+		END { if (c) print buf }' "$1"
+}
+
+_zm_fast_domains() {
+	awk -v n="$2" '{ gsub(/\r/, ""); sub(/^[ \t]+/, ""); sub(/[ \t]+$/, ""); if ($0 == "") next
+		d = tolower($0); t = d; sub(/^\./, "", t)
+		if (t !~ /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/) next
+		if (t ~ /^[0-9.]+$/ || (d in seen)) next
+		seen[d] = 1; buf = buf (c ? "," : "") d
+		if (++c == n) { print buf; buf = ""; c = 0 } }
+		END { if (c) print buf }' "$1"
+}
+
+import_plain_domain_list_to_local_source_ruleset_chunked() {
+	local plain_list_filepath="$1" ruleset_filepath="$2" chunk_size="${3:-1000}" zm_tmp zm_line
+	zm_tmp="$(mktemp)"
+	_zm_fast_domains "$plain_list_filepath" "$chunk_size" > "$zm_tmp"
+	while IFS= read -r zm_line; do
+		[ -n "$zm_line" ] || continue
+		patch_source_ruleset_rules "$ruleset_filepath" "domain_suffix" "$(comma_string_to_json_array "$zm_line")"
+	done < "$zm_tmp"
+	rm -f "$zm_tmp"
+}
+
+import_plain_subnet_list_to_local_source_ruleset_chunked() {
+	local plain_list_filepath="$1" ruleset_filepath="$2" chunk_size="${3:-1000}" zm_tmp zm_line
+	zm_tmp="$(mktemp)"
+	_zm_fast_subnets "$plain_list_filepath" "$chunk_size" > "$zm_tmp"
+	while IFS= read -r zm_line; do
+		[ -n "$zm_line" ] || continue
+		patch_source_ruleset_rules "$ruleset_filepath" "ip_cidr" "$(comma_string_to_json_array "$zm_line")"
+	done < "$zm_tmp"
+	rm -f "$zm_tmp"
+}
+
+nft_add_set_elements_from_file_chunked() {
+	local filepath="$1" nft_table_name="$2" nft_set_name="$3" chunk_size="${4:-5000}" zm_tmp zm_line
+	zm_tmp="$(mktemp)"
+	_zm_fast_subnets "$filepath" "$chunk_size" > "$zm_tmp"
+	while IFS= read -r zm_line; do
+		[ -n "$zm_line" ] || continue
+		nft_add_set_elements "$nft_table_name" "$nft_set_name" "$zm_line"
+	done < "$zm_tmp"
+	rm -f "$zm_tmp"
+}
+
+extract_ip_cidr_from_json_ruleset_to_file() {
+	jq -r '.rules[]? | .ip_cidr? // empty | if type == "array" then .[] else . end' "$1" > "$2" 2>/dev/null
+}
+# zm-fast-end
+ZM_FK_FAST_EOF
+	return 0
+}
+
+_fk_log_mark() {
+	FK_LOGMARK="zm-lists-$$-$(date +%s)"
+	logger -t netshift "[info] $FK_LOGMARK" 2>/dev/null
+	FK_LOGSEEN=0
+}
+
+_fk_lists_progress() {
+	local all tot
+	[ -n "$FK_LOGMARK" ] || return 0
+	all="$(logread 2>/dev/null | awk -v m="$FK_LOGMARK" 'f && /netshift/ { print } index($0, m) { f = 1 }')"
+	tot="$(printf '%s\n' "$all" | grep -c .)"
+	[ "$tot" -gt "${FK_LOGSEEN:-0}" ] 2>/dev/null || return 0
+	printf '%s\n' "$all" | awk -v skip="${FK_LOGSEEN:-0}" '
+		function base(u) { sub(/[?#].*$/, "", u); sub(/^.*\//, "", u); return u }
+		NR <= skip { next }
+		{ sub(/^.*netshift[^:]*: /, ""); sub(/^\[[a-z]+\] /, "") }
+		/Starting lists update/ { print "   → Начинаем загрузку списков"; next }
+		/DNS check passed/ { print "   ✓ DNS отвечает"; next }
+		/DNS check failed/ { print "   ✗ DNS не ответил — списки не скачаны"; next }
+		/DNS is unavailable/ { print "   · DNS пока не отвечает — пробуем ещё раз"; next }
+		/GitHub connection check passed/ { print "   ✓ GitHub доступен"; next }
+		/GitHub connection check failed/ { print "   ✗ GitHub недоступен — списки не скачаны"; next }
+		/GitHub is unavailable/ { print "   · GitHub пока не отвечает — пробуем ещё раз"; next }
+		/Downloading and processing lists/ { print "   → Скачиваем и разбираем списки"; next }
+		/Importing community subnet lists for/ { print "   → Адреса встроенных сервисов — заносим в файрвол"; next }
+		/Importing domains from URL: / { u = $0; sub(/^.*URL: /, "", u); print "   → Домены из списка " base(u); next }
+		/Importing subnets from URL: / { u = $0; sub(/^.*URL: /, "", u); print "   → Адреса из списка " base(u) " — заносим в файрвол"; next }
+		/^Download .* list failed/ { u = $2; print "   ✗ Не скачался список " base(u); next }
+		/Failed to decompile binary rule set/ { print "   ✗ Набор правил не раскрылся — его адреса пропущены"; next }
+		/Lists update completed successfully/ { print "   ✓ Все списки загружены"; next }
+		/Lists update failed/ { print "   ✗ Часть списков не загрузилась — работают остальные"; next }'
+	FK_LOGSEEN="$tot"
+	return 0
+}
+
+_fk_lists_wait() {
+	local p i=0 max="${1:-240}"
+	p="${2:-$(cat /var/run/netshift_list_update.pid 2>/dev/null)}"
+	case "$p" in ''|*[!0-9]*) return 0 ;; esac
+	kill -0 "$p" 2>/dev/null || { _fk_lists_progress; return 0; }
+	_fk_say "Forkozz скачивает списки и заносит адреса в файрвол"
+	while [ "$i" -lt "$max" ]; do
+		_fk_lists_progress
+		kill -0 "$p" 2>/dev/null || { _fk_lists_progress; return 0; }
+		sleep 2
+		i=$((i + 2))
+	done
+	_fk_lists_progress
+	return 1
+}
+
 _fk_lists_report() {
 	local c=/etc/sing-box/config.json n=0 i=0 t ty u pth sz lines tbl sets set cnt shown=0
 	if [ -s "$c" ]; then
@@ -13070,7 +13403,10 @@ _fk_lists_report() {
 			cnt="$(nft list set inet "$FK_NFT" "$set" 2>/dev/null | sed -n '/elements = {/,/}/p' | tr ',' '\n' | grep -c '[0-9a-f]')"
 			[ "$cnt" -gt 0 ] 2>/dev/null || continue
 			[ "$shown" = 0 ] && { _fk_say "Адреса в правилах файрвола (nftables):"; shown=1; }
-			echo "   · $set — $cnt"
+			case "$set" in
+				netshift_subnets|netshift_subnets_v6) echo "   · $set — $cnt (адреса и подсети из списков)" ;;
+				*) echo "   · $set — $cnt" ;;
+			esac
 		done
 	fi
 	return 0
@@ -13247,6 +13583,7 @@ do_fk_install() {
 	fi
 	chmod 0755 /usr/bin/netshift /etc/init.d/netshift
 	chmod -R a+rX /usr/lib/netshift
+	_fk_fast_patch
 	rm -rf "$tmp"
 
 	if [ ! -s /etc/config/netshift ]; then
@@ -13538,6 +13875,8 @@ do_fk_service() {
 	_fk_log_default
 	local lx; lx="$(_fk_log_ext)"
 	/etc/init.d/netshift enable >/dev/null 2>&1
+	_fk_fast_patch
+	_fk_log_mark
 	: > "$JOBS_DIR/forkop-svc.out"
 	if [ "$a" = apply ] && _fk_up; then
 		_fk_say "Применяем настройки: Forkozz пересобирает конфиг sing-box и подхватывает списки"
@@ -13568,6 +13907,7 @@ do_fk_service() {
 	if _fk_up; then
 		_fk_say "Проверяем, что всё работает"
 		_fk_check_live
+		_fk_lists_wait 240 || _rb_warn "Списки ещё скачиваются — числа ниже могут быть неполными. Они догрузятся сами; позже нажмите «Обновить списки сейчас», чтобы увидеть итог"
 		_fk_lists_report
 		_fk_lists_errors
 		_fk_ext_auto all "$lx"
@@ -13593,9 +13933,18 @@ do_fk_lists() {
 	local rc=0 out="$JOBS_DIR/forkop-lists.out"
 	_fk_installed || { echo "ОШИБКА: Forkozz не установлен"; return 1; }
 	_fk_up || { echo "ОШИБКА: Forkozz выключен — включите его, и списки скачаются сами"; return 1; }
-	_fk_say "Скачиваем свежие списки сервисов и обновляем адреса в файрволе"
-	_zm_run 300 /usr/bin/netshift list_update > "$out" 2>&1 || rc=1
-	sed 's/\x1b\[[0-9;]*m//g' "$out" 2>/dev/null | grep -v '^[[:space:]]*$' | tail -n 15 | sed 's/^/   /'
+	local lp
+	_fk_fast_patch
+	_fk_log_mark
+	/usr/bin/netshift list_update > "$out" 2>&1 &
+	lp=$!
+	if ! _fk_lists_wait 300 "$lp"; then
+		_zm_kill_tree "$lp"
+		_rb_warn "Загрузка списков не завершилась за 5 минут — прерываем её"
+		rc=1
+	fi
+	wait "$lp" 2>/dev/null || rc=1
+	sed 's/\x1b\[[0-9;]*m//g' "$out" 2>/dev/null | grep -v '^[[:space:]]*$' | grep -iE 'error|fail|ошиб' | grep -v '^jq: ' | tail -n 8 | sed 's/^/   /'
 	rm -f "$out"
 	if [ "$rc" != 0 ]; then
 		echo "!! Скачивание списков завершилось с ошибкой — работают прежние"
@@ -14183,6 +14532,8 @@ case "$cmd" in
 	system_toggle_ipv6)                         system_toggle_ipv6 ;;
 	system_toggle_flow_offloading_fix)           system_toggle_flow_offloading_fix ;;
 	system_uninstall_panel)                        system_uninstall_panel ;;
+	zm_cleanup_status)                             zm_cleanup_status ;;
+	zm_cleanup)                                    zm_cleanup "$1" ;;
 	sysinfo_run)                                   sysinfo_run ;;
 	sysinfo_get)                                   sysinfo_get ;;
 	mirror_status)                                     mirror_status ;;
@@ -14645,7 +14996,11 @@ function own_view(m, typed) {
 }
 
 function device_ips(m) {
-	return uniq([ ...words(m.zm_rule_source_ips), ...words(m.fully_routed_ips) ]);
+	return uniq(words(m.zm_rule_source_ips));
+}
+
+function all_ips(m) {
+	return uniq(words(m.fully_routed_ips));
 }
 
 function url_ext(u) {
@@ -14696,7 +15051,7 @@ function sec_summary(c, sec, main) {
 		iface: s(m.interface), links: length(sec_links(m)),
 		refs: { c: rf.c, s: rf.s, r: rf.r }, lists: rf.l,
 		domains: length(domain_lines(m)), subnets: length(subnet_lines(m)), own_off: own_off(m),
-		full: device_ips(m)
+		full: device_ips(m), all: all_ips(m)
 	};
 }
 
@@ -14835,10 +15190,11 @@ function set_list(c, sec, key, list) {
 	else c.delete(CFG, sec, key);
 }
 
-function write_device_lists(c, sec, full, excl) {
+function write_device_lists(c, sec, full, excl, all) {
 	set_list(c, sec, "zm_rule_source_ips", full);
-	c.delete(CFG, sec, "fully_routed_ips");
+	set_list(c, sec, "fully_routed_ips", all || []);
 	if (!c.get(CFG, "settings")) c.set(CFG, "settings", "settings");
+	c.set(CFG, "settings", "zm_dev_v2", "1");
 	set_list(c, "settings", "routing_excluded_ips", excl);
 }
 
@@ -14920,7 +15276,8 @@ function patch_device_engine() {
 
 function cmd_device_setup() {
 	let patched = patch_device_engine(), c = cursor(), migrated = false;
-	let legacy = filter(sections(c, "section"), (x) => is_conn(x) && length(words(x.fully_routed_ips)));
+	let v2 = s(c.get(CFG, "settings", "zm_dev_v2")) == "1";
+	let legacy = v2 ? [] : filter(sections(c, "section"), (x) => is_conn(x) && length(words(x.fully_routed_ips)));
 	if (length(legacy)) {
 		let backup = STATE + "/netshift.before-device-rules.conf";
 		if (!fs.access(backup)) {
@@ -14929,12 +15286,16 @@ function cmd_device_setup() {
 				fail("не удалось сохранить настройки перед переносом устройств");
 		}
 		for (let x in legacy) {
-			set_list(c, x[".name"], "zm_rule_source_ips", device_ips(x));
+			set_list(c, x[".name"], "zm_rule_source_ips", uniq([ ...device_ips(x), ...all_ips(x) ]));
 			c.delete(CFG, x[".name"], "fully_routed_ips");
 		}
+		migrated = true;
+	}
+	if (!v2) {
+		if (!c.get(CFG, "settings")) c.set(CFG, "settings", "settings");
+		c.set(CFG, "settings", "zm_dev_v2", "1");
 		c.save(CFG);
 		c.commit(CFG);
-		migrated = true;
 	}
 	out({ ok: true, changed: patched || migrated, migrated });
 }
@@ -15089,7 +15450,7 @@ function first_addr(v) {
 
 /* Сеть роутера: логические сети (lan, wan…) и устройства (br-lan, eth0, pppoe-wan…). */
 function net_info(c) {
-	let nets = [], devnet = {};
+	let nets = [], devnet = {}, netproto = {};
 	try { c.load("network"); } catch (e) {}
 	try {
 		c.foreach("network", "interface", (x) => {
@@ -15098,6 +15459,7 @@ function net_info(c) {
 			if (proto == "pppoe" || proto == "pppoa") dev = proto + "-" + n;
 			if (match(dev, /^@/)) dev = "";
 			if (dev != "" && !devnet[dev]) devnet[dev] = n;
+			netproto[n] = proto;
 			push(nets, { name: n, proto, dev });
 		});
 	} catch (e) {}
@@ -15114,7 +15476,8 @@ function net_info(c) {
 			: t == "1" ? "eth" : "";
 		if (kind == "") continue;
 		let st = trim(s(fs.readfile(p + "/operstate")));
-		push(devs, { name: n, kind, up: st != "down", net: devnet[n] || "" });
+		let dn = devnet[n] || (netproto[n] != null ? n : "");
+		push(devs, { name: n, kind, up: st != "down", net: dn, proto: dn != "" ? s(netproto[dn]) : "" });
 	}
 	devs = sort(devs, (a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
 	return { lan_ip: lan, nets, devs };
@@ -15310,6 +15673,7 @@ function cmd_get(want) {
 		subnets: own_view(m, rf.l).subnets,
 		lists: own_view(m, rf.l).lists,
 		full: device_ips(m),
+		all: all_ips(m),
 		excl: uniq(words(st.routing_excluded_ips)),
 		extra: p.extra,
 		dns: dns_info(st),
@@ -15393,8 +15757,10 @@ function cmd_set() {
 	lists = uniq([ ...lists, ...rplain ]);
 	let full = d.full == null ? device_ips(c.get_all(CFG, sec) || {}) : uniq(tokens(d.full));
 	let excl = d.excl == null ? uniq(words(c.get(CFG, "settings", "routing_excluded_ips"))) : uniq(tokens(d.excl));
-	for (let x in [ ...full, ...excl ]) if (!valid_ip(x)) fail("неверный адрес устройства: " + x);
-	if (!length(services) && !length(rsets) && !length(rsubs) && !length(domains) && !length(subnets) && !length(lists) && (length(full) || created || !sec_configured(c.get_all(CFG, sec) || {})))
+	let all = d.all == null ? all_ips(c.get_all(CFG, sec) || {}) : uniq(tokens(d.all));
+	for (let x in [ ...full, ...excl, ...all ]) if (!valid_ip(x)) fail("неверный адрес устройства: " + x);
+	if (length(all) > 64) fail("устройств с полным трафиком через VPN можно выбрать не больше 64");
+	if (!length(all) && !length(services) && !length(rsets) && !length(rsubs) && !length(domains) && !length(subnets) && !length(lists) && (length(full) || created || !sec_configured(c.get_all(CFG, sec) || {})))
 		fail(!own_on && (length(keep.domains) || length(keep.subnets) || length(keep.lists))
 			? "«Свой список» выключен, а других сервисов в секции нет — включите его или выберите сервис"
 			: "выберите для секции хотя бы один сервис, домен или адрес — устройства только ограничивают её правила");
@@ -15402,6 +15768,8 @@ function cmd_set() {
 	for (let x in sections(c, "section")) {
 		let n = x[".name"];
 		if (n == sec || !is_conn(x) || (n != p0.sec && index(p0.conns, n) < 0)) continue;
+		for (let v in all) for (let w in all_ips(x)) if (device_ip_overlap(v, w))
+			fail("устройство " + v + " уже целиком идёт через секцию «" + sec_label(x, n == p0.sec) + "» — весь трафик устройства можно отдать только одной секции");
 		if (!device_scopes_overlap(full, device_ips(x))) continue;
 		let other = sec_label(x, n == p0.sec), orf = sec_refs(x);
 		for (let v in services) if (index(words(x.community_lists), v) >= 0) fail("список «" + v + "» уже идёт через секцию «" + other + "» — один список можно включить только в одной секции");
@@ -15465,7 +15833,7 @@ function cmd_set() {
 	write_sec_ext(c, sec, mode, d.x);
 
 	set_lists(c, sec, { s: rsets, r: rsubs, l: lists }, services, domains, subnets);
-	if (own_on) {
+	if (own_on || !(length(keep.domains) || length(keep.subnets) || length(keep.lists))) {
 		del_keys(c, sec, [ "zm_own_off", "zm_own_domains", "zm_own_subnets", "zm_own_lists" ]);
 	} else {
 		c.set(CFG, sec, "zm_own_off", "1");
@@ -15473,7 +15841,7 @@ function cmd_set() {
 		if (length(keep.subnets)) c.set(CFG, sec, "zm_own_subnets", join("\n", keep.subnets)); else c.delete(CFG, sec, "zm_own_subnets");
 		set_list(c, sec, "zm_own_lists", keep.lists);
 	}
-	write_device_lists(c, sec, full, excl);
+	write_device_lists(c, sec, full, excl, all);
 
 	if (bp) {
 		if (length(bdom) || length(bsub)) {
@@ -16753,6 +17121,8 @@ list_methods() {
 	json_add_object "system_toggle_ipv6";          json_close_object
 	json_add_object "system_toggle_flow_offloading_fix"; json_close_object
 	json_add_object "system_uninstall_panel";      json_close_object
+	json_add_object "zm_cleanup_status";           json_close_object
+	json_add_object "zm_cleanup";                  json_close_object
 	json_add_object "sysinfo_run";                 json_close_object
 	json_add_object "sysinfo_get";                 json_close_object
 	json_add_object "mirror_status";               json_close_object
@@ -16860,6 +17230,8 @@ call_method() {
 		system_toggle_ipv6)            "$BACKEND" system_toggle_ipv6 ;;
 		system_toggle_flow_offloading_fix) "$BACKEND" system_toggle_flow_offloading_fix ;;
 		system_uninstall_panel)        "$BACKEND" system_uninstall_panel ;;
+		zm_cleanup_status)             "$BACKEND" zm_cleanup_status ;;
+		zm_cleanup)                    "$BACKEND" zm_cleanup ;;
 		sysinfo_run)                   "$BACKEND" sysinfo_run ;;
 		sysinfo_get)                   "$BACKEND" sysinfo_get ;;
 		mirror_status)                 "$BACKEND" mirror_status ;;
@@ -16985,6 +17357,7 @@ cat > '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json' << 'ZM_INSTALLER_EOF'
 					"test_status",
 					"test_results",
 					"zm_update_status",
+					"zm_cleanup_status",
 					"mixomo_status",
 					"mixomo_proxies",
 					"mixomo_config_get",
@@ -17046,6 +17419,7 @@ cat > '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json' << 'ZM_INSTALLER_EOF'
 					"system_toggle_ipv6",
 					"system_toggle_flow_offloading_fix",
 					"system_uninstall_panel",
+					"zm_cleanup",
 					"mirror_set",
 					"exclusions_toggle",
 					"exclusions_clear",
@@ -17236,6 +17610,8 @@ var callSystemToggleQuic = zmDeclare({ object: 'zapret-manager', method: 'system
 var callSystemToggleIpv6 = zmDeclare({ object: 'zapret-manager', method: 'system_toggle_ipv6', expect: {} });
 var callSystemToggleFlowOffloadingFix = zmDeclare({ object: 'zapret-manager', method: 'system_toggle_flow_offloading_fix', expect: {} });
 var callSystemUninstallPanel = zmDeclare({ object: 'zapret-manager', method: 'system_uninstall_panel', expect: {} });
+var callZmCleanupStatus = zmDeclare({ object: 'zapret-manager', method: 'zm_cleanup_status', expect: {} });
+var callZmCleanup = zmDeclare({ object: 'zapret-manager', method: 'zm_cleanup', expect: {} });
 var callSysinfoRun = zmDeclare({ object: 'zapret-manager', method: 'sysinfo_run', expect: {} });
 var callSysinfoGet = zmDeclare({ object: 'zapret-manager', method: 'sysinfo_get', expect: {} });
 var callMirrorStatus = zmDeclare({ object: 'zapret-manager', method: 'mirror_status', expect: {} });
@@ -17620,7 +17996,9 @@ function dockSync() {
 	});
 	_dockEl.classList.toggle('zm-dock-on', shown.length > 0);
 	var pad = shown.length ? (_dockEl.offsetHeight + 28) + 'px' : '';
-	if (document.body.style.paddingBottom !== pad) document.body.style.paddingBottom = pad;
+	var padEl = document.querySelector('.zmw-main') || document.body;
+	if (padEl !== document.body && document.body.style.paddingBottom) document.body.style.paddingBottom = '';
+	if (padEl.style.paddingBottom !== pad) padEl.style.paddingBottom = pad;
 	toastFit();
 }
 
@@ -17864,7 +18242,7 @@ var SVC_BRANDS = [
 	[ /steam/i, '#1b2838', 'ST' ], [ /cloudflare/i, '#f38020', 'CF' ], [ /amazon|aws|cloudfront/i, '#ff9900', 'AW' ],
 	[ /linkedin/i, '#0a66c2', 'IN' ], [ /soundcloud/i, '#ff5500', 'SC' ], [ /reddit/i, '#ff4500', 'RD' ], [ /nalog/i, '#1f4e8c', 'НЛ' ],
 	[ /rutor|rutracker|torrent/i, '#6b7280', 'RT' ], [ /hetzner/i, '#d50c2d', 'HZ' ], [ /ovh/i, '#123f6d', 'OV' ], [ /digitalocean/i, '#0080ff', 'DO' ],
-	[ /hodca|хостинг/i, '#0f766e', 'HC' ]
+	[ /hodca|h\.o\.d\.c\.a|хостинг/i, '#0f766e', 'HC' ]
 ];
 var SVC_PALETTE = [ '#6366f1', '#0ea5e9', '#14b8a6', '#10b981', '#84cc16', '#f59e0b', '#f97316', '#ef4444', '#ec4899', '#8b5cf6', '#64748b', '#0891b2' ];
 
@@ -18618,6 +18996,8 @@ return baseclass.extend({
 	systemToggleIpv6: callSystemToggleIpv6,
 	systemToggleFlowOffloadingFix: callSystemToggleFlowOffloadingFix,
 	systemUninstallPanel: callSystemUninstallPanel,
+	zmCleanupStatus: callZmCleanupStatus,
+	zmCleanup: callZmCleanup,
 	sysinfoRun: callSysinfoRun,
 	sysinfoGet: callSysinfoGet,
 	mirrorStatus: callMirrorStatus,
@@ -19773,7 +20153,7 @@ return view.extend({
 		var wrap = E('div', { 'class': 'zm-wrap' });
 		var card = E('div', { 'class': 'zm-card' });
 		var headEl = E('div', {});
-		var viewEl = E('div', { 'style': 'display:none; margin:10px 0' });
+		var viewEl = E('div', { 'style': 'display:none; margin:0 0 14px' });
 		var actEl = E('div', {});
 		var logEl = E('pre', { 'class': 'zm-log' });
 		var busy = false, frame = null, autoTried = false;
@@ -19784,6 +20164,22 @@ return view.extend({
 		var DONE = { install: 'Терминал установлен', remove: 'Терминал удалён' };
 
 		function addr() { return 'http://' + window.location.hostname + ':' + (data.port || 7681) + '/'; }
+
+		function termTitle() { return 'ttyd · ' + window.location.hostname + ':' + (data.port || 7681); }
+
+		function frameUrl() {
+			var base = addr(), bg = '';
+			if (window.zmTermUrl && String(window.zmTermUrl).indexOf(base) === 0) return window.zmTermUrl;
+			try { bg = getComputedStyle(document.documentElement).getPropertyValue('--console').trim(); } catch (e) { bg = ''; }
+			if (!/^#[0-9a-f]{6}$/i.test(bg)) bg = '#0d1117';
+			var theme = {
+				background: bg, foreground: '#e6edf3', cursor: '#e6edf3',
+				black: '#000000', red: '#d81e00', green: '#5ea702', yellow: '#cfae00', blue: '#427ab3', magenta: '#89658e', cyan: '#00a7aa', white: '#dbded8',
+				brightBlack: '#686a66', brightRed: '#f54235', brightGreen: '#99e343', brightYellow: '#fdeb61', brightBlue: '#84b0d8', brightMagenta: '#bc94b7', brightCyan: '#37e6e8', brightWhite: '#f1f1f0'
+			};
+			window.zmTermUrl = base + '?disableLeaveAlert=true&theme=' + encodeURIComponent(JSON.stringify(theme));
+			return window.zmTermUrl;
+		}
 
 		function refresh() {
 			return zm.termStatus().then(function(d) { data = d || {}; renderAll(); autoStart(); });
@@ -19844,14 +20240,20 @@ return view.extend({
 			var show = !!data.installed && !!data.running && canEmbed && !busy;
 			if (keep) {
 				viewEl.style.display = 'none';
-				if (!show) keep.hide(); else keep.open(addr());
+				if (!show) keep.hide(); else keep.open(frameUrl(), termTitle());
 				return;
 			}
 			if (!show) { viewEl.style.display = 'none'; return; }
 			if (!frame) {
-				frame = E('iframe', { 'src': addr(), 'style': 'width:100%; height:480px; border:0; border-radius:8px; background:#000' });
+				frame = E('iframe', { 'class': 'zm-term-frame', 'src': frameUrl() });
 				viewEl.innerHTML = '';
-				viewEl.appendChild(frame);
+				viewEl.appendChild(E('div', { 'class': 'zm-term' }, [
+					E('div', { 'class': 'zm-term-bar' }, [
+						E('span', { 'class': 'zm-term-dots' }, [ E('i', {}), E('i', {}), E('i', {}) ]),
+						E('span', { 'class': 'zm-term-title' }, termTitle())
+					]),
+					E('div', { 'class': 'zm-term-body' }, [ frame ])
+				]));
 			}
 			viewEl.style.display = '';
 		}
@@ -20268,13 +20670,17 @@ return view.extend({
 			if (data.blocker) return;
 			listCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Нажмите на пункт, чтобы включить или выключить его, и затем «Сохранить и применить». Списки берутся из каталога списков (itdoginfo/allow-domains, b4geoip и другие) и обновляются при каждом применении.'));
 			var cur = currentPick(), sel = pick || cur, changed = false;
-			var list = data.services || [];
+			var all = data.services || [];
+			var list = all.filter(function(s) { return s.id !== 'custom'; }).map(function(s) {
+				if (!/^c_itdoginfo_/.test(s.id) && !/^itdoginfo/i.test(s.group || '')) return s;
+				return { id: s.id, name: s.name, group: '', cat: true, on: s.on, skip: s.skip };
+			});
 			list.forEach(function(s) { if (!!sel[s.id] !== !!cur[s.id]) changed = true; });
 			function tile(s) {
 				return zm.svcCard({ name: s.name, key: s.id, on: !!sel[s.id], inc: !!sel.russia_inside && s.id !== 'russia_inside' && !s.group && zm.riCovers(s.id), click: function() {
 					if (busy) { zm.toast('Дождитесь окончания текущей операции', 'warning'); return; }
 					pick = {};
-					for (var k in sel) if (sel[k]) pick[k] = true;
+					for (var k in sel) if (sel[k] && k !== 'custom') pick[k] = true;
 					if (pick[s.id]) delete pick[s.id]; else pick[s.id] = true;
 					renderLists();
 				} });
@@ -20334,7 +20740,7 @@ return view.extend({
 				saveLabel: data.installed && !data.stopped ? 'Сохранить и применить' : 'Сохранить',
 				onCancel: function() { pick = null; renderLists(); },
 				onSave: function() {
-					var ids = list.filter(function(s) { return sel[s.id]; }).map(function(s) { return s.id; });
+					var ids = all.filter(function(s) { return s.id === 'custom' ? cur.custom : sel[s.id]; }).map(function(s) { return s.id; });
 					act('lists', ids.join(','), 'Применяем выбор — скачиваем списки');
 				}
 			});
@@ -20384,18 +20790,19 @@ return view.extend({
 			customCard.style.display = data.blocker || !svc ? 'none' : '';
 			if (data.blocker || !svc) return;
 			customCard.appendChild(E('h3', {}, 'Свой список'));
-			customCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Домены и IP-адреса из этого списка пойдут через Steer. После сохранения список сразу включается в выбор сервисов, «Очистить» — убирает его.'));
+			customCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Домены и IP-адреса из этого списка пойдут через Steer. По умолчанию список выключен — сохраните его и включите переключателем ниже. «Очистить» — убирает его.'));
 			if (customLoading && !customData) { customCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Загружаем список…')); return; }
 			var n = customData ? (parseInt(customData.count, 10) || 0) : 0;
 			customCard.appendChild(zm.swRow(!!svc.on, 'Свой список', svc.on ? 'Включён: домены и IP-адреса из списка идут через Steer. Выключите — они пойдут напрямую, сам список останется.' : 'Выключен: список не используется. Включите — домены и IP-адреса из него пойдут через Steer.', function() {
 				if (busy) { zm.toast('Дождитесь окончания текущей операции', 'warning'); return; }
 				if (!svc.on && !n) { zm.toast('Сначала добавьте в список домены или IP', 'warning'); return; }
+				if (customDirty) { zm.toast('Сначала сохраните изменения в списке', 'warning'); return; }
 				var ids = (data.services || []).filter(function(s) { return s.on && s.id !== 'custom'; }).map(function(s) { return s.id; });
 				if (!svc.on) ids.push('custom');
 				act('lists', ids.join(','), svc.on ? 'Выключаем свой список' : 'Включаем свой список');
 			}, busy));
 			customCard.appendChild(row('Состояние', !n ? badge('zm-off', 'список пуст')
-				: !svc.on ? badge('zm-warn', 'не выбран')
+				: !svc.on ? badge('zm-warn', 'выключен')
 				: !data.installed ? badge('zm-warn', 'пойдёт через Steer после установки')
 				: data.stopped ? badge('zm-off', 'Steer выключен')
 				: data.exit === 'vpn' ? badge('zm-ok', 'идёт через VPN')
@@ -21138,7 +21545,7 @@ block|Заблокированные сайты||||||block
 news|Новости||||||news
 anime|Аниме||||||anime
 porn|Сайты 18+||||||porn
-hodca|Хостинги и CDN||||||hodca
+hodca|H.O.D.C.A.||||||hodca
 russia_inside|Всё сразу (Russia inside)||||||russia_inside
 russia_outside|Сайты РФ из-за рубежа||||||russia_outside
 ukraine_inside|Блокировки Украины||||||ukraine_inside
@@ -21174,6 +21581,8 @@ var LABELS = {
 	rutor: [ 'rutor.info', 'Торренты' ],
 	rutracker: [ 'rutracker.org', 'Торренты' ],
 	scell: [ 'Supercell', 'Clash, Brawl Stars' ],
+	roblox: [ 'Картинки Roblox', 'tr.rbxcdn.com — аватары и превью' ],
+	riot: [ 'Riot Games', 'Вход в Valorant и League of Legends' ],
 	githubraw: [ 'GitHub Raw', 'githubusercontent.com' ],
 	github: [ 'GitHub', 'Код и релизы' ],
 	tapeop: [ 'tapeop.dev', 'Сайт' ],
@@ -22178,6 +22587,10 @@ return view.extend({
 						'class': 'cbi-button',
 						'click': function() { doZapretAction(d.zapret_running ? 'stop' : 'start'); }
 					}, d.zapret_running ? 'Остановить' : 'Запустить'));
+					if (d.zapret_running) zActions.push(E('button', {
+						'class': 'cbi-button',
+						'click': function() { doZapretAction('restart'); }
+					}, 'Перезапустить'));
 				} else {
 					zActions.push(E('button', {
 						'class': 'cbi-button cbi-button-positive',
@@ -22214,7 +22627,7 @@ return view.extend({
 				if (zBusy) { zm.toast('Дождитесь завершения текущей операции', 'warning'); return; }
 				var job = (action === 'install' || action === 'update') ? 'install_zapret'
 					: (action === 'remove') ? 'remove_zapret' : null;
-				var LABELS = { install: 'Устанавливаем и настраиваем Zapret', update: 'Обновляем Zapret', remove: 'Удаляем Zapret', start: 'Запускаем Zapret', stop: 'Останавливаем Zapret' };
+				var LABELS = { install: 'Устанавливаем и настраиваем Zapret', update: 'Обновляем Zapret', remove: 'Удаляем Zapret', start: 'Запускаем Zapret', stop: 'Останавливаем Zapret', restart: 'Перезапускаем Zapret' };
 				zm.toast(LABELS[action] || 'Выполняем', 'warning');
 				if (job) zBusy = true;
 
@@ -22232,6 +22645,7 @@ return view.extend({
 						});
 					} else if (res) {
 						zBusy = false;
+						if (action === 'restart') zm.toast(res.zapret_running ? 'Zapret перезапущен' : 'Zapret не запустился — проверьте стратегию', res.zapret_running ? 'info' : 'error');
 						status = res;
 						renderZCard(res);
 						renderBanner();
@@ -23616,6 +24030,10 @@ return view.extend({
 					'class': 'cbi-button',
 					'click': function() { view.doAction2(d.zapret2_running ? 'stop' : 'start'); }
 				}, d.zapret2_running ? 'Остановить' : 'Запустить'));
+				if (d.zapret2_running) z2Actions.push(E('button', {
+					'class': 'cbi-button',
+					'click': function() { view.doAction2('restart'); }
+				}, 'Перезапустить'));
 			} else {
 				z2Actions.push(E('button', {
 					'class': 'cbi-button cbi-button-positive',
@@ -23661,7 +24079,7 @@ return view.extend({
 		if (view.busy2) { zm.toast('Дождитесь завершения текущей операции', 'warning'); return; }
 		var job = (action === 'install' || action === 'update') ? 'install_zapret2'
 			: (action === 'remove') ? 'remove_zapret2' : null;
-		var LABELS = { install: 'Устанавливаем Zapret2', update: 'Обновляем Zapret2', remove: 'Удаляем Zapret2', start: 'Запускаем Zapret2', stop: 'Останавливаем Zapret2' };
+		var LABELS = { install: 'Устанавливаем Zapret2', update: 'Обновляем Zapret2', remove: 'Удаляем Zapret2', start: 'Запускаем Zapret2', stop: 'Останавливаем Zapret2', restart: 'Перезапускаем Zapret2' };
 		zm.toast(LABELS[action] || 'Выполняем', 'warning');
 		if (job) view.busy2 = true;
 
@@ -23679,6 +24097,7 @@ return view.extend({
 				});
 			} else if (res) {
 				view.busy2 = false;
+				if (action === 'restart') zm.toast(res.zapret2_running ? 'Zapret2 перезапущен' : 'Zapret2 не запустился', res.zapret2_running ? 'info' : 'error');
 				view.renderCards(res);
 			}
 		}).catch(function() { view.busy2 = false; });
@@ -23836,6 +24255,34 @@ html.zm-theme-dark .zm-tile:not(.zm-active):not(.zm-tile-off) {
 	box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
 }
 .zm-log.zm-show { display: block; }
+.zm-term {
+	box-sizing: border-box; min-width: 0; overflow: hidden;
+	background: #0d1117; color: #8b949e;
+	border: 1px solid rgba(255,255,255,.10); border-radius: 10px;
+	box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+}
+.zm-term-bar {
+	display: flex; align-items: center; gap: 12px;
+	height: 38px; padding: 0 16px; box-sizing: border-box;
+	border-bottom: 1px solid rgba(255,255,255,.07);
+	font-family: ui-monospace, "SF Mono", "Cascadia Code", Consolas, "Liberation Mono", monospace;
+	font-size: 12.5px; line-height: 1; color: #8b949e; user-select: none;
+}
+.zm-term-dots { display: inline-flex; gap: 8px; flex: 0 0 auto; }
+.zm-term-dots i { display: block; width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+.zm-term-dots i:nth-child(2) { background: #febc2e; }
+.zm-term-dots i:nth-child(3) { background: #28c840; }
+.zm-term-title { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zm-term-body { padding: 8px 11px 10px; background: inherit; }
+.zm-term-frame {
+	display: block; width: 100%; border: 0; background: #0d1117;
+	height: 480px; height: clamp(320px, calc(100vh - 340px), 780px);
+}
+@media (max-width: 600px) {
+	.zm-term-bar { padding: 0 12px; }
+	.zm-term-body { padding: 6px 5px 8px; }
+	.zm-term-frame { height: clamp(280px, calc(100vh - 300px), 620px); }
+}
 .zm-log { scrollbar-width: auto; scrollbar-color: auto; }
 .zm-log::-webkit-scrollbar { width: 14px; }
 .zm-log::-webkit-scrollbar-track { background: transparent; margin: 8px 0; }
@@ -24798,6 +25245,51 @@ return view.extend({
 		]);
 		wrap.appendChild(mirrorCard);
 
+		var cleanLog = E('pre', { 'class': 'zm-log' });
+		var cleanBusy = false;
+		function fmtKb(k) {
+			k = parseInt(k, 10) || 0;
+			if (k < 1024) return k + ' КБ';
+			return (k / 1024).toFixed(k < 10240 ? 1 : 0) + ' МБ';
+		}
+		var cleanCard = E('div', { 'class': 'zm-card' }, [
+			E('h3', {}, 'Очистка Zapret Manager'),
+			E('p', { 'class': 'zm-hint' }, 'Удаляет с роутера временные файлы и мусор панели: журналы операций, результаты тестов стратегий Zapret и ByeTube, недокачанные архивы, кэш списков невыбранных сервисов, сведения о новых версиях, собранную системную информацию и остатки прошлых версий. Настройки и установленные программы не трогает.'),
+			E('div', { 'class': 'zm-actions' }, [
+				E('button', {
+					'class': 'cbi-button cbi-button-action',
+					'click': function() {
+						if (cleanBusy) { zm.toast('Очистка уже идёт', 'warning'); return; }
+						cleanBusy = true;
+						cleanLog.classList.add('zm-show');
+						zm.renderLog(cleanLog, '==> Удаляем временные файлы и мусор панели');
+						zm.zmCleanup().then(function(res) {
+							cleanBusy = false;
+							if (!res || res.error) {
+								var why = (res && res.error) || 'роутер не ответил';
+								zm.renderLog(cleanLog, '==> Очистка не выполнена: ' + why);
+								zm.toast(why, 'error');
+								return;
+							}
+							var lines = [ '==> Удаляем временные файлы и мусор панели',
+								'   ✓ Удалено файлов и папок: ' + (parseInt(res.removed, 10) || 0),
+								'   ✓ Освобождено на флеше: ' + fmtKb(res.freed_flash_kb),
+								'   ✓ Освобождено в ОЗУ: ' + fmtKb((parseInt(res.freed_tmp_kb, 10) || 0) + (parseInt(res.freed_mem_kb, 10) || 0)),
+								'==> Готово' ];
+							zm.renderLog(cleanLog, lines.join('\n'));
+							zm.toast('Очистка выполнена', 'info');
+						}).catch(function() {
+							cleanBusy = false;
+							zm.renderLog(cleanLog, '==> Очистка не выполнена: роутер не ответил');
+							zm.toast('Роутер не ответил', 'error');
+						});
+					}
+				}, 'Очистить')
+			]),
+			cleanLog
+		]);
+		wrap.appendChild(cleanCard);
+
 		var uninstallLog = E('pre', { 'class': 'zm-log' });
 		var uninstallCard = E('div', { 'class': 'zm-card' }, [
 			E('h3', {}, 'Удалить Zapret Manager'),
@@ -25273,7 +25765,7 @@ var OLD_GROUP = 'Выбрано раньше (нет в каталоге)';
 var OLD_NAMES = { supercell: 'Supercell', ads_hagezi_pro: 'Реклама (HaGeZi Pro)', github: 'GitHub', youtube: 'YouTube', discord: 'Discord',
 	telegram: 'Telegram', meta: 'Meta', twitter: 'X (Twitter)', tiktok: 'TikTok', hdrezka: 'HDRezka', roblox: 'Roblox', google_ai: 'Google AI (Gemini)',
 	google_play: 'Google Play', cloudflare: 'Cloudflare', cloudfront: 'Amazon CloudFront', digitalocean: 'DigitalOcean', hetzner: 'Hetzner', ovh: 'OVH',
-	hodca: 'Хостинги и CDN', russia_outside: 'Сайты РФ из-за рубежа', ukraine_inside: 'Блокировки Украины' };
+	hodca: 'H.O.D.C.A.', russia_outside: 'Сайты РФ из-за рубежа', ukraine_inside: 'Блокировки Украины' };
 
 function refNorm(t) {
 	t = String(t || '');
@@ -25550,8 +26042,8 @@ function fromCfg(c) {
 		byDomains: ((c.bypass && c.bypass.domains) || []).join('\n'), bySubnets: ((c.bypass && c.bypass.subnets) || []).join('\n'),
 		mode: c.mode || 'links', links: (c.links || []).join('\n'), sub: (c.subs && c.subs.length ? c.subs : c.sub ? [ c.sub ] : []).join('\n'),
 		sub_interval: c.sub_interval || '12h', iface: c.iface || '', fastest: true, exclude: c.exclude || '',
-		items: pick.items, sel: pick.sel, own_on: c.own_on !== false, domains: (c.domains || []).join('\n'), subnets: (c.subnets || []).join('\n'),
-		lists: pick.lists.join('\n'), full: (c.full || []).slice(), excl: (c.excl || []).slice(),
+		items: pick.items, sel: pick.sel, own_on: c.own_on !== false && ((c.domains || []).length + (c.subnets || []).length + pick.lists.length) > 0, domains: (c.domains || []).join('\n'), subnets: (c.subnets || []).join('\n'),
+		lists: pick.lists.join('\n'), full: (c.full || []).slice(), all: (c.all || []).slice(), excl: (c.excl || []).slice(),
 		dns: { type: dns.type || (dns.server ? 'udp' : 'dot'), servers: (dns.servers && dns.servers.length ? dns.servers : [ dns.server || '9.9.9.9' ]).slice(),
 			bootstraps: (dns.bootstraps && dns.bootstraps.length ? dns.bootstraps : [ dns.bootstrap || '9.9.9.9' ]).slice(), detour: !!dns.detour },
 		quic_off: c.quic_off !== false, list_interval: c.list_interval || '1d', lists_via: !!c.lists_via
@@ -25575,7 +26067,7 @@ function sig(d) {
 	var srt = function(a) { return (a || []).slice().sort(); };
 	var tl = function(v) { return String(v || '').split(/\n/).map(function(x) { return x.trim(); }).filter(Boolean).join('\n'); };
 	return JSON.stringify([ extSig(d, SEC_EXT), extSig(d, SET_EXT), d.sec, d.mode, tl(d.links), tl(d.sub), d.sub_interval, d.iface, d.fastest, (function(r) { return [ srt(r.c), srt(r.s), srt(r.r), srt(r.l) ]; })(refsOf(d)), tl(d.domains), d.own_on !== false,
-		tl(d.subnets), tl(d.lists), srt(d.full), srt(d.excl), d.mode === 'iface' ? '' : String(d.exclude || ''), d.dns.type, d.dns.servers, d.dns.bootstraps, d.dns.detour, d.quic_off, d.list_interval, d.lists_via,
+		tl(d.subnets), tl(d.lists), srt(d.full), srt(d.all || []), srt(d.excl), d.mode === 'iface' ? '' : String(d.exclude || ''), d.dns.type, d.dns.servers, d.dns.bootstraps, d.dns.detour, d.quic_off, d.list_interval, d.lists_via,
 		String(d.label || '').trim(), d.isMain || d.enabled, tl(d.byDomains), tl(d.bySubnets) ]);
 }
 
@@ -25644,8 +26136,9 @@ function newCfg(c) {
 	var n = ((c && c.sections) || []).length + 1;
 	x.sec = 'new'; x.is_main = false; x.exists = false; x.enabled = true; x.label = warp && /^zmwarp/.test(warp.name) && !((c && c.sections) || []).some(function(s) { return s.label === 'WARP'; }) ? 'WARP' : 'Секция ' + n;
 	x.mode = 'iface'; x.iface = warp ? warp.name : ''; x.links = []; x.sub = ''; x.sub_interval = '12h'; x.exclude = ''; x.hide_names = [];
-	x.refs = { c: [], s: [], r: [] }; x.own_on = true; x.domains = []; x.subnets = []; x.lists = []; x.subs = []; x.x = {};
+	x.refs = { c: [], s: [], r: [] }; x.own_on = false; x.domains = []; x.subnets = []; x.lists = []; x.subs = []; x.x = {};
 	x.full = [];
+	x.all = [];
 	return x;
 }
 
@@ -25692,6 +26185,7 @@ return view.extend({
 		var svcCard = E('div', { 'class': 'zm-card' });
 		var ownCard = E('div', { 'class': 'zm-card' });
 		var fullCard = E('div', { 'class': 'zm-card' });
+		var allCard = E('div', { 'class': 'zm-card' });
 		var exclCard = E('div', { 'class': 'zm-card' });
 		var dnsCard = E('div', { 'class': 'zm-card zm-kv' });
 		var miscCard = E('div', { 'class': 'zm-card zm-kv' });
@@ -25855,7 +26349,7 @@ return view.extend({
 				x: extPick(draft, SEC_EXT), g: extPick(draft, SET_EXT),
 				iface: draft.iface, fastest: true, refs: refsOf(draft), own_on: draft.own_on !== false, domains: draft.domains,
 				exclude: draft.mode === 'iface' ? '' : draft.exclude,
-				subnets: draft.subnets, lists: draft.lists, full: draft.full, excl: draft.excl,
+				subnets: draft.subnets, lists: draft.lists, full: draft.full, all: draft.all, excl: draft.excl,
 				dns: { type: draft.dns.type, servers: draft.dns.servers, bootstraps: draft.dns.bootstraps, server: draft.dns.servers[0], bootstrap: draft.dns.bootstraps[0], detour: draft.dns.detour }, quic_off: draft.quic_off, list_interval: draft.list_interval, lists_via: draft.lists_via
 			});
 		}
@@ -25896,7 +26390,7 @@ return view.extend({
 			}
 			var rf = refsOf(draft);
 			var ownN = textLines(draft.domains).length + textLines(draft.subnets).length + textLines(draft.lists).length;
-			if (!rf.c.length && !rf.s.length && !rf.r.length && !rf.l.length && (!ownN || draft.own_on === false) && (draft.full.length || !secExists()))
+			if (!rf.c.length && !rf.s.length && !rf.r.length && !rf.l.length && (!ownN || draft.own_on === false) && !draft.all.length && (draft.full.length || !secExists()))
 				return [ 'svc', ownN ? '«Свой список» выключен, а других сервисов в секции «' + secName() + '» нет — включите его или выберите сервис'
 					: 'Выберите хотя бы один сервис, домен или адрес для секции «' + secName() + '» — устройства только ограничивают её правила' ];
 			var badOwn = tokLines(draft.domains).map(domainProblem).filter(Boolean)[0];
@@ -26020,8 +26514,10 @@ return view.extend({
 				var on = s.name === draft.sec, n = secSel(cfg, s), extra = (s.domains || 0) + (s.subnets || 0), f = (s.full || []).length;
 				var what = n ? nn(n, 'список', 'списка', 'списков') : extra ? nn(extra, 'адрес', 'адреса', 'адресов') : 'пусто';
 				if (f) what = (n || extra ? what + ' · ' : '') + nn(f, 'устройство', 'устройства', 'устройств');
+				var fa = (s.all || []).length;
+				if (fa) what = (n || extra || f ? what + ' · ' : '') + 'весь трафик: ' + fa;
 				return node(s.label, secConn(s), on, function() { open(s.name); },
-					E('span', { 'class': 'zm-lat ' + (!s.enabled ? 'zm-lat-bad' : n || extra || f ? 'zm-lat-good' : 'zm-lat-none') }, s.enabled ? what : 'выключена'),
+					E('span', { 'class': 'zm-lat ' + (!s.enabled ? 'zm-lat-bad' : n || extra || f || fa ? 'zm-lat-good' : 'zm-lat-none') }, s.enabled ? what : 'выключена'),
 					'zm-sec' + (s.enabled ? '' : ' zm-node-dead'));
 			});
 			if (isNew) tiles.push(node(secName(), 'ещё не сохранена', true, function() {}, E('span', { 'class': 'zm-lat zm-lat-mid' }, 'черновик'), 'zm-sec'));
@@ -26155,6 +26651,7 @@ return view.extend({
 			if (s.subnets) parts.push(nn(s.subnets, 'подсеть', 'подсети', 'подсетей'));
 			if (s.own_off) parts.push('свой список выключен');
 			if ((s.full || []).length) parts.push('только для ' + nn(s.full.length, 'устройства', 'устройств', 'устройств'));
+			if ((s.all || []).length) parts.push('весь трафик: ' + nn(s.all.length, 'устройство', 'устройства', 'устройств'));
 			return parts.join(' · ') || 'ничего не выбрано';
 		}
 
@@ -26446,7 +26943,7 @@ return view.extend({
 		function lanIp() { return netInfo().lan_ip || 'IP-роутера'; }
 
 		function devFoot(d) {
-			var k = { bridge: 'мост', eth: 'порт', ppp: 'PPP', tun: 'туннель', wifi: 'Wi-Fi' }[d.kind] || '';
+			var k = { bridge: 'мост', eth: 'порт', ppp: 'PPP', tun: ({ wireguard: 'WireGuard', amneziawg: 'AmneziaWG' }[d.proto] || 'туннель'), wifi: 'Wi-Fi' }[d.kind] || '';
 			return (d.net ? 'сеть ' + d.net + (k ? ' · ' + k : '') : k) + (d.missing ? ' · не найден' : '');
 		}
 
@@ -26895,7 +27392,8 @@ return view.extend({
 				!ownCnt ? badge('zm-off', 'пуст') : ownOn ? badge('zm-ok', 'включён · ' + nn(ownCnt, 'строка', 'строки', 'строк')) : badge('zm-warn', 'выключен · ' + nn(ownCnt, 'строка', 'строки', 'строк')) ]));
 			ownCard.appendChild(zm.swRow(ownOn, 'Вести свой список через VPN',
 				ownOn ? 'Свои домены, адреса и внешние списки идут через подключение секции — так же, как выбранные сервисы.'
-					: 'Выключено: свои домены, адреса и внешние списки сохранены, но идут напрямую. Включите — и они снова пойдут через VPN.',
+					: ownCnt ? 'Выключено: свои домены, адреса и внешние списки сохранены, но идут напрямую. Включите — и они снова пойдут через VPN.'
+					: 'По умолчанию выключено. Впишите ниже домены, адреса или ссылки на списки и включите — они пойдут через VPN.',
 				function() { set('own_on', !ownOn); }));
 			var ownDim = ownOn ? '' : 'opacity:.55';
 			[ taDomains, taSubnets, taLists ].forEach(function(t) { t.style.opacity = ownOn ? '' : '.55'; });
@@ -26935,17 +27433,19 @@ return view.extend({
 
 		function devCard(card, key, title, hint) {
 			card.innerHTML = '';
-			var list = draft[key], devs = (cfg && cfg.devices) || [], known = {}, assigned = {};
+			var list = draft[key], devs = (cfg && cfg.devices) || [], known = {}, assigned = {}, akey = key === 'all' ? 'all' : 'full', taken = {};
 			secs().forEach(function(s) {
-				(s.name === draft.sec ? draft.full : s.full || []).forEach(function(ip) {
+				if (key === 'all' && s.name !== draft.sec) (s.all || []).forEach(function(ip) { taken[ip] = s.label; });
+				(s.name === draft.sec ? draft[akey] : s[akey] || []).forEach(function(ip) {
 					if (!assigned[ip]) assigned[ip] = [];
 					assigned[ip].push(s.label);
 				});
 			});
-			card.appendChild(E('h3', {}, [ title + ' ', list.length ? badge(key === 'full' ? 'zm-ok' : 'zm-warn', nn(list.length, 'устройство', 'устройства', 'устройств')) : E([]) ]));
+			card.appendChild(E('h3', {}, [ title + ' ', list.length ? badge(key === 'excl' ? 'zm-warn' : 'zm-ok', nn(list.length, 'устройство', 'устройства', 'устройств')) : E([]) ]));
 			card.appendChild(E('p', { 'class': 'zm-hint', 'style': 'margin-top:-6px' }, hint));
 			function toggle(ip) {
 				var l = draft[key].slice(), i = l.indexOf(ip);
+				if (i < 0 && taken[ip]) { zm.toast('Это устройство уже целиком идёт через секцию «' + taken[ip] + '». Сначала уберите его там — весь трафик устройства можно отдать только одной секции.', 'warning'); return; }
 				if (i >= 0) l.splice(i, 1);
 				else l.push(ip);
 				set(key, l);
@@ -26953,7 +27453,7 @@ return view.extend({
 			var grid = E('div', { 'class': 'zm-nodes' });
 			function foot(ip, base) {
 				var labels = assigned[ip] || [];
-				return base + (labels.length ? ' · ' + labels.join(', ') : '') + (draft.excl.indexOf(ip) >= 0 && key === 'full' ? ' · мимо Forkozz' : '');
+				return base + (labels.length ? ' · ' + labels.join(', ') : '') + (draft.excl.indexOf(ip) >= 0 && key !== 'excl' ? ' · мимо Forkozz' : '');
 			}
 			devs.forEach(function(d) {
 				known[d.ip] = true;
@@ -26978,9 +27478,11 @@ return view.extend({
 		}
 
 		function renderDev() {
-			devCard(fullCard, 'full', 'Устройства для правил секции «' + secName() + '»', 'Через подключение этой секции идут только её сервисы, домены и адреса — и только с выбранных устройств. Всё остальное проверяется по другим секциям, а потом идёт напрямую. Ничего не выбрано — правила действуют для всех устройств. Одно устройство можно выбрать в нескольких секциях. «Мимо Forkozz» и исключения важнее правил секции. Чтобы устройство не потерялось, закрепите за ним IP-адрес в DHCP.');
+			devCard(allCard, 'all', 'Весь трафик устройства через VPN · «' + secName() + '»', 'Выбранные устройства целиком ходят через подключение этой секции — любые сайты и приложения, а не только выбранные сервисы. Подходит для телевизора, приставки или телефона, которым VPN нужен всегда. Если подключение секции недоступно, такое устройство остаётся без интернета, а не идёт напрямую. Одно устройство можно отдать только одной секции. Чтобы устройство не потерялось, закрепите за ним IP-адрес в DHCP.');
+			if (!draft.isMain && !draft.enabled) allCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Секция выключена: устройства из этого списка ходят как обычно.'));
+			devCard(fullCard, 'full', 'Только для этих устройств · «' + secName() + '»', 'Ограничение для сервисов секции: если выбрать устройства, её сервисы, домены и адреса пойдут через VPN только с них, остальные устройства — напрямую. Ничего не выбрано — сервисы секции идут через VPN со всех устройств. На список «Весь трафик» выше это не влияет.');
 			if (!draft.isMain && !draft.enabled) fullCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Секция выключена: её правила не действуют. Выбор устройств в остальных секциях сохраняется.'));
-			devCard(exclCard, 'excl', 'Мимо Forkozz', 'Общий список для всех секций: устройство всегда ходит напрямую. Этот выбор имеет приоритет над правилами секций и не меняет их списки устройств.');
+			devCard(exclCard, 'excl', 'Мимо Forkozz', 'Общий список для всех секций: устройство всегда ходит напрямую. Этот выбор важнее двух списков выше и не меняет их.');
 		}
 
 		function dnsUniq(t, list) {
@@ -27145,8 +27647,13 @@ return view.extend({
 			netCard.appendChild(E('h3', {}, 'Сеть'));
 
 			netCard.appendChild(E('h4', { 'style': 'margin:4px 0' }, 'Откуда принимать трафик'));
-			netCard.appendChild(hint('Устройства из этих сетей идут через Forkozz. Обычно это br-lan — вся домашняя сеть. Гостевую или отдельную сеть можно добавить сюда же.', 0));
-			var src = withMissing(devs.filter(function(d) { return (d.kind === 'bridge' || d.kind === 'eth') && !isWan(d); }), draft.src_ifs);
+			netCard.appendChild(hint('Устройства из этих сетей идут через Forkozz. Обычно это br-lan — вся домашняя сеть. Гостевую или отдельную сеть можно добавить сюда же. Свой VPN-сервер на роутере (WireGuard, AmneziaWG, OpenVPN) тоже можно отметить — тогда его клиенты пойдут через Forkozz.', 0));
+			var outIfs = {};
+			secs().forEach(function(s) { if (s.iface) outIfs[s.iface] = true; });
+			if (draft.mode === 'iface' && draft.iface) outIfs[draft.iface] = true;
+			(cfg && cfg.tunnels || []).forEach(function(t) { if (t.steer) outIfs[t.name] = true; });
+			var isSrcTun = function(d) { return d.kind === 'tun' && !outIfs[d.name] && !/^(zmwarp|zm_|zmv_)/.test(d.name); };
+			var src = withMissing(devs.filter(function(d) { return (d.kind === 'bridge' || d.kind === 'eth' || isSrcTun(d)) && !isWan(d); }), draft.src_ifs);
 			netCard.appendChild(devTiles(src, function(n) { return draft.src_ifs.indexOf(n) >= 0; }, function(n, on) {
 				if (on && draft.src_ifs.length === 1) { zm.toast('Нужна хотя бы одна сеть', 'warning'); return; }
 				set('src_ifs', on ? draft.src_ifs.filter(function(x) { return x !== n; }) : draft.src_ifs.concat([ n ]));
@@ -27362,6 +27869,7 @@ return view.extend({
 		panes.conn.appendChild(routeCard);
 		panes.svc.appendChild(svcCard);
 		panes.svc.appendChild(ownCard);
+		panes.dev.appendChild(allCard);
 		panes.dev.appendChild(fullCard);
 		panes.dev.appendChild(exclCard);
 		panes.set.appendChild(dnsCard);
@@ -29481,7 +29989,7 @@ var ROUTES = [
 	{ id: 'hosts', title: 'Hosts', sub: 'Домены в hosts и списки GeoHide', icon: 'list', group: 'Сеть', dot: 'hosts' },
 	{ id: 'doh', title: 'DNS over HTTPS', sub: 'Шифрованный DNS для всей сети', icon: 'globe', group: 'Сеть', dot: 'doh' },
 	{ id: 'awg', title: 'AmneziaWG', sub: 'Туннели AmneziaWG и WARP: установка, ключи, интерфейсы', icon: 'anarchy', group: 'Сеть', dot: 'awg' },
-	{ id: 'terminal', title: 'Терминал', sub: 'Командная строка роутера в браузере (ttyd)', icon: 'terminal', group: 'Сеть' },
+	{ id: 'terminal', title: 'Терминал', sub: 'Командная строка роутера в браузере (ttyd)', icon: 'terminal', group: 'Сеть', dot: 'term' },
 	{ id: 'system', title: 'Система', sub: 'Параметры роутера, зеркала и обслуживание', icon: 'cpu', group: 'Сервис' }
 ];
 var ROUTE_BY_ID = {};
@@ -29498,7 +30006,7 @@ var alertsEl = E('div', { 'class': 'zmw-alerts' }), alertsKey = '';
 /* Терминал переживает переходы между разделами: его iframe живёт в viewEl постоянно и только прячется.
  * Прячем без display:none и без смены размера — иначе ttyd сожмёт терминал до нуля колонок. */
 var termKeep = { host: null, frame: null, src: '' };
-var TERM_SHOW = 'max-width:1100px; margin:0 0 16px', TERM_HIDE = 'max-width:1100px; margin:0; height:0; overflow:hidden; visibility:hidden';
+var TERM_SHOW = 'margin:0 0 18px', TERM_HIDE = 'margin:0; height:0; overflow:hidden; visibility:hidden; border-width:0; box-shadow:none';
 
 function termHide() { if (termKeep.host) termKeep.host.setAttribute('style', TERM_HIDE); }
 
@@ -29507,13 +30015,19 @@ function termDrop() {
 	termKeep.host = null; termKeep.frame = null; termKeep.src = '';
 }
 
-function termOpen(src) {
+function termOpen(src, title) {
 	if (!viewEl || !sid || currentRoute() !== 'terminal') return false;
 	if (termKeep.frame && termKeep.src !== src) termDrop();
 	if (!termKeep.host || termKeep.host.parentNode !== viewEl) {
 		termDrop();
-		termKeep.frame = E('iframe', { 'src': src, 'style': 'display:block; width:100%; height:480px; border:0; border-radius:8px; background:#000' });
-		termKeep.host = E('div', { 'class': 'zmw-term-keep', 'style': TERM_HIDE }, [ termKeep.frame ]);
+		termKeep.frame = E('iframe', { 'class': 'zm-term-frame', 'src': src });
+		termKeep.host = E('div', { 'class': 'zmw-term-keep zm-term', 'style': TERM_HIDE }, [
+			E('div', { 'class': 'zm-term-bar' }, [
+				E('span', { 'class': 'zm-term-dots' }, [ E('i', {}), E('i', {}), E('i', {}) ]),
+				E('span', { 'class': 'zm-term-title' }, title || 'ttyd')
+			]),
+			E('div', { 'class': 'zm-term-body' }, [ termKeep.frame ])
+		]);
 		termKeep.src = src;
 		viewEl.insertBefore(termKeep.host, viewEl.firstChild);
 	}
@@ -29733,7 +30247,7 @@ function refreshMemory() {
 }
 
 var statusBusy = false;
-var DOT_TEXT = { 1: 'работает', 2: 'не работает', 3: 'работает частично' };
+var DOT_TEXT = { 1: 'работает', 2: 'ошибка — не работает', 3: 'работает частично', 4: 'установлен, не запущен или не настроен' };
 function refreshShellStatus() {
 	if (!shell || !sid || statusBusy) return;
 	statusBusy = true;
@@ -29753,13 +30267,14 @@ function refreshShellStatus() {
 			if (k === 'awg' && h.awg_total) title = 'туннелей работает: ' + (h.awg_up || 0) + ' из ' + h.awg_total;
 			else if (k === 'awg' && h.awg === 1) title = 'установлен, туннелей нет';
 			else if (k === 'awg' && h.awg === 3) title = 'установлен не полностью — откройте вкладку и нажмите «Доустановить»';
-			setDot(navDots[k], h[k], title);
+			if (h.dots && h.dots[k] === 4) title = null;
+			setDot(navDots[k], h.dots && typeof h.dots[k] === 'number' ? h.dots[k] : h[k], title);
 		});
 	}).catch(function () {}).then(function () { statusBusy = false; });
 }
 function setDot(el, st, title) {
 	if (!el) return;
-	el.className = 'zmw-nav-dot' + (st === 1 ? ' zmw-on' : st === 2 ? ' zmw-stop' : st === 3 ? ' zmw-part' : '');
+	el.className = 'zmw-nav-dot' + (st === 1 ? ' zmw-on' : st === 2 ? ' zmw-stop' : st === 3 ? ' zmw-part' : st === 4 ? ' zmw-idle' : '');
 	el.title = title || DOT_TEXT[st] || '';
 }
 
@@ -30287,7 +30802,8 @@ body.zmw-locked .zmw-shell { filter: blur(6px); pointer-events: none; }
 	box-shadow: 0 6px 16px -6px rgba(99,102,241,.8);
 }
 .zmw-nav-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; display: none; }
-.zmw-nav-dot.zmw-on, .zmw-nav-dot.zmw-stop, .zmw-nav-dot.zmw-part { display: block; }
+.zmw-nav-dot.zmw-on, .zmw-nav-dot.zmw-stop, .zmw-nav-dot.zmw-part, .zmw-nav-dot.zmw-idle { display: block; }
+.zmw-nav-dot.zmw-idle { background: #9aa3b2; box-shadow: 0 0 0 3px rgba(154,163,178,.18); }
 .zmw-nav-dot.zmw-part { background: var(--warn-dot); box-shadow: 0 0 0 3px var(--warn-bg), 0 0 10px var(--warn-dot); }
 .zmw-nav-dot.zmw-on { background: var(--ok-dot); box-shadow: 0 0 0 3px var(--ok-bg), 0 0 10px var(--ok-dot); }
 .zmw-nav-dot.zmw-stop { background: var(--bad-dot); box-shadow: 0 0 0 3px var(--bad-bg), 0 0 10px var(--bad-dot); animation: zmw-blink 1.6s ease-in-out infinite; }
@@ -30848,6 +31364,17 @@ html[data-theme="dark"] #zmw-view .zm-tile.zm-active::before { color: #a594ff; }
 #zmw-view .bt-chip { border-radius: 7px; }
 
 #zmw-view iframe { border: 1px solid var(--border-2) !important; border-radius: 16px !important; background: #fff; box-shadow: var(--shadow); }
+#zmw-view .zm-term {
+	background: var(--console); border: 1px solid var(--console-border); border-radius: 16px;
+	box-shadow: inset 0 1px 0 rgba(255,255,255,.04), var(--shadow);
+}
+#zmw-view .zm-term-bar { height: 40px; padding: 0 20px; font-family: var(--mono); }
+#zmw-view .zm-term-body { padding: 8px 15px 12px; }
+#zmw-view .zm-term iframe.zm-term-frame { border: 0 !important; border-radius: 0 !important; background: var(--console); box-shadow: none; }
+@media (max-width: 600px) {
+	#zmw-view .zm-term-bar { padding: 0 14px; }
+	#zmw-view .zm-term-body { padding: 6px 9px 10px; }
+}
 
 #zmw-view pre:not(.zm-log) { font-family: var(--mono); }
 #zmw-view hr { border: 0; border-top: 1px solid var(--border); }
@@ -31577,11 +32104,20 @@ if [ -x /usr/bin/netshift ] && [ -f /usr/lib/netshift/constants.sh ]; then
 	else _zmi_warn "Сверить не удалось — откройте вкладку Forkozz и нажмите «Перезапустить»"; fi
 fi
 
+_zmi_say "Убираем временные файлы и остатки прошлых версий"
+_zm_cl="$(/opt/zapret-manager-luci/backend.sh zm_cleanup install 2>/dev/null || true)"
+_zm_cl_f="$(printf '%s' "$_zm_cl" | sed -n 's/.*"freed_flash_kb":\([0-9]*\).*/\1/p')"
+_zm_cl_t="$(printf '%s' "$_zm_cl" | sed -n 's/.*"freed_tmp_kb":\([0-9]*\).*/\1/p')"
+_zm_cl_s="$(printf '%s' "$_zm_cl" | sed -n 's/.*"flash_kb":\([0-9]*\).*/\1/p')"
+if [ -n "$_zm_cl_s" ]; then _zmi_ok "Освобождено: флеш ${_zm_cl_f:-0} КБ, /tmp ${_zm_cl_t:-0} КБ. Панель занимает на флеше ${_zm_cl_s} КБ"
+else _zmi_ok "Готово"; fi
+
 ZMW_PORT="$(uci -q get uhttpd.zmweb.listen_http | tr ' ' '\n' | head -n1 | sed 's/.*://')"
 ZMW_IP="$(/opt/zapret-manager-luci/backend.sh lan_ip 2>/dev/null || true)"
 [ -n "$ZMW_IP" ] || ZMW_IP="192.168.1.1"
 
 echo "sh <(wget -q -O - https://raw.githubusercontent.com/StressOzz/Zapret-Manager/main/Zapret-Manager.sh)" > /usr/bin/zms; chmod +x /usr/bin/zms
+echo "sh <(wget -q -O - https://raw.githubusercontent.com/StressOzz/Zapret-Manager/main/ZapretManager_LuCI.sh)" > /usr/bin/zmw; chmod +x /usr/bin/zmw
 if [ "$ZMW_OK" = 1 ]; then _zmi_ok "Web UI включён на порту ${ZMW_PORT:-7788}"
 else _zmi_warn "Web UI не включён: на роутере нет веб-сервера uhttpd или не установился uhttpd-mod-ubus"; fi
 echo -e "\n${GREEN}Готово: Zapret Manager $ZM_NEW_VER установлен${NC}\n"
