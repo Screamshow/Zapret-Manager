@@ -1,10 +1,10 @@
 #!/bin/sh
-# Version: 2.55
+# Version: 2.59
 set -e
-clear
+
 GREEN="\033[1;32m"; CYAN="\033[1;36m"; YELLOW="\033[1;33m"; MAGENTA="\033[1;35m"; BLUE="\033[0;34m"; NC="\033[0m"; DGRAY="\033[38;5;244m"
 
-ZM_NEW_VER="2.55"
+ZM_NEW_VER="2.59"
 _zmi_say() { echo -e "${CYAN}==>${NC} $*"; }
 _zmi_ok() { echo -e "   ${GREEN}✓${NC} $*"; }
 _zmi_step() { echo -e "   → $*"; }
@@ -28,8 +28,8 @@ _zmi_pkg() {
 	_zmi_warn "Пакет $1 не установился — проверьте интернет на роутере. $2"
 	return 1
 }
-
-echo -e "\n${MAGENTA}Zapret Manager для LuCI и Web $ZM_NEW_VER — установка${NC}\n"
+clear
+echo -e "${MAGENTA}Zapret Manager для LuCI и Web $ZM_NEW_VER — установка${NC}\n"
 _zmi_say "Проверяем, что панель сейчас ничем не занята"
 
 if [ -f /tmp/zapret-manager-luci/redbtn_deep.pid ]; then
@@ -44,7 +44,7 @@ fi
 for _zm_pid in /tmp/zapret-manager-luci/*.pid; do
 	[ -f "$_zm_pid" ] || continue
 	_zm_job="$(basename "$_zm_pid" .pid)"
-	case "$_zm_job" in versions|sysinfo|*_download|redbtn_deep) continue ;; esac
+	case "$_zm_job" in versions|sysinfo|*_download|redbtn_deep|fk-guard) continue ;; esac
 	if kill -0 "$(cat "$_zm_pid" 2>/dev/null)" 2>/dev/null && ! grep -q '^__DONE__' "/tmp/zapret-manager-luci/$_zm_job.log" 2>/dev/null; then
 		echo -e "${YELLOW}Сейчас в панели идёт операция ($_zm_job) — дождитесь её окончания и запустите установку снова${NC}"
 		exit 1
@@ -83,7 +83,7 @@ cat > '/opt/zapret-manager-luci/backend.sh.zm-new' << 'ZM_INSTALLER_EOF'
 umask 022
 
 CONF="/etc/config/zapret"
-ZM_VERSION="2.55"
+ZM_VERSION="2.59"
 ZM_SCRIPT_URL="https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh"
 GH_RAW="https://raw.githubusercontent.com"
 GH_MAIN="https://github.com"
@@ -854,7 +854,9 @@ zm_watch() {
 	return 0
 }
 
-_zm_job_skip() { case "$1" in versions|sysinfo|*_download|redbtn_deep) return 0 ;; esac; return 1; }
+# Фоновые сторожа и служебные задачи: это не операции пользователя — они не должны ни блокировать
+# обновление, установку и перезагрузку, ни попадать под «Остановить все операции».
+_zm_job_skip() { case "$1" in versions|sysinfo|*_download|redbtn_deep|fk-guard) return 0 ;; esac; return 1; }
 
 _zm_cancel_one() {
 	local j="$1" pid log="$JOBS_DIR/$1.log"
@@ -2564,13 +2566,55 @@ system_status() {
 		"$(_quic_blocked)" "$(_ipv6_enabled_in_zapret)" "$(_flow_offloading_fix_applied)" "$(_expert_mode)" "$PKG" "$(_zt_json)"
 }
 
+# IPv6 проверяем в двух местах одинаково. Пинг по имени зависит от DNS: если DNS роутера не отдаёт
+# IPv6-адреса сайтов (так настроен, например, Mihomo в Mixomo), он не проходит и при рабочем IPv6.
+# Поэтому связь проверяем по адресу, а DNS — отдельно.
+ZM_V6_ADDRS="2001:4860:4860::8888 2606:4700:4700::1111"
+ZM_V6_STATE="$JOBS_DIR/v6.state"
+_zm_v6_ms() {
+	local a t
+	for a in "$@"; do
+		t="$(ping -6 -c1 -W2 "$a" 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p' | head -n1)"
+		[ -n "$t" ] && { echo "$t"; return 0; }
+	done
+	return 1
+}
+# Отдаёт ли DNS роутера IPv6-адреса сайтов (без них устройства ходят на сайты по IPv4)
+_zm_v6_dns() {
+	nslookup google.com 127.0.0.1 2>/dev/null | awk '/^Name:/ { f = 1 } f && /^Address/ && /:[0-9A-Fa-f]*:/ { ok = 1 } END { exit !ok }'
+}
+# live — IPv6 работает и DNS отдаёт IPv6-адреса; nodns — работает, но адресов DNS не отдаёт; dead — не работает
+_zm_v6_probe() {
+	ip -6 route show default 2>/dev/null | grep -q . || { echo dead; return; }
+	_zm_v6_ms $ZM_V6_ADDRS >/dev/null || { echo dead; return; }
+	if _zm_v6_dns; then echo live; else echo nodns; fi
+}
+# Для плашки на каждой странице: ответ из памяти, обновление раз в 10 минут в фоне — страницу не держим
+_zm_v6_cached() {
+	local f="$ZM_V6_STATE"
+	if [ ! -s "$f" ] || [ -n "$(find "$f" -mmin +10 2>/dev/null)" ]; then
+		if mkdir "$f.lock" 2>/dev/null; then
+			( _zm_v6_probe > "$f.new" 2>/dev/null; [ -s "$f.new" ] && mv -f "$f.new" "$f"; rmdir "$f.lock" ) >/dev/null 2>&1 </dev/null &
+		elif [ -n "$(find "$f.lock" -mmin +2 2>/dev/null)" ]; then
+			rmdir "$f.lock" 2>/dev/null
+		fi
+	fi
+	cat "$f" 2>/dev/null
+}
+
 system_check_connectivity() {
-	local t4 t6
+	local t4 t6 dns=true st=dead
 	t4=$(ping -4 -c1 -W2 google.com 2>/dev/null | grep 'time=' | sed -E 's/.*time=([0-9.]+).*/\1/')
-	t6=$(ping -6 -c1 -W2 google.com 2>/dev/null | grep 'time=' | sed -E 's/.*time=([0-9.]+).*/\1/')
-	printf '{"ipv4_ok":%s,"ipv4_ms":"%s","ipv6_ok":%s,"ipv6_ms":"%s"}\n' \
+	t6="$(_zm_v6_ms google.com)"
+	if [ -z "$t6" ]; then
+		t6="$(_zm_v6_ms $ZM_V6_ADDRS)"
+		[ -n "$t6" ] && ! _zm_v6_dns && dns=false
+	fi
+	if [ -n "$t6" ]; then st=live; [ "$dns" = false ] && st=nodns; fi
+	mkdir -p "$JOBS_DIR"; echo "$st" > "$ZM_V6_STATE"
+	printf '{"ipv4_ok":%s,"ipv4_ms":"%s","ipv6_ok":%s,"ipv6_ms":"%s","ipv6_dns":%s}\n' \
 		"$([ -n "$t4" ] && echo true || echo false)" "$(esc "$t4")" \
-		"$([ -n "$t6" ] && echo true || echo false)" "$(esc "$t6")"
+		"$([ -n "$t6" ] && echo true || echo false)" "$(esc "$t6")" "$dns"
 }
 
 system_toggle_quic() {
@@ -2617,9 +2661,7 @@ system_toggle_ipv6() {
 		printf '{"ok":true,"ipv6_enabled":false}\n'
 		return
 	fi
-	local t6
-	t6=$(ping -6 -c1 -W2 google.com 2>/dev/null | grep 'time=')
-	if [ -z "$t6" ]; then
+	if ! _zm_v6_ms $ZM_V6_ADDRS >/dev/null; then
 		echo '{"error":"IPv6 недоступен на роутере — включение не рекомендуется"}'
 		return 1
 	fi
@@ -5005,7 +5047,7 @@ _zm_job_label() {
 		mixomo*) echo "Mixomo" ;; bytetube*) echo "ByeTube" ;;
 		install_zapret2|remove_zapret2) echo "Zapret2" ;; install_zapret|remove_zapret) echo "Zapret" ;;
 		strategy_test) echo "тест стратегий" ;; tg*) echo "TG WS Proxy" ;; doh*) echo "DNS over HTTPS" ;;
-		mirror_set) echo "смена зеркала" ;; *) echo "$1" ;;
+		mirror_set) echo "смена зеркала" ;; zm_update) echo "обновление панели" ;; *) echo "$1" ;;
 	esac
 }
 
@@ -5014,28 +5056,39 @@ _zm_busy_job() {
 	for f in "$JOBS_DIR"/*.pid; do
 		[ -f "$f" ] || continue
 		j="$(basename "$f" .pid)"
-		case "$j" in versions|sysinfo|*_download|redbtn_deep) continue ;; esac
+		case "$j" in versions|sysinfo|*_download|redbtn_deep|fk-guard) continue ;; esac
 		_job_running "$j" && { _zm_job_label "$j"; return 0; }
 	done
 	return 1
 }
 
 zm_update_action() {
-	local tmp="/tmp/zm_update_install.sh" why v j
+	local j
 	if j="$(_zm_busy_job)"; then
 		printf '{"error":"%s"}\n' "$(esc "идёт операция «$j» — дождитесь её окончания и обновите панель")"
 		return 1
 	fi
+	job_start zm_update do_zm_update
+}
+
+# Установщик качается фоновой задачей: с медленного GitHub это дольше, чем служба rpcd ждёт ответа,
+# и кнопка «Обновить панель» получала от роутера пустой ответ («нет данных»).
+do_zm_update() {
+	local tmp="/tmp/zm_update_install.sh" why v
+	echo "==> Скачиваем новую версию панели с GitHub"
 	if ! why="$(_zm_update_fetch "$tmp")"; then
 		rm -f "$tmp"
-		printf '{"error":"%s"}\n' "$(esc "$why")"
+		echo "ОШИБКА: $why"
 		return 1
 	fi
 	v="$(grep -m1 '^# Version:' "$tmp" | sed 's/^# Version:[[:space:]]*//' | tr -d '\r ')"
+	echo "   ✓ Установщик скачан и проверен: версия $v"
 	chmod +x "$tmp"
 	rm -f "$ZM_STATE_DIR/latest.panel"
-	( sh "$tmp" >/tmp/zm_update_install.log 2>&1; rm -f "$tmp" ) >/dev/null 2>&1 </dev/null &
-	printf '{"ok":true,"version":"%s"}\n' "$(esc "$v")"
+	echo "==> Запускаем установку — панель на полминуты пропадёт"
+	# установщик стартует чуть позже: эта задача должна успеть завершиться, иначе он сочтёт панель занятой
+	( sleep 5; sh "$tmp" >/tmp/zm_update_install.log 2>&1; rm -f "$tmp" ) >/dev/null 2>&1 </dev/null &
+	return 0
 }
 
 _mixomo_lan_ip() { _zm_lan_ip; }
@@ -6148,7 +6201,8 @@ health() {
 	if _st_installed; then sx="$(_st_exit)"; [ "$sx" = warp ] && _st_warp_own && sx=own; fi
 	local fw=false v6=false
 	[ "$(uci -q get firewall.@defaults[0].flow_offloading)" = 1 ] && [ -f /usr/share/firewall4/templates/ruleset.uc ] && [ "$(_flow_offloading_fix_applied)" = false ] && fw=true
-	[ -f "$CONF" ] && [ "$(_ipv6_enabled_in_zapret)" = false ] && ip -6 route show default 2>/dev/null | grep -q . && v6=true
+	# плашка нужна, только если по IPv6 действительно ходят: он работает и DNS роутера отдаёт IPv6-адреса сайтов
+	[ -f "$CONF" ] && [ "$(_ipv6_enabled_in_zapret)" = false ] && [ "$(_zm_v6_cached)" = live ] && v6=true
 	local d_zr="$zr" d_zr2="$zr2" d_bt="$bt" d_tg="$tg" d_mx="$mx" d_doh="$doh" d_sr="$sr" d_fk d_awg d_term=0 awgj
 	[ "$zr" = 2 ] && d_zr=4
 	[ "$zr2" = 2 ] && d_zr2=4
@@ -8497,6 +8551,14 @@ stl_engine_remove() {
 	return $rc
 }
 
+# Пакеты ядра steer, которые сейчас стоят на роутере: ядро, его модули и прежние имена
+stl_pkgs_installed() {
+	local p m
+	for p in $(for m in $STL_MODS; do echo "steer-$m"; done) steer-extended steer-core steer libsteer libsteer-wolfssl; do
+		_pkg_is_installed "$p" && printf '%s ' "$p"
+	done
+}
+
 stl_leftovers() {
 	stl_present && return 0
 	local t m n=0
@@ -8508,6 +8570,8 @@ stl_leftovers() {
 	done
 	killall steerd >/dev/null 2>&1
 	rm -rf "$STL_STATE"
+	rm -f "$STL_SOCK"
+	rmdir "$STL_ETC" 2>/dev/null
 	[ "$n" -gt 0 ] && echo "   ✓ Убраны оставшиеся правила ядра steer: $n"
 	return 0
 }
@@ -9086,11 +9150,15 @@ _st_migrate
 _st_sel_remap
 mkdir -p "$ST_RUN" 2>/dev/null
 
-_st_splify2() { [ -x /usr/libexec/rpcd/splify2 ] || [ -d /usr/lib/splify2 ] || [ -x /etc/init.d/splify2 ] || ubus list splify2 >/dev/null 2>&1; }
+_st_splify2_pkg() { grep -qx 'P:luci-app-splify2' /lib/apk/db/installed 2>/dev/null || [ -f /usr/lib/opkg/info/luci-app-splify2.control ]; }
+_st_splify2() {
+	[ -x /usr/libexec/rpcd/splify2 ] || return 1
+	_st_splify2_pkg || [ -f /www/luci-static/resources/view/splify2/home.js ]
+}
 
 _st_blocker() {
 	local b
-	if _st_splify2; then echo splify2; return; fi
+	if _st_splify2 && [ "$(stl_spec_whose)" != zm ]; then echo splify2; return; fi
 	if b="$(stl_busy_by)"; then echo "Ядро steer ведёт $b — Zapret Manager его не трогает."; return; fi
 	if _st_spec_foreign; then echo steer; return; fi
 	echo ""
@@ -10589,36 +10657,49 @@ _st_cron_refresh() {
 }
 
 _st_cron_get() {
-	local line hour
+	local line hour min
 	line=$(grep -F "$ST_CRON_TAG" "$CRON_FILE" 2>/dev/null | head -n1)
 	[ -n "$line" ] || return 0
+	min=$(echo "$line" | awk '{print $1}')
 	hour=$(echo "$line" | awk '{print $2}')
+	case "$min" in */*) echo "everym:${min#*/}"; return 0 ;; esac
 	case "$hour" in
 		*/*) echo "every:${hour#*/}" ;;
-		*) echo "daily:$hour" ;;
+		*)
+			case "$min" in ''|0|00|*[!0-9]*) echo "daily:$hour" ;; ?) echo "daily:$hour:0$min" ;; *) echo "daily:$hour:$min" ;; esac ;;
 	esac
 }
 
 _st_cron_set() {
-	local mode="${1%%:*}" value="${1#*:}" spec
+	local mode="${1%%:*}" value="${1#*:}" spec keep="$1" h m
 	case "$mode" in
 		off) spec="" ;;
 		every)
-			case "$value" in
-				2|4|6|8|12) spec="0 */$value * * *" ;;
-				*) echo '{"error":"допустимо каждые 2, 4, 6, 8 или 12 часов"}'; return 1 ;;
-			esac ;;
+			case "$value" in ''|*[!0-9]*|???*) echo '{"error":"введите интервал от 1 до 23 часов"}'; return 1 ;; esac
+			value="${value#0}"
+			[ "${value:-0}" -ge 1 ] && [ "$value" -le 23 ] || { echo '{"error":"введите интервал от 1 до 23 часов"}'; return 1; }
+			spec="0 */$value * * *"; keep="every:$value" ;;
+		everym)
+			case "$value" in ''|*[!0-9]*|???*) echo '{"error":"введите интервал от 10 до 59 минут"}'; return 1 ;; esac
+			[ "$value" -ge 10 ] && [ "$value" -le 59 ] || { echo '{"error":"введите интервал от 10 до 59 минут"}'; return 1; }
+			spec="*/$value * * * *" ;;
 		daily)
-			case "$value" in ''|*[!0-9]*) echo '{"error":"введите час от 0 до 23"}'; return 1 ;; esac
-			[ "$value" -ge 0 ] && [ "$value" -le 23 ] || { echo '{"error":"допустимый диапазон 0-23"}'; return 1; }
-			spec="0 $value * * *" ;;
+			h="${value%%:*}"; m=0
+			case "$value" in *:*) m="${value#*:}" ;; esac
+			case "$h" in ''|*[!0-9]*|???*) echo '{"error":"введите время от 00:00 до 23:59"}'; return 1 ;; esac
+			case "$m" in ''|*[!0-9]*|???*) echo '{"error":"введите время от 00:00 до 23:59"}'; return 1 ;; esac
+			case "$h" in 0?) h="${h#0}" ;; esac
+			case "$m" in 0?) m="${m#0}" ;; esac
+			[ "$h" -le 23 ] && [ "$m" -le 59 ] || { echo '{"error":"введите время от 00:00 до 23:59"}'; return 1; }
+			spec="$m $h * * *"
+			if [ "$m" = 0 ]; then keep="daily:$h"; elif [ "$m" -lt 10 ]; then keep="daily:$h:0$m"; else keep="daily:$h:$m"; fi ;;
 		*) echo '{"error":"неизвестный режим"}'; return 1 ;;
 	esac
 	mkdir -p "$(dirname "$CRON_FILE")"
 	touch "$CRON_FILE"
 	sed -i "\\|$ST_CRON_TAG|d" "$CRON_FILE"
 	[ -n "$spec" ] && echo "$spec $ST_CRON_CMD $ST_CRON_TAG" >> "$CRON_FILE"
-	if [ -n "$spec" ] && [ -d "$ST_DIR" ]; then echo "$1" > "$ST_CRON_KEEP"; else rm -f "$ST_CRON_KEEP"; fi
+	if [ -n "$spec" ] && [ -d "$ST_DIR" ]; then echo "$keep" > "$ST_CRON_KEEP"; else rm -f "$ST_CRON_KEEP"; fi
 	/etc/init.d/cron enable >/dev/null 2>&1
 	/etc/init.d/cron restart >/dev/null 2>&1
 	printf '{"ok":true}\n'
@@ -11342,7 +11423,7 @@ do_steer_warp_recreate() {
 do_steer_remove() {
 	_st_phase remove
 	_rb_say "Удаляем Steer и туннель WARP"
-	local foreign="" p pkgs="" rc=0 keepf="$JOBS_DIR/steer.keep.$$" keptif="" kept=0
+	local foreign="" p pkgs="" rc=0 keepf="$JOBS_DIR/steer.keep.$$" keptif="" kept=0 alien="" ownpk=""
 	case "$(_st_blocker)" in
 		splify2) foreign=splify2 ;;
 		steer) foreign="чужой настройке (правила в $STL_ETC писала не панель)" ;;
@@ -11354,6 +11435,8 @@ do_steer_remove() {
 	else
 		_st_spec_clear
 		stl_stop
+		# на место вернулись правила, которые были у ядра до панели, — такое ядро не наше
+		[ "$(stl_spec_whose)" = foreign ] && alien=1
 	fi
 	local wi netrl=0
 	: > "$keepf"
@@ -11380,6 +11463,11 @@ do_steer_remove() {
 	fi
 	if [ -n "$foreign" ] && grep -qsw -- "$STL_VPN_DEV" "$STL_SPEC" "$STL_YAML"; then :; else _st_vpn_zone off; fi
 	for p in $(sed -n 's/^pkg \(steer[a-z0-9-]*\)$/\1/p' "$ST_OWNED" 2>/dev/null); do pkgs="$pkgs $p"; done
+	# Ядром больше никто не пользуется — убираем его целиком, даже если оно уже стояло до «Установить»
+	# или запись о том, что его ставила панель, потерялась. Иначе Steer «удалён», а ядро остаётся на роутере.
+	if [ -z "$foreign" ] && [ -z "$alien" ]; then
+		for p in $(stl_pkgs_installed); do case " $pkgs " in *" $p "*) ;; *) pkgs="$pkgs $p" ;; esac; done
+	fi
 	[ -n "$pkgs" ] && { stl_engine_remove $pkgs || rc=1; }
 	_st_owns "pkg conntrack" && { _zm_pkg_purge conntrack || rc=1; }
 	if ! uci show network 2>/dev/null | grep -q "\.proto='amneziawg'"; then
@@ -11389,6 +11477,8 @@ do_steer_remove() {
 		done
 	fi
 	_rb_rpcd_ensure
+	# что-то не удалилось — запоминаем, какие пакеты ставила панель: иначе повторное «Удалить» их уже не найдёт
+	[ "$rc" = 0 ] || ownpk="$(grep '^pkg ' "$ST_OWNED" 2>/dev/null)"
 	if [ -n "$foreign" ] && grep -q "^$ST_DIR/" "$keepf" 2>/dev/null; then
 		find "$ST_DIR" \( -type f -o -type l \) 2>/dev/null | while IFS= read -r p; do grep -qxF "$p" "$keepf" || rm -f "$p"; done
 		find "$ST_DIR" -depth -type d -exec rmdir {} \; 2>/dev/null
@@ -11399,7 +11489,29 @@ do_steer_remove() {
 	fi
 	rm -f "$keepf"
 	[ -n "$foreign" ] || stl_leftovers
+	if [ "$rc" != 0 ]; then
+		# страница должна по-прежнему показывать Steer с кнопкой «Удалить», а не «не установлен»
+		[ -n "$ownpk" ] && { mkdir -p "$ST_DIR"; printf '%s\n' "$ownpk" > "$ST_OWNED"; }
+		stl_present && _st_own "engine"
+	fi
 	_zm_after_remove "Steer"
+	if [ "$rc" = 0 ] && [ -n "$alien" ] && stl_present; then
+		_rb_warn "Ядро steer оставлено: в нём правила, которые писала не панель ($STL_ETC)"
+		echo "==> Готово: Steer панели удалён. Ядро steer осталось на роутере — им пользуется чужая настройка"
+		_zm_rb_note
+		return 0
+	fi
+	if [ "$rc" = 0 ] && [ -z "$foreign" ] && stl_present; then
+		_rb_warn "Команда steer всё ещё есть на роутере: $(command -v steer). Она стоит не из пакета — панель её не удаляет"
+		echo "==> Готово: Steer панели удалён, но само ядро steer осталось — см. строку выше"
+		_zm_rb_note
+		return 0
+	fi
+	if [ "$rc" = 0 ] && [ -n "$foreign" ] && [ "${kept:-0}" = 0 ] && [ -z "$keptif" ]; then
+		echo "==> Готово: Steer панели удалён. Ядро steer оставлено — оно нужно $foreign"
+		_zm_rb_note
+		return 0
+	fi
 	if [ "$rc" = 0 ] && { [ "${kept:-0}" -gt 0 ] || [ -n "$keptif" ]; }; then
 		[ "${kept:-0}" -gt 0 ] && _rb_warn "В $ST_DIR оставлено файлов: $kept — на них ссылаются правила ядра steer, которые ведёт $foreign. Без них ядро не запустится"
 		echo "==> Готово: Steer панели удалён. Оставлено только то, чем пользуется $foreign"
@@ -15608,6 +15720,10 @@ _si_row() {
 _si_ping() {
 	local t
 	t="$(ping "$1" -c 1 -W 2 google.com 2>/dev/null | sed -n 's/.*time=\([0-9.]*\).*/\1/p' | head -n1)"
+	if [ -z "$t" ] && [ "$1" = -6 ] && t="$(_zm_v6_ms $ZM_V6_ADDRS)"; then
+		_si_row "$2" "работает, $t мс; DNS роутера IPv6-адреса сайтов не отдаёт" ok
+		return
+	fi
 	[ -n "$t" ] && _si_row "$2" "работает, $t мс" ok || _si_row "$2" "нет связи" bad
 }
 
@@ -19383,7 +19499,7 @@ setInterval(dockSync, 600);
 window.addEventListener('hashchange', function() { setTimeout(dockSync, 50); });
 
 var _activePolls = {};
-var JOB_NAMES = { steer: 'Steer', forkop: 'Forkozz', awg: 'AmneziaWG', strategy_test: 'тест стратегий', mirror_set: 'смена зеркала' };
+var JOB_NAMES = { steer: 'Steer', forkop: 'Forkozz', awg: 'AmneziaWG', strategy_test: 'тест стратегий', mirror_set: 'смена зеркала', zm_update: 'обновление панели' };
 var _stuck = {}, _stopEl = null, _stopBusy = false;
 
 function jobName(j) {
@@ -20750,7 +20866,9 @@ return view.extend({
 		overviewEl.appendChild(renderOverview(data, dohData, hostsData, sysData, healthData));
 		renderCards();
 		var updateEl = E('div', {});
+		var updateLog = E('pre', { 'class': 'zm-log' });
 		wrap.appendChild(updateEl);
+		wrap.appendChild(updateLog);
 		if (!document.body.classList.contains('zmw-body')) wrap.appendChild(zm.alertBanners(healthData, function() { location.reload(); }));
 		wrap.appendChild(E('div', { 'class': 'zm-header' }, [
 			E('h2', {}, 'Zapret Manager для LuCI и Web'),
@@ -20802,10 +20920,20 @@ return view.extend({
 						zmUpdateBusy = true;
 						zm.toast('Скачиваем и проверяем новую версию…', 'info', 4000);
 						zm.zmUpdateAction().then(function(res) {
-							zmUpdateBusy = false;
-							if (res.error) { zm.toast('Обновление не началось: ' + res.error, 'error', 8000); return; }
-							zm.toast('Устанавливаем версию ' + (res.version || zmUpdate.latest) + ' — через 4 секунды вы будете выведены из LuCI. Подождите полминуты и зайдите заново', 'warning', 8000);
-							waitForServerAndReload();
+							if (res.error) { zmUpdateBusy = false; zm.toast('Обновление не началось: ' + res.error, 'error', 8000); return; }
+							var go = function(v) {
+								zm.toast('Устанавливаем версию ' + (v || zmUpdate.latest) + ' — через 4 секунды вы будете выведены из LuCI. Подождите полминуты и зайдите заново', 'warning', 8000);
+								waitForServerAndReload();
+							};
+							if (!res.started) { zmUpdateBusy = false; go(res.version); return; }
+							/* установщик качается фоновой задачей — ход и причину отказа видно в журнале */
+							try { updateLog.scrollIntoView({ block: 'nearest' }); } catch (e) {}
+							zm.pollJob('zm_update', updateLog, function(ok) {
+								zmUpdateBusy = false;
+								if (ok) { go(''); return; }
+								var m = /ОШИБКА:\s*([^\n]+)/.exec(updateLog.textContent || '');
+								zm.toast('Обновление не началось: ' + (m ? m[1] : 'причина — в журнале на странице'), 'error', 8000);
+							});
 						}).catch(function() { zmUpdateBusy = false; });
 					}
 				}, 'Обновить панель')
@@ -21972,8 +22100,6 @@ function verLt(a, b) {
 	return false;
 }
 
-function hh(h) { return (h < 10 ? '0' : '') + h + ':00'; }
-
 return view.extend({
 	load: function() {
 		zm.injectCss();
@@ -22856,18 +22982,49 @@ return view.extend({
 			if (!data.installed || data.blocker || !(data.warp_on || data.has_sub)) return;
 			autoCard.appendChild(E('h3', {}, 'Автоперезапуск'));
 			autoCard.appendChild(E('p', { 'class': 'zm-hint' }, 'Туннели и Steer перезапускаются по расписанию — помогает, если обход со временем «подвисает».'));
-			var cur = data.autorestart || '';
-			var am = cur === '' ? 'off' : (cur.indexOf('every:') === 0 ? 'every' + cur.split(':')[1] : 'daily');
-			var curHour = am === 'daily' ? parseInt(cur.split(':')[1], 10) : 4;
+			var cur = data.autorestart || '', cp = cur.split(':');
+			var cn = parseInt(cp[1], 10);
+			var am = 'off';
+			if (isNaN(cn)) am = 'off';
+			else if (cp[0] === 'every') am = (cn === 2 || cn === 6 || cn === 12) ? 'every' + cn : 'custom';
+			else if (cp[0] === 'everym') am = 'custom';
+			else if (cp[0] === 'daily') am = 'daily';
+			var curHour = am === 'daily' ? cn : 4, curMin = am === 'daily' ? parseInt(cp[2] || '0', 10) : 0;
 			if (isNaN(curHour) || curHour < 0 || curHour > 23) curHour = 4;
-			var opts = [];
-			for (var h = 0; h < 24; h++) opts.push(E('option', { 'value': String(h), 'selected': h === curHour ? 'selected' : null }, hh(h)));
-			var hourSel = E('select', { 'class': 'cbi-input-select zm-hour-select' }, opts);
+			if (isNaN(curMin) || curMin < 0 || curMin > 59) curMin = 0;
+			var p2 = function(n) { return (n < 10 ? '0' : '') + n; };
+			var curTime = p2(curHour) + ':' + p2(curMin);
+			var isMin = am === 'custom' && cp[0] === 'everym';
+			var timeInp = E('input', { 'type': 'time', 'lang': 'ru', 'class': 'cbi-input-text zm-ab-time', 'value': curTime });
 			var dailyRow = E('div', { 'class': 'zm-actions', 'style': am === 'daily' ? '' : 'display:none' }, [
 				E('span', { 'class': 'zm-label' }, 'Время перезапуска'),
-				hourSel,
-				E('button', { 'class': 'cbi-button cbi-button-positive', 'click': function() { doAuto('daily:' + hourSel.value); } },
-					am === 'daily' ? 'Сохранить время' : 'Включить')
+				timeInp,
+				E('button', { 'class': 'cbi-button cbi-button-positive', 'click': function() {
+					var m = /^(\d{1,2}):(\d{2})/.exec(timeInp.value || '');
+					if (!m || +m[1] > 23 || +m[2] > 59) { zm.toast('Введите время от 00:00 до 23:59', 'warning'); return; }
+					doAuto('daily:' + (+m[1]) + ':' + m[2]);
+				} }, am === 'daily' ? 'Сохранить время' : 'Включить')
+			]);
+			var numInp = E('input', { 'type': 'number', 'class': 'cbi-input-text zm-auto-num', 'min': '1', 'max': '59', 'step': '1', 'inputmode': 'numeric',
+				'value': am === 'custom' && !isNaN(cn) ? String(cn) : '3' });
+			var unitSel = E('select', { 'class': 'cbi-input-select zm-hour-select' }, [
+				E('option', { 'value': 'h', 'selected': isMin ? null : 'selected' }, 'часов'),
+				E('option', { 'value': 'm', 'selected': isMin ? 'selected' : null }, 'минут')
+			]);
+			var customRow = E('div', { 'class': 'zm-actions', 'style': am === 'custom' ? '' : 'display:none' }, [
+				E('span', { 'class': 'zm-label' }, 'Каждые'),
+				numInp,
+				unitSel,
+				E('button', { 'class': 'cbi-button cbi-button-positive', 'click': function() {
+					var n = parseInt(numInp.value, 10);
+					if (unitSel.value === 'm') {
+						if (isNaN(n) || n < 10 || n > 59) { zm.toast('Введите интервал от 10 до 59 минут', 'warning'); return; }
+						doAuto('everym:' + n);
+					} else {
+						if (isNaN(n) || n < 1 || n > 23) { zm.toast('Введите интервал от 1 до 23 часов', 'warning'); return; }
+						doAuto('every:' + n);
+					}
+				} }, am === 'custom' ? 'Сохранить интервал' : 'Включить')
 			]);
 			function tile(id, label, onclick) {
 				return E('div', { 'class': 'zm-tile' + (am === id ? ' zm-active' : ''), 'click': onclick }, label);
@@ -22877,11 +23034,18 @@ return view.extend({
 				tile('every2', 'Каждые 2 часа', function() { if (am !== 'every2') doAuto('every:2'); }),
 				tile('every6', 'Каждые 6 часов', function() { if (am !== 'every6') doAuto('every:6'); }),
 				tile('every12', 'Каждые 12 часов', function() { if (am !== 'every12') doAuto('every:12'); }),
-				tile('daily', am === 'daily' ? 'Ежедневно в ' + hh(curHour) : 'Ежедневно в заданное время', function() {
+				tile('custom', am === 'custom' ? 'Каждые ' + cn + (isMin ? ' мин' : ' ч') : 'Свой интервал', function() {
+					dailyRow.style.display = 'none';
+					customRow.style.display = '';
+					numInp.focus();
+				}),
+				tile('daily', am === 'daily' ? 'Ежедневно в ' + curTime : 'Ежедневно в заданное время', function() {
+					customRow.style.display = 'none';
 					dailyRow.style.display = '';
-					hourSel.focus();
+					timeInp.focus();
 				})
 			]));
+			autoCard.appendChild(customRow);
 			autoCard.appendChild(dailyRow);
 		}
 
@@ -24557,6 +24721,7 @@ return view.extend({
 			var fGrid = E('div', { 'class': 'zm-grid' });
 			var fCard = E('div', { 'class': 'zm-card' }, [
 				E('h3', {}, 'Стратегии Flowseal'),
+				E('p', { 'class': 'zm-hint' }, 'Стратегия Flowseal полностью заменяет текущую. В ней уже есть основной блок, игровой, блоки для YouTube и Discord.'),
 				E('div', { 'class': 'zm-actions' }, [
 					E('button', {
 						'class': 'cbi-button',
@@ -26574,6 +26739,7 @@ html.zm-theme-dark .zm-tt-tile { border-color: rgba(255,255,255,.12); background
 .zm-ab-row .zm-label { min-width: 120px; }
 .zm-ab-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .zm-ab-time { width: auto !important; min-width: 110px; }
+.zm-auto-num { width: 84px !important; min-width: 0 !important; }
 .zm-ab-last { margin: 12px 0 4px; padding: 10px 12px; border-radius: 10px; background: rgba(127,127,127,.08); font-size: 13px; line-height: 1.5; }
 .zm-ab-last .zm-label { opacity: .7; }
 .zm-ab-ok { color: #1a7f37; }
@@ -27099,10 +27265,12 @@ return view.extend({
 								E('span', { 'class': 'zm-label' }, 'IPv4 (google.com)'),
 								zm.badge(res.ipv4_ok === true, 'доступен, ' + res.ipv4_ms + ' мс', 'недоступен')
 							]));
+							var noDns = res.ipv6_ok === true && res.ipv6_dns === false;
 							netEl.appendChild(E('div', { 'class': 'zm-row' }, [
-								E('span', { 'class': 'zm-label' }, 'IPv6 (google.com)'),
+								E('span', { 'class': 'zm-label' }, noDns ? 'IPv6 (по адресу)' : 'IPv6 (google.com)'),
 								zm.badge(res.ipv6_ok === true, 'доступен, ' + res.ipv6_ms + ' мс', 'недоступен')
 							]));
+							if (noDns) netEl.appendChild(E('p', { 'class': 'zm-hint' }, 'IPv6 на роутере работает, но DNS роутера не отдаёт IPv6-адреса сайтов — устройства ходят на сайты по IPv4. Включать IPv6 в Zapret не нужно.'));
 						}).catch(function() { netBusy = false; });
 					}
 				}, 'Проверить IPv4 / IPv6')
