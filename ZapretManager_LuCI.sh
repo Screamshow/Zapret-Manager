@@ -1,6 +1,6 @@
 #!/bin/sh
 read -r _ _ ZM_NEW_VER <<'ZM_VERSION_EOF'
-# Version: 2.93
+# Version: 2.95
 ZM_VERSION_EOF
 set -e
 
@@ -17176,11 +17176,9 @@ do_ab_apply() {
 	ids="$(_ab_ids)"
 	_ab_say "Блокировка рекламы: $(_ab_title "$(_ab_get list pro)")$([ "$(_ab_get tif 0)" = 1 ] && echo ' + защита от фишинга')$([ "$(_ab_get doh 0)" = 1 ] && echo ' + запрет чужих DoH')"
 	avail="$(awk '/^MemAvailable:/ { print $2 }' /proc/meminfo 2>/dev/null)"
-	if [ -n "$avail" ] && [ "$avail" -lt 60000 ] 2>/dev/null; then
-		echo "ОШИБКА: свободной памяти роутера всего $((avail / 1024)) МБ — для списка нужно хотя бы 60 МБ. Выберите список поменьше или отключите защиту от фишинга"
-		_ab_put err "мало свободной памяти" errat "$(date +%s)"
-		return 1
-	fi
+if [ -n "$avail" ] && [ "$avail" -lt 60000 ]; then
+    echo "!! Свободной памяти $((avail / 1024)) МБ, продолжаем на свой риск"
+fi
 	_ab_say "Скачиваем списки"
 	now="$(date +%s)"
 	for id in $ids; do
@@ -37614,9 +37612,12 @@ sed -i '/# zm-rpcd-watch$/d' /etc/crontabs/root 2>/dev/null || true
 echo '*/2 * * * * /opt/zapret-manager-luci/backend.sh zm_watch >/dev/null 2>&1 # zm-rpcd-watch' >> /etc/crontabs/root 2>/dev/null || true
 # Сторож панели запускается раз в 2 минуты — без этого cron пишет строку о каждом запуске в системный журнал.
 # Уровень 9 — только ошибки cron. Свой уровень, если его уже выставили, не трогаем.
-if [ -z "$(uci -q get system.@system[0].cronloglevel)" ]; then
-	uci -q set system.@system[0].cronloglevel='9' && uci -q commit system
-fi
+# Пусто, 5 (так в стандартном /etc/config/system OpenWrt) или 8 (умолчание busybox) — это не ваш выбор,
+# а заводское значение: при нём crond пишет «cron.err … USER root pid … cmd …» о каждом успешном запуске.
+case "$(uci -q get system.@system[0].cronloglevel)" in
+	''|5|8)
+	uci -q set system.@system[0].cronloglevel='9' && uci -q commit system ;;
+esac
 if [ -x /etc/init.d/cron ]; then
 	/etc/init.d/cron enable >/dev/null 2>&1 || true
 	/etc/init.d/cron restart >/dev/null 2>&1 || true
