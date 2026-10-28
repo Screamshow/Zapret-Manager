@@ -33491,24 +33491,21 @@ return view.extend({
 		zm.injectCss();
 		return Promise.all([
 			zm.status(),
-			zm.dohStatus().catch(function() { return {}; }),
 			zm.hostsStatus().catch(function() { return { items: [] }; }),
 			zm.systemStatus().catch(function() { return {}; }),
 			zm.systemInfo().catch(function() { return {}; }),
 			zm.zmUpdateStatus().catch(function() { return {}; }),
 			zm.health().catch(function() { return {}; }),
-			zm.boardInfo().catch(function() { return {}; }),
-			zm.backupList().catch(function() { return {}; })
+			zm.boardInfo().catch(function() { return {}; })
 		]);
 	},
 
 	render: function(all) {
-		var data = all[0], dohData = all[1], hostsData = all[2], sysData = all[3];
-		var sysInfo = all[4] || {};
-		var zmUpdate = all[5] || {};
-		var healthData = all[6] || {};
-		var boardInfo = all[7] || {};
-		var bkData = all[8] || {};
+		var data = all[0], hostsData = all[1], sysData = all[2];
+		var sysInfo = all[3] || {};
+		var zmUpdate = all[4] || {};
+		var healthData = all[5] || {};
+		var boardInfo = all[6] || {};
 		var wrap = E('div', { 'class': 'zm-wrap' });
 		var overviewEl = E('div', {});
 		var cards = E('div', { 'class': 'zm-cards' });
@@ -33554,7 +33551,7 @@ return view.extend({
 			}
 			return E('div', { 'class': 'zm-sysline' }, [ E('span', { 'class': 'zm-label' }, 'Система') ].concat(c));
 		}
-		function renderOverview(d, doh, hosts, sys, h, bk) {
+		function renderOverview(d, hosts, sys, h) {
 			var hostsAi = (hosts.items || []).filter(function(it) { return /^ai_/.test(it.id); });
 			var hostsOther = (hosts.items || []).filter(function(it) { return !/^ai_/.test(it.id); });
 			var hostsEnabled = hostsOther.filter(function(it) { return it.enabled; }).length + (hostsAi.some(function(it) { return it.enabled; }) ? 1 : 0);
@@ -33652,16 +33649,14 @@ return view.extend({
 		function refreshOverview() {
 			Promise.all([
 				zm.status(),
-				zm.dohStatus().catch(function() { return {}; }),
 				zm.hostsStatus().catch(function() { return { items: [] }; }),
 				zm.systemStatus().catch(function() { return {}; }),
-				zm.health().catch(function() { return {}; }),
-				zm.backupList().catch(function() { return {}; })
+				zm.health().catch(function() { return {}; })
 			]).then(function(res) {
 				overviewEl.innerHTML = '';
-				overviewEl.appendChild(renderOverview(res[0], res[1], res[2], res[3], res[4], res[5]));
-				if (res[4] && typeof res[4].zapret === 'number') {
-					try { window.dispatchEvent(new CustomEvent('zm:health', { detail: res[4] })); } catch (e) {}
+				overviewEl.appendChild(renderOverview(res[0], res[1], res[2], res[3]));
+				if (res[3] && typeof res[3].zapret === 'number') {
+					try { window.dispatchEvent(new CustomEvent('zm:health', { detail: res[3] })); } catch (e) {}
 				}
 			});
 		}
@@ -33726,7 +33721,7 @@ return view.extend({
 			}).catch(function() { verData = { items: (verData && verData.items) || [] }; renderVersions(); });
 		}
 
-		overviewEl.appendChild(renderOverview(data, dohData, hostsData, sysData, healthData, bkData));
+		overviewEl.appendChild(renderOverview(data, hostsData, sysData, healthData));
 		renderCards();
 		var updateEl = E('div', {});
 		var updateLog = E('pre', { 'class': 'zm-log' });
