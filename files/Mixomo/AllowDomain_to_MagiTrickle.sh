@@ -52,7 +52,8 @@ merge_lst_dir() {
 clear
 say "$MAG" "Создаём список ItDog Allow Domains для MagiTrickle"
 
-fetch "https://api.github.com/repos/itdoginfo/allow-domains/tarball/main" "$REPO_TGZ"
+MIRROR_BASE_URL="${ZAPRET_MANAGER_MIRROR:-https://mirror.51343.ru}"
+fetch "${MIRROR_BASE_URL%/}/zapret-manager/proxy/api.github.com/repos/itdoginfo/allow-domains/tarball/main" "$REPO_TGZ"
 
 mkdir -p "$REPO_DIR"
 tar -xzf "$REPO_TGZ" -C "$REPO_DIR"

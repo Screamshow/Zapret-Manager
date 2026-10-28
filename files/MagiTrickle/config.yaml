@@ -204,7 +204,7 @@ subscriptions:
   name: Block (Russia Inside от ITDog)
   interface: Mihomo
   enable: true
-  url: https://github.com/itdoginfo/allow-domains/raw/refs/heads/main/Russia/inside-raw.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/github.com/itdoginfo/allow-domains/raw/refs/heads/main/Russia/inside-raw.lst
   interval: 604800
   last_update: 1781640819
   rules:
@@ -4944,7 +4944,7 @@ subscriptions:
   name: GeoBlock (от GeoHide)
   interface: Mihomo
   enable: true
-  url: https://github.com/Internet-Helper/GeoHideDNS/raw/refs/heads/main/lists/domains.txt
+  url: https://mirror.51343.ru/zapret-manager/proxy/github.com/Internet-Helper/GeoHideDNS/raw/refs/heads/main/lists/domains.txt
   interval: 604800
   last_update: 1781641318
   rules:
@@ -6144,7 +6144,7 @@ subscriptions:
   name: Google AI
   interface: Mihomo
   enable: true
-  url: https://github.com/itdoginfo/allow-domains/raw/refs/heads/main/Services/google_ai.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/github.com/itdoginfo/allow-domains/raw/refs/heads/main/Services/google_ai.lst
   interval: 604800
   last_update: 1781641072
   rules:
@@ -6264,7 +6264,7 @@ subscriptions:
   name: Google Play
   interface: Mihomo
   enable: true
-  url: https://github.com/itdoginfo/allow-domains/raw/refs/heads/main/Services/google_play.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/github.com/itdoginfo/allow-domains/raw/refs/heads/main/Services/google_play.lst
   interval: 604800
   last_update: 1781641191
   rules:
@@ -6320,7 +6320,7 @@ subscriptions:
   name: Roblox
   interface: Mihomo
   enable: false
-  url: https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Services/roblox.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Services/roblox.lst
   interval: 604800
   last_update: 1783376799
   rules:
@@ -6344,7 +6344,7 @@ subscriptions:
   name: Roblox (CIDR)
   interface: Mihomo
   enable: false
-  url: https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/roblox.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/roblox.lst
   interval: 604800
   last_update: 1783376775
   rules:
@@ -6360,7 +6360,7 @@ subscriptions:
   name: Telegram
   interface: Mihomo
   enable: true
-  url: https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Services/telegram.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Services/telegram.lst
   interval: 604800
   last_update: 1783376600
   rules:
@@ -6448,7 +6448,7 @@ subscriptions:
   name: Telegram (CIDR)
   interface: Mihomo
   enable: true
-  url: https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/telegram.lst
+  url: https://mirror.51343.ru/zapret-manager/proxy/raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/telegram.lst
   interval: 604800
   last_update: 1783376694
   rules:
@@ -6496,7 +6496,7 @@ subscriptions:
   name: Supercell
   interface: Mihomo
   enable: true
-  url: https://github.com/Internet-Helper/GeoHideDNS/raw/refs/heads/main/lists/supercell.txt
+  url: https://mirror.51343.ru/zapret-manager/proxy/github.com/Internet-Helper/GeoHideDNS/raw/refs/heads/main/lists/supercell.txt
   interval: 604800
   last_update: 1781641362
   rules:
