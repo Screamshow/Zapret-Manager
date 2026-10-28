@@ -129,16 +129,16 @@ fi
 
 CONF="/etc/config/zapret"
 ZM_VERSION="@ZM_VERSION@"
-ZM_SCRIPT_URL="https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh"
+ZM_SCRIPT_URL="https://raw.githubusercontent.com/Screamshow/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh"
 GH_RAW="https://raw.githubusercontent.com"
 GH_MAIN="https://github.com"
-MT_URL_ITDOG="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml"
-MT_URL_IH1="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/config.yaml"
-MT_URL_IH2="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/MagiTrickle/configOLD.yaml"
-EXCLUDE_URL="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/zapret-hosts-user-exclude.txt"
+MT_URL_ITDOG="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/MagiTrickle/configAD.yaml"
+MT_URL_IH1="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/MagiTrickle/config.yaml"
+MT_URL_IH2="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/MagiTrickle/configOLD.yaml"
+EXCLUDE_URL="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/zapret-hosts-user-exclude.txt"
 FLOWSEAL_ZIP="${GH_MAIN}/Flowseal/zapret-discord-youtube/archive/refs/heads/main.zip"
 FLOWSEAL_FAKE_RAW="${GH_MAIN}/Flowseal/zapret-discord-youtube/raw/refs/heads/main/bin"
-STR_URL="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/StrYoutube"
+STR_URL="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/StrYoutube"
 ZAPRET_VER="72.20260307"
 JOBS_DIR="/tmp/zapret-manager-luci"
 ZM_STATE_DIR="/opt/zapret-manager-luci/state"
@@ -2025,13 +2025,13 @@ _do_install_zapret2_core() {
 	echo "==> Настраиваем стратегии"
 	mkdir -p /opt/zapret2/init.d/openwrt/custom.d
 	_nochange_fetch /opt/zapret2/init.d/openwrt/custom.d/50-discord_media.sh \
-		"${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/Zapret2/50-discord_media.sh" \
+		"${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/Zapret2/50-discord_media.sh" \
 		|| echo "!! Не удалось загрузить 50-discord_media.sh"
 	if _nochange_in /etc/config/zapret2; then echo "   · Стратегия Zapret2 помечена #nochange — оставляем как есть"
 	else
-		_nochange_fetch /etc/config/zapret2 "${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/Zapret2/zapret2" || echo "!! Не удалось загрузить zapret2"
+		_nochange_fetch /etc/config/zapret2 "${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/Zapret2/zapret2" || echo "!! Не удалось загрузить zapret2"
 	fi
-	_nochange_fetch /opt/zapret2/ipset/zapret_hosts_discord.txt "${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/files/Zapret2/zapret_hosts_discord.txt" \
+	_nochange_fetch /opt/zapret2/ipset/zapret_hosts_discord.txt "${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/files/Zapret2/zapret_hosts_discord.txt" \
 		|| echo "!! Не удалось загрузить zapret_hosts_discord.txt"
 
 	echo "==> Запускаем Zapret2"
@@ -2521,7 +2521,7 @@ do_add_fake_flow() {
 }
 
 ZAPRET_FAKE_RAW="${GH_MAIN}/bol-van/zapret/raw/refs/heads/master/files/fake"
-ZM_FAKE_RAW="${GH_MAIN}/StressOzz/Zapret-Manager/raw/refs/heads/main/files"
+ZM_FAKE_RAW="${GH_MAIN}/Screamshow/Zapret-Manager/raw/refs/heads/main/files"
 FAKE_FAIL="$JOBS_DIR/fake_fail"
 _fake_missing() {
 	local f d=/opt/zapret/files/fake
@@ -7023,7 +7023,7 @@ _test_prepare_urls() {
 		"forum.ru-board.com|https://forum.ru-board.com" \
 		"play.google.com|https://play.google.com" \
 		"downloads.openwrt.org|https://downloads.openwrt.org" \
-		"githubusercontent.com|https://raw.githubusercontent.com/StressOzz/Zapret-Manager/refs/heads/main/Zapret-Manager.sh" \
+		"githubusercontent.com|https://raw.githubusercontent.com/Screamshow/Zapret-Manager/refs/heads/main/Zapret-Manager.sh" \
 		>> "$out"
 	curl -fsSL --connect-timeout 8 --max-time 15 "$TEST_DOMAINS_JSON" 2>/dev/null \
 		| sed -n 's/.*"id":[[:space:]]*"\([^"]*\)".*"host":[[:space:]]*"\([^"]*\)".*/\1|\2/p' >> "$out"
@@ -8226,7 +8226,7 @@ zm_update_status() {
 
 ZM_CL_FILE="/opt/zapret-manager-luci/CHANGELOG.md"
 ZM_CL_PENDING="$ZM_STATE_DIR/cl.pending"
-ZM_CL_URLS="${GH_RAW}/StressOzz/Zapret-Manager/refs/heads/main/CHANGELOG.md https://cdn.jsdelivr.net/gh/StressOzz/Zapret-Manager@main/CHANGELOG.md"
+ZM_CL_URLS="${GH_RAW}/Screamshow/Zapret-Manager/refs/heads/main/CHANGELOG.md https://cdn.jsdelivr.net/gh/Screamshow/Zapret-Manager@main/CHANGELOG.md"
 
 _zm_cl_get() {
 	local out="$1" u
@@ -31558,7 +31558,7 @@ function flagFont() {
 	document.head.appendChild(s);
 }
 
-var CL_HISTORY = 'https://github.com/StressOzz/Zapret-Manager/blob/main/CHANGELOG.md';
+var CL_HISTORY = 'https://github.com/Screamshow/Zapret-Manager/blob/main/CHANGELOG.md';
 var CL_KINDS = { '➕': [ 'new', 'Новое' ], '⚡': [ 'imp', 'Улучшено' ], '🐞': [ 'fix', 'Исправлено' ], '🗑': [ 'del', 'Убрано' ] };
 function clParse(text) {
 	var secs = [], cur = null;
@@ -56057,7 +56057,7 @@ ZMW_IP="$(/opt/zapret-manager-luci/backend.sh lan_ip 2>/dev/null || true)"
 for _zm_c in "zms Zapret-Manager.sh" "zmw ZapretManager_LuCI.sh"; do
 	cat > "/usr/bin/${_zm_c%% *}" <<ZM_GET_EOF
 #!/bin/sh
-u="https://raw.githubusercontent.com/StressOzz/Zapret-Manager/main/${_zm_c#* }"
+u="https://raw.githubusercontent.com/Screamshow/Zapret-Manager/main/${_zm_c#* }"
 ZM_GET_EOF
 	cat >> "/usr/bin/${_zm_c%% *}" <<'ZM_GET_EOF'
 t="/tmp/zm-get.$$.sh"
