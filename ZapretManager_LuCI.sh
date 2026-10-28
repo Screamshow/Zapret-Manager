@@ -159,6 +159,30 @@ _zm_gh_host() {
 	esac
 	return 1
 }
+ZM_MIR_BASE="${ZAPRET_MANAGER_MIRROR:-https://mirror.51343.ru}"; ZM_MIR_BASE="${ZM_MIR_BASE%/}"
+ZM_MIR_PROXY="$ZM_MIR_BASE/zapret-manager/proxy"
+# Hosts the mirror forwards. codeload.github.com is left out on purpose: the
+# mirror answers "upstream host is not allowed" for it, so those fetches stay
+# on the direct and gh-proxy path below.
+_zm_mir_host() {
+	case "$1" in
+		https://raw.githubusercontent.com/*|https://github.com/*|https://api.github.com/*|https://cdn.jsdelivr.net/*|https://packages.routerich.ru/*) return 0 ;;
+	esac
+	return 1
+}
+_zm_mir_url() { printf '%s/%s' "$ZM_MIR_PROXY" "${1#https://}"; }
+# Same test as _zm_dl_sane, repeated here because that one is defined further
+# down the file than this code runs.
+_zm_mir_sane() { [ -s "$1" ] && ! head -c 1024 "$1" | grep -qiE '<(!doctype|html|head|body)'; }
+_zm_mir_exec() {
+	local t="$1" a x=0
+	shift
+	for a; do
+		[ "$x" = 0 ] && { set --; x=1; }
+		if _zm_mir_host "$a"; then set -- "$@" "$(_zm_mir_url "$a")"; else set -- "$@" "$a"; fi
+	done
+	command "$t" "$@"
+}
 _zm_ghp_say() {
 	[ -n "$ZM_JOB_LOG" ] && printf '%s\n' "$1" >> "$ZM_JOB_LOG" 2>/dev/null
 	mkdir -p "$JOBS_DIR" 2>/dev/null
@@ -200,11 +224,20 @@ _zm_ghp_exec() {
 	command "$t" "$@"
 }
 _zm_ghp_run() {
-	local t="$1" a gh="" rc why out nm m
+	local t="$1" a gh="" mir="" rc why out nm m
 	shift
 	for a; do _zm_gh_host "$a" && { gh="$a"; break; }; done
 	[ -n "$gh" ] || { command "$t" "$@"; return; }
 	_zm_ghp_load
+	for a; do _zm_mir_host "$a" && { mir="$a"; break; }; done
+	if [ -n "$mir" ] && [ -z "$ZM_MIR_OFF" ]; then
+		out="$(_zm_ghp_out "$t" "$@")"
+		_zm_mir_exec "$t" "$@"; rc=$?
+		if [ "$rc" = 0 ] && { [ -z "$out" ] || [ "$out" = /dev/null ] || _zm_mir_sane "$out"; }; then return 0; fi
+		[ -n "$out" ] && [ "$out" != /dev/null ] && rm -f "$out" 2>/dev/null
+		nm="${mir%%\?*}"; nm="${nm##*/}"; [ -n "$nm" ] || nm="$mir"
+		_zm_ghp_say "   · $nm не получен с зеркала $ZM_MIR_BASE — пробуем напрямую"
+	fi
 	command "$t" "$@"; rc=$?
 	if [ "$rc" = 0 ]; then [ "$ZM_GHP_MODE" = off ] && rm -f "$ZM_GHP_FAIL" 2>/dev/null; return 0; fi
 	why="$(_zm_ghp_why "$t" "$rc")" || return $rc
