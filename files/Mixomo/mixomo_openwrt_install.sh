@@ -14,10 +14,11 @@ NC='\033[0m'
 clear
 
 MIRROR_BASE_URL="${ZAPRET_MANAGER_MIRROR:-https://mirror.51343.ru}"; MIRROR_BASE_URL="${MIRROR_BASE_URL%/}"; MIRROR_PROXY="${MIRROR_BASE_URL}/zapret-manager/proxy"
-GH_RAW_HOST="${MIRROR_PROXY}/raw.githubusercontent.com"; GH_MAIN_HOST="${MIRROR_PROXY}/github.com"; GH_API_HOST="${MIRROR_PROXY}/api.github.com"
-GH_CHECK_URL="${GH_RAW_HOST}/Screamshow/Zapret-Manager/refs/heads/main/Zapret-Manager.sh"
-wget -q -T 8 -O /dev/null "$GH_CHECK_URL" 2>/dev/null || { echo -e "${MIRROR_BASE_URL} ${RED}недоступно!${NC}\n"; exit 1; }
-GH_OK=1; GH_RAW="$GH_RAW_HOST"; GH_MAIN="$GH_MAIN_HOST"
+GH_CHECK_URL="${MIRROR_PROXY}/raw.githubusercontent.com/Screamshow/Zapret-Manager/refs/heads/main/Zapret-Manager.sh"
+# SRC_PFX switches every download between the mirror and the host itself.
+if wget -q -T 8 -O /dev/null "$GH_CHECK_URL" 2>/dev/null; then GH_OK=1; SRC_PFX="${MIRROR_PROXY}/"
+else GH_OK=0; SRC_PFX="https://"; echo -e "${MIRROR_BASE_URL} ${RED}недоступно${NC} — качаем напрямую\n"; fi
+GH_RAW="${SRC_PFX}raw.githubusercontent.com"; GH_MAIN="${SRC_PFX}github.com"; GH_API_HOST="${SRC_PFX}api.github.com"
 
 
 
@@ -422,7 +423,7 @@ EOF
 
     echo "Определение актуальной версии ACE Editor"
     local LATEST_ACE_VER
-    LATEST_ACE_VER=$(curl -s "${MIRROR_PROXY}/api.cdnjs.com/libraries/ace" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 | head -1)
+    LATEST_ACE_VER=$(curl -s "${SRC_PFX}api.cdnjs.com/libraries/ace" | grep -o '"version":"[^"]*"' | cut -d'"' -f4 | head -1)
     if [ -z "$LATEST_ACE_VER" ]; then
         log_warn "cdnjs API недоступен, пробуем GitHub API"
         LATEST_ACE_VER=$(curl -s "${GH_API_HOST}/repos/ajaxorg/ace/releases/latest" | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//' | head -1)
@@ -440,9 +441,9 @@ EOF
         local dest="${ACE_PATH}/${file}"
         local success=0
         
-        for url in "${MIRROR_PROXY}/cdn.jsdelivr.net/npm/ace-builds@${LATEST_ACE_VER}/src-min-noconflict/${file}" \
+        for url in "${SRC_PFX}cdn.jsdelivr.net/npm/ace-builds@${LATEST_ACE_VER}/src-min-noconflict/${file}" \
                    "${GH_RAW}/ajaxorg/ace-builds/master/src-min-noconflict/${file}" \
-                   "${MIRROR_PROXY}/cdnjs.cloudflare.com/ajax/libs/ace/${CDNJS_ACE_VER}/${file}"; do
+                   "${SRC_PFX}cdnjs.cloudflare.com/ajax/libs/ace/${CDNJS_ACE_VER}/${file}"; do
             
             log_online "Скачивание $file"
             if curl -Lf -s --connect-timeout 5 --max-time 30 -o "$dest" "$url" || wget -q -T 5 -O "$dest" "$url"; then
@@ -635,7 +636,7 @@ return view.extend({
 		
 		if (isManual) ui.showModal(null, [E('p', { 'class': 'spinning' }, _('Проверка обновлений...'))]);
 		
-		var cmd = 'wget -q -O - "https://mirror.51343.ru/zapret-manager/proxy/api.github.com/repos/MetaCubeX/mihomo/releases/latest" 2>/dev/null | grep -m1 \'"tag_name":\' | sed \'s/.*"\\(v[0-9.]*\\)".*/\\1/\'';
+		var cmd = 'J=$(wget -q -O - "https://mirror.51343.ru/zapret-manager/proxy/api.github.com/repos/MetaCubeX/mihomo/releases/latest" 2>/dev/null) || J=""; [ -n "$J" ] || J=$(wget -q -O - "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" 2>/dev/null); printf \'%s\' "$J" | grep -m1 \'"tag_name":\' | sed \'s/.*"\\(v[0-9.]*\\)".*/\\1/\'';
 		
 		fs.exec('/bin/sh', ['-c', cmd])
 			.then(function(res) {
@@ -664,11 +665,13 @@ return view.extend({
 		this.updateButton.textContent = _('Подождите...');
 		this.updateButton.disabled = true;
 		var arch = 'arm64';
-		var downloadUrl = 'https://mirror.51343.ru/zapret-manager/proxy/github.com/MetaCubeX/mihomo/releases/download/' + latestVersion + '/mihomo-linux-' + arch + '-' + latestVersion + '.gz';
+		var dlPath = '/MetaCubeX/mihomo/releases/download/' + latestVersion + '/mihomo-linux-' + arch + '-' + latestVersion + '.gz';
+		var downloadUrl = 'https://mirror.51343.ru/zapret-manager/proxy/github.com' + dlPath;
+		var directUrl = 'https://github.com' + dlPath;
 		var steps = [
 			{ msg: _('Создание бэкапа...'), shell: 'cp -f /usr/bin/mihomo /tmp/mihomo.backup' },
 			{ msg: _('Остановка Mihomo...'), shell: '/etc/init.d/mihomo stop' },
-			{ msg: _('Скачивание архива %s...').format(latestVersion), shell: 'wget -q -O /tmp/mihomo.gz "' + downloadUrl + '" && test -s /tmp/mihomo.gz' },
+			{ msg: _('Скачивание архива %s...').format(latestVersion), shell: '{ wget -q -O /tmp/mihomo.gz "' + downloadUrl + '" || wget -q -O /tmp/mihomo.gz "' + directUrl + '"; } && test -s /tmp/mihomo.gz' },
 			{ msg: _('Распаковка архива...'), shell: '/bin/gzip -d -c /tmp/mihomo.gz > /tmp/mihomo_new 2>/dev/null && test -s /tmp/mihomo_new' },
 			{ msg: _('Выдача временных прав...'), shell: '/bin/chmod 755 /tmp/mihomo_new' },
 			{ msg: _('Проверка ядра...'), shell: '/tmp/mihomo_new -v 2>&1 || true' },
