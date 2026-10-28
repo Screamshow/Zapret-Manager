@@ -33537,15 +33537,12 @@ return view.extend({
 			return dd === day ? 'сегодня ' + hm : day - dd === 864e5 ? 'вчера ' + hm : p2(t.getDate()) + '.' + p2(t.getMonth() + 1) + '.' + t.getFullYear();
 		}
 		function sysStrip(sys) {
-			var href = document.body.classList.contains('zmw-body') ? '#/system' : L.url('admin/services/zapret-manager/system');
 			var p2 = function(x) { return (x < 10 ? '0' : '') + x; };
 			function chip(tone, text, title) {
-				var go = function() { location.href = href; };
-				return E('span', { 'class': 'zm-badge ' + tone, 'role': 'link', 'tabindex': '0', 'title': title + '\nНажмите — откроется «Система»', 'click': go,
-					'keydown': function(ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); go(); } } }, [ E('span', { 'class': 'zm-dot' }), text ]);
+				return E('span', { 'class': 'zm-badge ' + tone, 'title': title }, [ E('span', { 'class': 'zm-dot' }), text ]);
 			}
 			var fm = { hw: 'аппаратный', sw: 'программный' }[sys.flow_mode] || '', fon = !!fm;
-			var zf = sys.flow_offloading_fix === true, sf = sys.steer_offload_fix === true;
+			var zf = sys.flow_offloading_fix === true;
 			var c = [
 				chip(sys.quic_blocked ? 'zm-ok' : 'zm-off', sys.quic_blocked ? 'QUIC блокируется' : 'QUIC не блокируется', 'Блокировка QUIC (UDP 80 и 443): браузеры переходят на обычный HTTPS, его Zapret обрабатывает надёжнее'),
 				chip(sys.ipv6_enabled ? 'zm-ok' : 'zm-off', sys.ipv6_enabled ? 'IPv6 в Zapret' : 'IPv6 в Zapret выключен', 'Обрабатывает ли Zapret трафик IPv6'),
@@ -33555,9 +33552,6 @@ return view.extend({
 			if ((fon && zIn) || zf) c.push(chip(zf ? (fon ? 'zm-ok' : 'zm-off') : sys.zapret_fix_off ? 'zm-off' : 'zm-bad',
 				zf ? 'поправка для Zapret' : sys.zapret_fix_off ? 'поправка для Zapret отключена' : 'нет поправки для Zapret',
 				zf ? 'Поправка Flow Offloading для Zapret применена' + (fon ? '' : idle) : sys.zapret_fix_off ? 'Поправка для Zapret отключена вручную — сама не включится' : 'Flow Offloading включён, а поправки для Zapret нет — часть соединений может идти мимо Zapret'));
-			if ((fon && sys.steer_installed) || sf) c.push(chip(sf ? (fon ? 'zm-ok' : 'zm-off') : sys.steer_offload_off ? 'zm-off' : 'zm-bad',
-				sf ? 'поправка для Steer' : sys.steer_offload_off ? 'поправка для Steer отключена' : 'нет поправки для Steer',
-				sf ? 'Поправка Flow Offloading для Steer применена' + (fon ? '' : idle) : sys.steer_offload_off ? 'Поправка для Steer отключена вручную — сама не включится' : 'Flow Offloading включён, а поправки для Steer нет — соединения Steer могут перестать идти'));
 			var mh = String(sysInfo.mirror_host || '');
 			if (mh) {
 				var def = mh === 'downloads.openwrt.org', how = def ? '' : String(sysInfo.mirror_how || '');
@@ -33576,8 +33570,6 @@ return view.extend({
 
 			var zrSt = st(h, 'zapret', d.zapret === 'installed' ? (d.zapret_running ? 1 : 2) : 0);
 			var zr2St = st(h, 'zapret2', d.zapret2 === 'installed' ? (d.zapret2_running ? 1 : 2) : 0);
-			var dohSt = st(h, 'doh', doh.installed ? 1 : 0);
-			var dohNode = zm.stateBadge(dohSt);
 
 			var items = [];
 			if (zrSt !== 0) items.push(row('Zapret', zm.stateBadge(zrSt)));
@@ -33587,43 +33579,17 @@ return view.extend({
 			if (zr2St !== 0) items.push(row('Zapret2', zm.stateBadge(zr2St)));
 			var warnBadge = function(text) { return E('span', { 'class': 'zm-badge zm-warn' }, [ E('span', { 'class': 'zm-dot' }), text ]); };
 			var offBadge = function(text) { return E('span', { 'class': 'zm-badge zm-off' }, [ E('span', { 'class': 'zm-dot' }), text ]); };
-			var stSt = st(h, 'steer', 0);
-			var stVia = /^iface:/.test(h.steer_exit || '') ? 'через ' + h.steer_exit.slice(6) : { warp: 'через WARP', own: 'через свой WARP', vpn: 'через VPN' }[h.steer_exit] || '';
-			if (stSt !== 0) items.push(row('Steer', stSt === 1 ? zm.badge(true, 'работает' + (stVia ? ' · ' + stVia : ''), '')
-				: stSt === 2 ? zm.badge(false, '', (h.steer_fail ? 'туннель не принят' : 'не работает') + (stVia ? ' · ' + stVia : ''))
-				: stSt === 5 ? offBadge(h.steer_off ? 'выключен' : h.steer_exit === 'none' ? 'подключите WARP или VPN' : 'сервисы не выбраны')
-				: zm.badge(false, '', 'не установлен')));
-			var fkSt = st(h, 'forkop', 0);
-			if (fkSt !== 0) items.push(row('Forkozz', fkSt === 1 ? zm.badge(true, 'работает', '')
-				: fkSt === 2 ? zm.badge(false, '', 'не работает')
-				: fkSt === 5 ? offBadge('выключен')
-				: zm.badge(false, '', 'не установлен')));
-			[ [ 'ByeTube', st(h, 'bytetube', 0) ], [ 'TG WS Proxy', st(h, 'tg', 0) ], [ 'Mixomo', st(h, 'mixomo', 0) ] ].forEach(function(c) {
-				if (c[1] !== 0) items.push(row(c[0], zm.stateBadge(c[1])));
-			});
-			if (dohSt !== 0) items.push(row('DNS over HTTPS', dohNode));
 			var awgSt = st(h, 'awg', 0);
 			if (awgSt !== 0) items.push(row('AmneziaWG', awgSt === 1 ? zm.badge(true, h.awg_up ? 'туннелей работает: ' + h.awg_up : h.awg_total ? 'установлен' : 'установлен, туннелей нет', '')
 				: awgSt === 3 ? warnBadge(h.awg_total ? 'работает ' + (h.awg_up || 0) + ' из ' + h.awg_total : 'установлен не полностью')
 				: awgSt === 2 ? zm.badge(false, '', 'туннели не отвечают')
 				: awgSt === 5 ? offBadge('установлен, туннелей нет')
 				: zm.badge(false, '', 'не установлен')));
-			var tsSt = +h.tsc || 0;
-			if (tsSt !== 0) items.push(row('Удалённый доступ', tsSt === 1 ? zm.badge(true, 'работает', '') : tsSt === 3 ? warnBadge('нужно войти в Tailscale')
-				: tsSt === 2 ? zm.badge(false, '', 'не работает') : tsSt === 5 ? offBadge('выключен') : zm.badge(false, '', 'не установлен')));
 			var trSt = h && h.dots && typeof h.dots.term === 'number' ? h.dots.term : 0;
 			if (trSt !== 0) items.push(row('Терминал', trSt === 1 ? zm.badge(true, 'работает', '') : trSt === 2 ? zm.badge(false, '', 'не работает') : trSt === 4 ? offBadge('выключен') : zm.badge(false, '', 'не установлен')));
-			if (h.htop) items.push(row('htop', zm.badge(true, 'установлен', '')));
 			if (hosts.geohide || hostsEnabled > 0) items.push(row('Домены в hosts', hosts.geohide
 				? zm.badge(true, hosts.geohide === 'malw' ? 'dns.malw.link' : 'GeoHide ' + hosts.geohide.toUpperCase(), '')
 				: zm.badge(true, 'включено ' + hostsEnabled + ' из ' + hostsTotal, '')));
-			var abSt = h && h.dots && typeof h.dots.adblock === 'number' ? h.dots.adblock : 0;
-			if (abSt !== 0) items.push(row('Блокировка рекламы', abSt === 1 ? zm.badge(true, 'работает', '') : warnBadge('список не подключён')));
-			var bkItems = (bk && bk.items) || [];
-			if (bkItems.length || (bk && bk.auto === false)) items.push(row('Резервная копия', E('span', { 'style': 'display:inline-flex; gap:8px; flex-wrap:wrap; align-items:center' }, [
-				!bk || !bk.items ? E('span', {}, '—')
-					: bkItems.length ? zm.badge(true, 'копий: ' + bkItems.length + ' · последняя ' + bkWhen(bkItems[0].at), '') : offBadge('копий нет'),
-				bk && bk.items && bk.auto === false ? E('span', { 'class': 'zm-badge zm-off', 'title': 'Копия перед установкой, удалением и обновлением не сохраняется сама' }, [ E('span', { 'class': 'zm-dot' }), 'авто выкл' ]) : '' ])));
 
 			var half = Math.ceil(items.length / 2);
 
@@ -33685,7 +33651,7 @@ return view.extend({
 						? E('span', { 'class': 'zm-badge zm-bad' }, [ E('span', { 'class': 'zm-dot' }), 'нет' ])
 						: E('span', { 'class': 'zm-badge zm-off' }, [ E('span', { 'class': 'zm-dot' }), 'проверяем…' ])));
 			if (sysInfo.inet === 'nodns') extras.push(E('p', { 'class': 'zm-hint', 'style': 'margin:4px 0 0' },
-				'Откройте вкладку «DNS over HTTPS»: выберите другой сервер или выключите его. Если DNS не трогали — перезагрузите роутер.'));
+				'Проверьте настройки DNS роутера. Если DNS не трогали — перезагрузите роутер.'));
 			rows = rows.concat(extras);
 
 			cards.appendChild(E('div', { 'class': 'zm-card' }, [
@@ -33758,8 +33724,7 @@ return view.extend({
 					'disabled': d.pending ? '' : null,
 					'click': function() { loadVersions('refresh'); }
 				}, d.pending ? 'Проверяем…' : checked ? 'Проверить снова' : 'Проверить'),
-				E('span', { 'class': 'zm-hint', 'style': 'margin:0' }, [ said + ' · ',
-					E('a', { 'href': document.body.classList.contains('zmw-body') ? '#/system' : L.url('admin/services/zapret-manager/system'), 'title': 'Система → Поиск новых версий', 'style': 'color:inherit; text-decoration:underline; text-underline-offset:2px' }, 'изменить') ])
+				E('span', { 'class': 'zm-hint', 'style': 'margin:0' }, said)
 			]));
 			verEl.appendChild(card);
 		}
