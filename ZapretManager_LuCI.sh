@@ -27262,21 +27262,8 @@ case "$cmd" in
 	system_toggle_quic)                        system_toggle_quic "$1" ;;
 	system_toggle_ipv6)                         system_toggle_ipv6 "$1" ;;
 	system_toggle_flow_offloading_fix)           system_toggle_flow_offloading_fix "$1" ;;
-	system_toggle_steer_offload_fix)             system_toggle_steer_offload_fix "$1" ;;
-	system_uninstall_panel)                        system_uninstall_panel "$1" ;;
-	purge_scan)                                    purge_scan ;;
-	purge_run)                                     purge_run "$1" ;;
-	backup_list)                                   backup_list ;;
-	backup_action)                                 backup_action "$1" "$2" ;;
-	zm_cleanup)                                    zm_cleanup "$1" ;;
-	zm_autoclean)                                  zm_autoclean "$1" ;;
 	gh_proxy)                                      gh_proxy "$1" "$2" ;;
 	gh_mirrors)                                    gh_mirrors ;;
-	zm_refs_heal)                                  zm_refs_heal "$1" ;;
-	sysinfo_run)                                   sysinfo_run ;;
-	sysinfo_get)                                   sysinfo_get ;;
-	mirror_status)                                     mirror_status ;;
-	mirror_set)                                          mirror_set "$1" ;;
 	exclusions_status)                                     exclusions_status ;;
 	exclusions_toggle)                                       exclusions_toggle "$1" ;;
 	exclusions_clear)                                          exclusions_clear ;;
@@ -27286,13 +27273,7 @@ case "$cmd" in
 	zapret_list_set)                                 zapret_list_set "$1" "$2" ;;
 	zapret_list_restore)                             zapret_list_restore "$1" ;;
 	nfqws_opt_set)                                   nfqws_opt_set "$1" ;;
-	tg_status)                                                   tg_status ;;
-	tg_action)                                                    tg_action "$1" "$2" ;;
-	tg_auto_tick)                                                 tg_auto_tick "$1" ;;
 	zapret_excl_tick)                                             zapret_excl_tick ;;
-	tg_restart_all)                                                tg_restart_all ;;
-	tgws_status)                                                    tgws_status ;;
-	tgws_action)                                                     tgws_action "$1" ;;
 	hosts_status)                      hosts_status ;;
 	hosts_toggle)                       hosts_toggle "$1" ;;
 	hosts_replace_geohide)              hosts_replace_geohide "$1" ;;
@@ -27300,45 +27281,15 @@ case "$cmd" in
 	hosts_file_get)                     hosts_file_get ;;
 	hosts_file_set)                     hosts_file_set "$1" ;;
 	upload_part)                        upload_part "$1" "$2" ;;
-	doh_install)                         doh_install ;;
-	doh_remove)                          doh_remove ;;
-	doh_status)                          doh_status ;;
-	doh_set)                              _doh_locked doh_set "$1" ;;
-	doh_probe)                            doh_probe "$1" ;;
-	doh_check)                            doh_check ;;
-	doh_bootstrap_set)                    _doh_locked doh_bootstrap_set "$1" ;;
-	doh_force_set)                        _doh_locked doh_force_set "$1" ;;
-	doh_failover_set)                     _doh_locked doh_failover_set "$1" ;;
-	doh_own_set)                          doh_own_set "$1" ;;
-	doh_power)                            _doh_locked doh_power "$1" ;;
-	doh_watch)                            doh_watch ;;
-	dns_net_set)                          dns_net_set "$1" ;;
-	dns_net_gone)                         dns_net_gone ;;
 	test_status)                          test_status ;;
 	test_action)                          test_action "$1" "$2" ;;
 	test_results)                         test_results "$1" ;;
 	zapret_opt_set)                       zapret_opt_set "$1" ;;
-	system_time_set)                      system_time_set "$1" ;;
 	zm_update_status)                     zm_update_status ;;
 	zm_update_action)                     zm_update_action ;;
 	zm_changelog)                         case "$1" in local|remote|all) zm_changelog "$1" ;; *) echo '{"error":"неизвестный режим"}' ;; esac ;;
 	zm_changelog_seen)                    zm_changelog seen ;;
 	zm_changelog_sync)                    _zm_cl_sync ;;
-	mixomo_status)                        mixomo_status ;;
-	mixomo_action)                        mixomo_action "$1" ;;
-	mixomo_config_get)                    mixomo_config_get ;;
-	mixomo_config_set)                    mixomo_config_set "$1" ;;
-	mixomo_subscription_set)              mixomo_subscription_set "$1" ;;
-	mixomo_filter_set)                    mixomo_filter_set "$1" ;;
-	mixomo_proxies)                       mixomo_proxies ;;
-	mixomo_magitrickle_list_set)          mixomo_magitrickle_list_set "$1" ;;
-	mixomo_autorestart_set)               mixomo_autorestart_set "$1" "$2" ;;
-	mixomo_ui_action)                     mixomo_ui_action "$1" ;;
-	mixomo_warp_status)                   mixomo_warp_status ;;
-	mixomo_warp_action)                   mixomo_warp_action "$1" ;;
-	mixomo_warp_integrate_action)         mixomo_warp_integrate_action ;;
-	mixomo_warp_config_set)               mixomo_warp_config_set "$1" ;;
-	bytetube_installed)                   bytetube_installed ;;
 	health)                               health ;;
 	versions)                             versions_status "$1" ;;
 	versions_mode)                        versions_mode_set "$1" ;;
@@ -27346,35 +27297,8 @@ case "$cmd" in
 	versions_cron_sync)                   _ver_cron_sync ;;
 	autoupd)                              autoupd "$1" ;;
 	autoupd_run)                          autoupd_run "$1" ;;
-	awg_status)                           awg_status ;;
-	awg_action)                           awg_action "$1" "$2" ;;
 	term_status)                          term_status ;;
 	term_action)                          term_action "$1" "$2" ;;
-	tsc_status)                           tsc_status ;;
-	tsc_action)                           tsc_action "$1" "$2" ;;
-	tsc_watch)                            tsc_watch ;;
-	tsc_lan_ip)                           _zm_lan_ip ;;
-	monitor)                              monitor_snapshot ;;
-	monitor_procs)                        monitor_procs ;;
-	monitor_action)                       monitor_action "$1" "$2" ;;
-	htop_gone)                            htop_gone ;;
-	watch_status)                         watch_status ;;
-	watch_set)                            watch_set "$1" ;;
-	adblock_status)                       adblock_status ;;
-	adblock_action)                       adblock_action "$1" "$2" ;;
-	adblock_cron)                         adblock_cron ;;
-	adblock_stats_tick)                   adblock_stats_tick ;;
-	steer_status)                         steer_status ;;
-	steer_action)                         steer_action "$1" "$2" ;;
-	bytetube_action)                      bytetube_action "$1" ;;
-	bytetube_sync)                        bytetube_sync ;;
-	forkop_status)                        forkop_status ;;
-	forkop_config_get)                    forkop_config_get ;;
-	forkop_config_set)                    forkop_config_set "$1" ;;
-	forkop_device_setup)                  _fk_device_setup "$1" ;;
-	forkop_priority_watch)                _fk_fallback_sec "$1" ;;
-	forkop_ping_burst)                    _fk_ping_burst "$1" ;;
-	forkop_action)                        forkop_action "$1" "$2" ;;
 	lan_ip)                               _zm_lan_ip ;;
 	jobs_cancel)                          jobs_cancel "$1" ;;
 	system_reboot)                        system_reboot ;;
@@ -27384,8 +27308,6 @@ case "$cmd" in
 	ui_nav_set)                           ui_nav_set "$1" ;;
 	ui_flags_get)                         ui_flags_get ;;
 	ui_flag_set)                          ui_flag_set "$1" ;;
-	adblock_dns_sync)                     _ab_dns_sync ;;
-	zapret_doh_migrate)                   [ -f "$ZO_DOH_FLAG" ] && [ -f "$CONF" ] && _zo_doh_stale && { _zo_doh_follow; echo '{"changed":true}'; } || echo '{"changed":false}' ;;
 	multi)                                _zm_multi "$1" ;;
 	*) echo '{"error":"неизвестная команда"}'; exit 1 ;;
 esac
@@ -30670,21 +30592,7 @@ list_methods() {
 	json_add_object "system_toggle_quic"; json_add_string "mode" "string"; json_close_object
 	json_add_object "system_toggle_ipv6"; json_add_string "mode" "string"; json_close_object
 	json_add_object "system_toggle_flow_offloading_fix"; json_add_string "mode" "string"; json_close_object
-	json_add_object "system_toggle_steer_offload_fix"; json_add_string "mode" "string"; json_close_object
-	json_add_object "system_uninstall_panel";      json_add_string "mode" "string"; json_close_object
-	json_add_object "purge_scan";                  json_close_object
-	json_add_object "purge_run";                   json_add_string "value" "string"; json_close_object
-	json_add_object "backup_list";                 json_close_object
-	json_add_object "backup_action";               json_add_string "action" "string"; json_add_string "value" "string"; json_close_object
-	json_add_object "backup_up";                   json_add_string "part" "string"; json_add_string "data" "string"; json_close_object
-	json_add_object "backup_down";                 json_add_string "id" "string"; json_add_string "off" "string"; json_close_object
-	json_add_object "zm_cleanup";                  json_close_object
-	json_add_object "zm_autoclean";                json_add_string "mode" "string"; json_close_object
 	json_add_object "gh_proxy";                    json_add_string "action" "string"; json_add_string "value" "string"; json_close_object
-	json_add_object "sysinfo_run";                 json_close_object
-	json_add_object "sysinfo_get";                 json_close_object
-	json_add_object "mirror_status";               json_close_object
-	json_add_object "mirror_set";                  json_add_string "id" "string"; json_close_object
 	json_add_object "exclusions_status";           json_close_object
 	json_add_object "exclusions_toggle";           json_add_string "ip" "string"; json_close_object
 	json_add_object "exclusions_clear";            json_close_object
@@ -30694,11 +30602,6 @@ list_methods() {
 	json_add_object "zapret_list_set";             json_add_string "id" "string"; json_add_string "content" "string"; json_close_object
 	json_add_object "zapret_list_restore";         json_add_string "id" "string"; json_close_object
 	json_add_object "nfqws_opt_set";               json_add_string "content" "string"; json_close_object
-	json_add_object "tg_status";                   json_close_object
-	json_add_object "tg_action";                   json_add_string "variant" "string"; json_add_string "action" "string"; json_close_object
-	json_add_object "tg_restart_all";              json_close_object
-	json_add_object "tgws_status";                 json_close_object
-	json_add_object "tgws_action";                 json_add_string "action" "string"; json_close_object
 	json_add_object "hosts_status";           json_close_object
 	json_add_object "hosts_toggle";           json_add_string "block" "string"; json_close_object
 	json_add_object "hosts_replace_geohide";  json_add_string "region" "string"; json_close_object
@@ -30706,105 +30609,30 @@ list_methods() {
 	json_add_object "hosts_file_get";         json_close_object
 	json_add_object "hosts_file_set";         json_add_string "content" "string"; json_close_object
 	json_add_object "upload_part";            json_add_string "content" "string"; json_add_string "part" "string"; json_close_object
-	json_add_object "doh_status";             json_close_object
-	json_add_object "doh_check";              json_close_object
-	json_add_object "doh_probe";              json_add_string "provider" "string"; json_close_object
-	json_add_object "doh_install";            json_close_object
-	json_add_object "doh_remove";             json_close_object
-	json_add_object "doh_set";                json_add_string "provider" "string"; json_close_object
-	json_add_object "doh_bootstrap_set";      json_add_string "value" "string"; json_close_object
-	json_add_object "doh_force_set";          json_add_string "mode" "string"; json_close_object
-	json_add_object "doh_failover_set";       json_add_string "value" "string"; json_close_object
-	json_add_object "doh_power";              json_add_string "mode" "string"; json_close_object
-	json_add_object "doh_own_set";            json_add_string "value" "string"; json_close_object
-	json_add_object "dns_net_set";            json_add_string "value" "string"; json_close_object
 	json_add_object "test_status";             json_close_object
 	json_add_object "test_action";             json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
 	json_add_object "zapret_opt_set";          json_add_string "opt" "string"; json_close_object
-	json_add_object "system_time_set";         json_add_string "value" "string"; json_close_object
 	json_add_object "test_results";            json_add_string "mode" "string"; json_close_object
 	json_add_object "zm_update_status";        json_close_object
 	json_add_object "zm_update_action";        json_close_object
 	json_add_object "zm_changelog";            json_add_string "mode" "string"; json_close_object
 	json_add_object "zm_changelog_seen";       json_close_object
-	json_add_object "mixomo_status";           json_close_object
-	json_add_object "mixomo_action";           json_add_string "action" "string"; json_close_object
-	json_add_object "mixomo_config_get";       json_close_object
-	json_add_object "mixomo_config_set";       json_add_string "content" "string"; json_close_object
-	json_add_object "mixomo_subscription_set"; json_add_string "url" "string"; json_close_object
-	json_add_object "mixomo_filter_set";       json_add_string "value" "string"; json_close_object
-	json_add_object "mixomo_proxies";          json_close_object
-	json_add_object "mixomo_magitrickle_list_set"; json_add_string "id" "string"; json_close_object
-	json_add_object "mixomo_autorestart_set";  json_add_string "mode" "string"; json_add_string "value" "string"; json_close_object
-	json_add_object "mixomo_ui_action";        json_add_string "which" "string"; json_close_object
-	json_add_object "mixomo_warp_status";      json_close_object
-	json_add_object "mixomo_warp_action";      json_add_string "endpoint_mode" "string"; json_close_object
-	json_add_object "mixomo_warp_integrate_action"; json_close_object
-	json_add_object "mixomo_warp_config_set"; json_add_string "content" "string"; json_close_object
-	json_add_object "bytetube_installed";     json_close_object
 	json_add_object "health";                 json_close_object
 	json_add_object "system_reboot";          json_close_object
 	json_add_object "reboot_hint_clear";      json_close_object
 	json_add_object "versions";               json_add_string "action" "string"; json_close_object
 	json_add_object "versions_mode";          json_add_string "mode" "string"; json_close_object
-	json_add_object "awg_status";             json_close_object
-	json_add_object "awg_action";             json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
 	json_add_object "term_status";            json_close_object
 	json_add_object "term_action";            json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
-	json_add_object "tsc_status";             json_close_object
-	json_add_object "tsc_action";             json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
-	json_add_object "adblock_status";         json_close_object
-	json_add_object "adblock_action";         json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
-	json_add_object "steer_status";           json_close_object
-	json_add_object "steer_action";           json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
-	json_add_object "bytetube_action";        json_add_string "action" "string"; json_close_object
-	json_add_object "forkop_status";          json_close_object
-	json_add_object "forkop_config_get";      json_close_object
-	json_add_object "forkop_config_set";      json_add_string "content" "string"; json_close_object
-	json_add_object "forkop_action";          json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
 	json_add_object "jobs_cancel";            json_add_string "job" "string"; json_close_object
 	json_add_object "ui_theme_set";           json_add_string "theme" "string"; json_close_object
 	json_add_object "ui_nav_set";             json_add_string "ids" "string"; json_close_object
 	json_add_object "ui_flags_get";           json_close_object
 	json_add_object "ui_flag_set";            json_add_string "name" "string"; json_close_object
-	json_add_object "monitor";                json_close_object
-	json_add_object "monitor_procs";          json_close_object
-	json_add_object "monitor_action";         json_add_string "action" "string"; json_add_string "mode" "string"; json_close_object
-	json_add_object "watch_status";           json_close_object
-	json_add_object "watch_set";              json_add_string "value" "string"; json_close_object
 	json_add_object "autoupd";                json_add_string "action" "string"; json_close_object
 	json_dump
 }
 
-ZM_BK_DIR="/opt/zapret-manager-luci/backups"
-ZM_BK_UP="/tmp/zapret-manager-luci/bk.upload"
-ZM_BK_UC="/opt/zapret-manager-luci/b64.uc"
-zm_bk_up() {
-	mkdir -p /tmp/zapret-manager-luci
-	case "$1" in
-		first) : > "$ZM_BK_UP" ;;
-		next) [ -f "$ZM_BK_UP" ] || { echo '{"error":"загрузка прервалась — выберите файл ещё раз"}'; return; } ;;
-		*) echo '{"error":"неверная часть файла"}'; return ;;
-	esac
-	case "$2" in *[!A-Za-z0-9+/=]*) rm -f "$ZM_BK_UP"; echo '{"error":"файл передался с ошибками — выберите его ещё раз"}'; return ;; esac
-	printf '%s' "$2" >> "$ZM_BK_UP"
-	[ "$(wc -c < "$ZM_BK_UP")" -gt 33554432 ] && { rm -f "$ZM_BK_UP"; echo '{"error":"файл слишком большой"}'; return; }
-	echo '{"ok":true}'
-}
-zm_bk_down() {
-	local f="$ZM_BK_DIR/$1.zmb" off="$2" sz
-	case "$1" in ''|*[!0-9a-z-]*) echo '{"error":"копия не найдена"}'; return ;; esac
-	[ -f "$f" ] || { echo '{"error":"копия не найдена"}'; return; }
-	case "$off" in ''|*[!0-9]*) off=0 ;; esac
-	sz="$(wc -c < "$f" | tr -d ' ')"
-	if command -v ucode >/dev/null 2>&1 && [ -f "$ZM_BK_UC" ]; then
-		printf '{"size":%s,"off":%s,"data":"%s"}\n' "$sz" "$off" "$(ucode "$ZM_BK_UC" enc "$f" "$off" 196608)"
-	elif command -v base64 >/dev/null 2>&1; then
-		printf '{"size":%s,"off":%s,"data":"%s"}\n' "$sz" "$off" "$(dd if="$f" bs=4096 skip=$((off / 4096)) count=48 2>/dev/null | base64 | tr -d '\n')"
-	else
-		echo '{"error":"на роутере нет ucode и base64 — скачать файл не получится"}'
-	fi
-}
 
 call_method() {
 	local method="$1"
@@ -30839,21 +30667,7 @@ call_method() {
 		system_toggle_quic) json_get_var mode mode; "$BACKEND" system_toggle_quic "$mode" ;;
 		system_toggle_ipv6) json_get_var mode mode; "$BACKEND" system_toggle_ipv6 "$mode" ;;
 		system_toggle_flow_offloading_fix) json_get_var mode mode; "$BACKEND" system_toggle_flow_offloading_fix "$mode" ;;
-		system_toggle_steer_offload_fix) json_get_var mode mode; "$BACKEND" system_toggle_steer_offload_fix "$mode" ;;
-		system_uninstall_panel)        json_get_var mode mode; "$BACKEND" system_uninstall_panel "$mode" ;;
-		purge_scan)                    "$BACKEND" purge_scan ;;
-		purge_run)                     json_get_var value value; "$BACKEND" purge_run "$value" ;;
-		backup_list)                   "$BACKEND" backup_list ;;
-		backup_action)                 json_get_var action action; json_get_var value value; printf '%s' "$value" | "$BACKEND" backup_action "$action" @stdin ;;
-		backup_up)                     json_get_var part part; json_get_var data data; zm_bk_up "$part" "$data" ;;
-		backup_down)                   json_get_var id id; json_get_var off off; zm_bk_down "$id" "$off" ;;
-		zm_cleanup)                    "$BACKEND" zm_cleanup ;;
-		zm_autoclean)                  json_get_var mode mode; "$BACKEND" zm_autoclean "$mode" ;;
 		gh_proxy)                      json_get_var action action; json_get_var value value; "$BACKEND" gh_proxy "$action" "$value" ;;
-		sysinfo_run)                   "$BACKEND" sysinfo_run ;;
-		sysinfo_get)                   "$BACKEND" sysinfo_get ;;
-		mirror_status)                 "$BACKEND" mirror_status ;;
-		mirror_set)                    json_get_var id id;           "$BACKEND" mirror_set "$id" ;;
 		exclusions_status)             "$BACKEND" exclusions_status ;;
 		exclusions_toggle)             json_get_var ip ip;          "$BACKEND" exclusions_toggle "$ip" ;;
 		exclusions_clear)              "$BACKEND" exclusions_clear ;;
@@ -30863,11 +30677,6 @@ call_method() {
 		zapret_list_set)               json_get_var id id; json_get_var content content; printf '%s' "$content" | "$BACKEND" zapret_list_set "$id" @stdin ;;
 		zapret_list_restore)           json_get_var id id; "$BACKEND" zapret_list_restore "$id" ;;
 		nfqws_opt_set)                 json_get_var content content; printf '%s' "$content" | "$BACKEND" nfqws_opt_set @stdin ;;
-		tg_status)                     "$BACKEND" tg_status ;;
-		tg_action)                     json_get_var variant variant; json_get_var action action; "$BACKEND" tg_action "$variant" "$action" ;;
-		tg_restart_all)                "$BACKEND" tg_restart_all ;;
-		tgws_status)                   "$BACKEND" tgws_status ;;
-		tgws_action)                   json_get_var action action;   "$BACKEND" tgws_action "$action" ;;
 		hosts_status)            "$BACKEND" hosts_status ;;
 		hosts_toggle)            json_get_var block block;     "$BACKEND" hosts_toggle "$block" ;;
 		hosts_replace_geohide)   json_get_var region region;   "$BACKEND" hosts_replace_geohide "$region" ;;
@@ -30875,68 +30684,22 @@ call_method() {
 		hosts_file_get)          "$BACKEND" hosts_file_get ;;
 		hosts_file_set)          json_get_var content content; printf '%s' "$content" | "$BACKEND" hosts_file_set @stdin ;;
 		upload_part)             json_get_var content content; json_get_var part part; printf '%s' "$content" | "$BACKEND" upload_part "$part" @stdin ;;
-		doh_status)              "$BACKEND" doh_status ;;
-		doh_check)               "$BACKEND" doh_check ;;
-		doh_probe)               json_get_var provider provider; "$BACKEND" doh_probe "$provider" ;;
-		doh_install)             "$BACKEND" doh_install ;;
-		doh_remove)              "$BACKEND" doh_remove ;;
-		doh_set)                 json_get_var provider provider; "$BACKEND" doh_set "$provider" ;;
-		doh_bootstrap_set)       json_get_var value value; "$BACKEND" doh_bootstrap_set "$value" ;;
-		doh_force_set)           json_get_var mode mode; "$BACKEND" doh_force_set "$mode" ;;
-		doh_failover_set)        json_get_var value value; "$BACKEND" doh_failover_set "$value" ;;
-		doh_power)               json_get_var mode mode; "$BACKEND" doh_power "$mode" ;;
-		doh_own_set)             json_get_var value value; "$BACKEND" doh_own_set "$value" ;;
-		dns_net_set)             json_get_var value value; "$BACKEND" dns_net_set "$value" ;;
 		test_status)             "$BACKEND" test_status ;;
 		test_action)             json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" test_action "$action" @stdin ;;
 		zapret_opt_set)          json_get_var opt opt;         "$BACKEND" zapret_opt_set "$opt" ;;
-		system_time_set)         json_get_var value value;     "$BACKEND" system_time_set "$value" ;;
 		test_results)            json_get_var mode mode; "$BACKEND" test_results "$mode" ;;
 		zm_update_status)        "$BACKEND" zm_update_status ;;
 		zm_update_action)        "$BACKEND" zm_update_action ;;
 		zm_changelog)            json_get_var mode mode;       "$BACKEND" zm_changelog "$mode" ;;
 		zm_changelog_seen)       "$BACKEND" zm_changelog_seen ;;
-		mixomo_status)           "$BACKEND" mixomo_status ;;
-		mixomo_action)           json_get_var action action; "$BACKEND" mixomo_action "$action" ;;
-		mixomo_config_get)       "$BACKEND" mixomo_config_get ;;
-		mixomo_config_set)       json_get_var content content; printf '%s' "$content" | "$BACKEND" mixomo_config_set @stdin ;;
-		mixomo_subscription_set) json_get_var url url; "$BACKEND" mixomo_subscription_set "$url" ;;
-		mixomo_filter_set)       json_get_var value value; "$BACKEND" mixomo_filter_set "$value" ;;
-		mixomo_proxies)          "$BACKEND" mixomo_proxies ;;
-		mixomo_magitrickle_list_set) json_get_var id id; "$BACKEND" mixomo_magitrickle_list_set "$id" ;;
-		mixomo_autorestart_set)  json_get_var mode mode; json_get_var value value; "$BACKEND" mixomo_autorestart_set "$mode" "$value" ;;
-		mixomo_ui_action)        json_get_var which which; "$BACKEND" mixomo_ui_action "$which" ;;
-		mixomo_warp_status)      "$BACKEND" mixomo_warp_status ;;
-		mixomo_warp_action)      json_get_var endpoint_mode endpoint_mode; "$BACKEND" mixomo_warp_action "$endpoint_mode" ;;
-		mixomo_warp_integrate_action) "$BACKEND" mixomo_warp_integrate_action ;;
-		mixomo_warp_config_set) json_get_var content content; printf '%s' "$content" | "$BACKEND" mixomo_warp_config_set @stdin ;;
-		bytetube_installed)      "$BACKEND" bytetube_installed ;;
 		health)                  "$BACKEND" health ;;
 		system_reboot)           "$BACKEND" system_reboot ;;
 		reboot_hint_clear)       "$BACKEND" reboot_hint_clear ;;
 		versions)                json_get_var action action; "$BACKEND" versions "$action" ;;
 		versions_mode)           json_get_var mode mode; "$BACKEND" versions_mode "$mode" ;;
-		awg_status)              "$BACKEND" awg_status ;;
-		awg_action)              json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" awg_action "$action" @stdin ;;
 		term_status)             "$BACKEND" term_status ;;
 		term_action)             json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" term_action "$action" @stdin ;;
-		tsc_status)              "$BACKEND" tsc_status ;;
-		tsc_action)              json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" tsc_action "$action" @stdin ;;
-		monitor)                 "$BACKEND" monitor ;;
-		monitor_procs)           "$BACKEND" monitor_procs ;;
-		monitor_action)          json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" monitor_action "$action" @stdin ;;
-		watch_status)            "$BACKEND" watch_status ;;
-		watch_set)               json_get_var value value; "$BACKEND" watch_set "$value" ;;
 		autoupd)                 json_get_var action action; "$BACKEND" autoupd "$action" ;;
-		adblock_status)          "$BACKEND" adblock_status ;;
-		adblock_action)          json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" adblock_action "$action" @stdin ;;
-		steer_status)            "$BACKEND" steer_status ;;
-		steer_action)            json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" steer_action "$action" @stdin ;;
-		bytetube_action)         json_get_var action action; "$BACKEND" bytetube_action "$action" ;;
-		forkop_status)           "$BACKEND" forkop_status ;;
-		forkop_config_get)       "$BACKEND" forkop_config_get ;;
-		forkop_config_set)       json_get_var content content; printf '%s' "$content" | "$BACKEND" forkop_config_set @stdin ;;
-		forkop_action)           json_get_var action action; json_get_var mode mode; printf '%s' "$mode" | "$BACKEND" forkop_action "$action" @stdin ;;
 		jobs_cancel)             json_get_var job job;         "$BACKEND" jobs_cancel "$job" ;;
 		ui_theme_set)            json_get_var theme theme;     "$BACKEND" ui_theme_set "$theme" ;;
 		ui_nav_set)              json_get_var ids ids;         "$BACKEND" ui_nav_set "$ids" ;;
@@ -30985,42 +30748,19 @@ cat > '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json' << 'ZM_INSTALLER_EOF'
 					"discord_status",
 					"hosts_status",
 					"hosts_file_get",
-					"doh_status",
-					"doh_check",
-					"doh_probe",
 					"game_status",
 					"system_status",
-					"mirror_status",
 					"exclusions_status",
 					"nfqws_opt_get",
 					"zapret_lists_status",
 					"zapret_list_get",
-					"tg_status",
-					"tgws_status",
 					"test_status",
 					"test_results",
 					"zm_update_status",
 					"zm_changelog",
-					"purge_scan",
-					"backup_list",
-					"mixomo_status",
-					"mixomo_proxies",
-					"mixomo_config_get",
-					"mixomo_warp_status",
-					"bytetube_installed",
 					"health",
 					"versions",
-					"awg_status",
-					"monitor",
-					"monitor_procs",
-					"watch_status",
 					"term_status",
-					"tsc_status",
-					"adblock_status",
-					"steer_status",
-					"forkop_status",
-					"forkop_config_get",
-					"sysinfo_get",
 					"ui_flags_get"
 				],
 				"system": [
@@ -31051,19 +30791,10 @@ cat > '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json' << 'ZM_INSTALLER_EOF'
 					"discord_set_dv",
 					"discord_set_fake",
 					"hosts_toggle",
-					"doh_set",
-					"doh_bootstrap_set",
-					"doh_force_set",
-					"doh_failover_set",
-					"doh_own_set",
-					"doh_power",
-					"dns_net_set",
 					"hosts_replace_geohide",
 					"hosts_reset",
 					"hosts_file_set",
 					"upload_part",
-					"doh_install",
-					"doh_remove",
 					"game_set",
 					"game_set_fake",
 					"game_toggle_xtreme",
@@ -31071,51 +30802,18 @@ cat > '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json' << 'ZM_INSTALLER_EOF'
 					"system_toggle_quic",
 					"system_toggle_ipv6",
 					"system_toggle_flow_offloading_fix",
-					"system_toggle_steer_offload_fix",
-					"system_uninstall_panel",
-					"zm_cleanup",
-					"zm_autoclean",
 					"gh_proxy",
-					"purge_run",
-					"backup_action",
-					"backup_up",
-					"backup_down",
-					"mirror_set",
 					"exclusions_toggle",
 					"exclusions_clear",
 					"nfqws_opt_set",
 					"zapret_list_set",
 					"zapret_list_restore",
-					"tg_action",
-					"tg_restart_all",
-					"tgws_action",
 					"test_action",
 					"zapret_opt_set",
-					"system_time_set",
 					"zm_update_action",
 					"zm_changelog_seen",
-					"mixomo_action",
-					"mixomo_config_set",
-					"mixomo_subscription_set",
-					"mixomo_filter_set",
-					"mixomo_magitrickle_list_set",
-					"mixomo_autorestart_set",
-					"mixomo_ui_action",
-					"mixomo_warp_action",
-					"mixomo_warp_integrate_action",
-					"mixomo_warp_config_set",
-					"bytetube_action",
-					"awg_action",
-					"monitor_action",
-					"watch_set",
 					"autoupd",
 					"term_action",
-					"tsc_action",
-					"adblock_action",
-					"steer_action",
-					"forkop_config_set",
-					"forkop_action",
-					"sysinfo_run",
 					"jobs_cancel",
 					"ui_theme_set",
 					"ui_nav_set",
@@ -31131,7 +30829,6 @@ cat > '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json' << 'ZM_INSTALLER_EOF'
 		}
 	}
 }
-
 ZM_INSTALLER_EOF
 chmod 0644 '/usr/share/rpcd/acl.d/luci-app-zapret-manager.json'
 
@@ -31267,23 +30964,10 @@ function zmDeclare(o) {
 }
 
 var callStatus = zmDeclare({ object: 'zapret-manager', method: 'status', expect: {} });
-var callAwgStatus = zmDeclare({ object: 'zapret-manager', method: 'awg_status', expect: {} });
-var callAwgAction = zmDeclare({ object: 'zapret-manager', method: 'awg_action', params: ['action', 'mode'], expect: {} });
 var callTermStatus = zmDeclare({ object: 'zapret-manager', method: 'term_status', expect: {} });
 var callTermAction = zmDeclare({ object: 'zapret-manager', method: 'term_action', params: ['action', 'mode'], expect: {} });
-var callTscStatus = zmDeclare({ object: 'zapret-manager', method: 'tsc_status', expect: {} });
-var callTscAction = zmDeclare({ object: 'zapret-manager', method: 'tsc_action', params: ['action', 'mode'], expect: {} });
-var callMonitor = zmDeclare({ object: 'zapret-manager', method: 'monitor', expect: {} });
-var callMonitorProcs = zmDeclare({ object: 'zapret-manager', method: 'monitor_procs', expect: {} });
-var callMonitorAction = zmDeclare({ object: 'zapret-manager', method: 'monitor_action', params: ['action', 'mode'], expect: {} });
-var callWatchStatus = zmDeclare({ object: 'zapret-manager', method: 'watch_status', expect: {} });
-var callWatchSet = zmDeclare({ object: 'zapret-manager', method: 'watch_set', params: ['value'], expect: {} });
 var callUiFlagsGet = zmDeclare({ object: 'zapret-manager', method: 'ui_flags_get', expect: {} });
 var callUiFlagSet = zmDeclare({ object: 'zapret-manager', method: 'ui_flag_set', params: ['name'], expect: {} });
-var callAdblockStatus = zmDeclare({ object: 'zapret-manager', method: 'adblock_status', expect: {} });
-var callAdblockAction = zmDeclare({ object: 'zapret-manager', method: 'adblock_action', params: ['action', 'mode'], expect: {} });
-var callSteerStatus = zmDeclare({ object: 'zapret-manager', method: 'steer_status', expect: {} });
-var callSteerAction = zmDeclare({ object: 'zapret-manager', method: 'steer_action', params: ['action', 'mode'], expect: {} });
 var callSystemInfo = zmDeclare({ object: 'zapret-manager', method: 'system_info', expect: {} });
 var callVersions = zmDeclare({ object: 'zapret-manager', method: 'versions', params: ['action'], expect: {} });
 var callVersionsMode = zmDeclare({ object: 'zapret-manager', method: 'versions_mode', params: ['mode'], expect: {} });
@@ -31311,21 +30995,7 @@ var callSystemCheckConnectivity = zmDeclare({ object: 'zapret-manager', method: 
 var callSystemToggleQuic = zmDeclare({ object: 'zapret-manager', method: 'system_toggle_quic', params: ['mode'], expect: {} });
 var callSystemToggleIpv6 = zmDeclare({ object: 'zapret-manager', method: 'system_toggle_ipv6', params: ['mode'], expect: {} });
 var callSystemToggleFlowOffloadingFix = zmDeclare({ object: 'zapret-manager', method: 'system_toggle_flow_offloading_fix', params: ['mode'], expect: {} });
-var callSystemToggleSteerOffloadFix = zmDeclare({ object: 'zapret-manager', method: 'system_toggle_steer_offload_fix', params: ['mode'], expect: {} });
-var callSystemUninstallPanel = zmDeclare({ object: 'zapret-manager', method: 'system_uninstall_panel', params: ['mode'], expect: {} });
-var callZmCleanup = zmDeclare({ object: 'zapret-manager', method: 'zm_cleanup', expect: {} });
-var callZmAutoclean = zmDeclare({ object: 'zapret-manager', method: 'zm_autoclean', params: ['mode'], expect: {} });
 var callGhProxy = zmDeclare({ object: 'zapret-manager', method: 'gh_proxy', params: ['action', 'value'], expect: {} });
-var callPurgeScan = zmDeclare({ object: 'zapret-manager', method: 'purge_scan', expect: {} });
-var callPurgeRun = zmDeclare({ object: 'zapret-manager', method: 'purge_run', params: ['value'], expect: {} });
-var callBackupList = zmDeclare({ object: 'zapret-manager', method: 'backup_list', expect: {} });
-var callBackupAction = zmDeclare({ object: 'zapret-manager', method: 'backup_action', params: ['action', 'value'], expect: {} });
-var callBackupUp = zmDeclare({ object: 'zapret-manager', method: 'backup_up', params: ['part', 'data'], expect: {} });
-var callBackupDown = zmDeclare({ object: 'zapret-manager', method: 'backup_down', params: ['id', 'off'], expect: {} });
-var callSysinfoRun = zmDeclare({ object: 'zapret-manager', method: 'sysinfo_run', expect: {} });
-var callSysinfoGet = zmDeclare({ object: 'zapret-manager', method: 'sysinfo_get', expect: {} });
-var callMirrorStatus = zmDeclare({ object: 'zapret-manager', method: 'mirror_status', expect: {} });
-var callMirrorSet = zmDeclare({ object: 'zapret-manager', method: 'mirror_set', params: ['id'], expect: {} });
 var callExclusionsStatus = zmDeclare({ object: 'zapret-manager', method: 'exclusions_status', expect: {} });
 var callExclusionsToggle = zmDeclare({ object: 'zapret-manager', method: 'exclusions_toggle', params: ['ip'], expect: {} });
 var callExclusionsClear = zmDeclare({ object: 'zapret-manager', method: 'exclusions_clear', expect: {} });
@@ -31335,11 +31005,6 @@ var callZapretListSet = zmDeclare({ object: 'zapret-manager', method: 'zapret_li
 var callZapretListRestore = zmDeclare({ object: 'zapret-manager', method: 'zapret_list_restore', params: ['id'], expect: {} });
 var callNfqwsOptGet = zmDeclare({ object: 'zapret-manager', method: 'nfqws_opt_get', expect: {} });
 var callNfqwsOptSet = zmDeclare({ object: 'zapret-manager', method: 'nfqws_opt_set', params: ['content'], expect: {} });
-var callTgStatus = zmDeclare({ object: 'zapret-manager', method: 'tg_status', expect: {} });
-var callTgAction = zmDeclare({ object: 'zapret-manager', method: 'tg_action', params: ['variant', 'action'], expect: {} });
-var callTgRestartAll = zmDeclare({ object: 'zapret-manager', method: 'tg_restart_all', expect: {} });
-var callTgwsStatus = zmDeclare({ object: 'zapret-manager', method: 'tgws_status', expect: {} });
-var callTgwsAction = zmDeclare({ object: 'zapret-manager', method: 'tgws_action', params: ['action'], expect: {} });
 var callHostsStatus = zmDeclare({ object: 'zapret-manager', method: 'hosts_status', expect: {} });
 var callHostsToggle = zmDeclare({ object: 'zapret-manager', method: 'hosts_toggle', params: ['block'], expect: {} });
 var callHostsReplaceGeohide = zmDeclare({ object: 'zapret-manager', method: 'hosts_replace_geohide', params: ['region'], expect: {} });
@@ -31363,23 +31028,10 @@ function bigSend(text, fn) {
 }
 function bigText(call) { return function(text) { return bigSend(text, function(v) { return call(v); }); }; }
 function bigArg2(call) { return function(a, text) { return bigSend(text, function(v) { return call(a, v); }); }; }
-var callDohStatus = zmDeclare({ object: 'zapret-manager', method: 'doh_status', expect: {} });
-var callDohCheck = zmDeclare({ object: 'zapret-manager', method: 'doh_check', expect: {} });
-var callDohProbe = zmDeclare({ object: 'zapret-manager', method: 'doh_probe', params: ['provider'], expect: {} });
-var callDohInstall = zmDeclare({ object: 'zapret-manager', method: 'doh_install', expect: {} });
-var callDohRemove = zmDeclare({ object: 'zapret-manager', method: 'doh_remove', expect: {} });
-var callDohSet = zmDeclare({ object: 'zapret-manager', method: 'doh_set', params: ['provider'], expect: {} });
-var callDohBootstrapSet = zmDeclare({ object: 'zapret-manager', method: 'doh_bootstrap_set', params: ['value'], expect: {} });
-var callDohForceSet = zmDeclare({ object: 'zapret-manager', method: 'doh_force_set', params: ['mode'], expect: {} });
-var callDohFailoverSet = zmDeclare({ object: 'zapret-manager', method: 'doh_failover_set', params: ['value'], expect: {} });
-var callDohOwnSet = zmDeclare({ object: 'zapret-manager', method: 'doh_own_set', params: ['value'], expect: {} });
-var callDohPower = zmDeclare({ object: 'zapret-manager', method: 'doh_power', params: ['mode'], expect: {} });
-var callDnsNetSet = zmDeclare({ object: 'zapret-manager', method: 'dns_net_set', params: ['value'], expect: {} });
 var callTestStatus = zmDeclare({ object: 'zapret-manager', method: 'test_status', expect: {} });
 var callTestAction = zmDeclare({ object: 'zapret-manager', method: 'test_action', params: ['action', 'mode'], expect: {} });
 var callTestResults = zmDeclare({ object: 'zapret-manager', method: 'test_results', params: ['mode'], expect: {} });
 var callZapretOptSet = zmDeclare({ object: 'zapret-manager', method: 'zapret_opt_set', params: ['opt'], expect: {} });
-var callSystemTimeSet = zmDeclare({ object: 'zapret-manager', method: 'system_time_set', params: ['value'], expect: {} });
 var callZmUpdateStatus = zmDeclare({ object: 'zapret-manager', method: 'zm_update_status', expect: {} });
 var callZmUpdateAction = zmDeclare({ object: 'zapret-manager', method: 'zm_update_action', expect: {} });
 var callZmChangelog = zmDeclare({ object: 'zapret-manager', method: 'zm_changelog', params: ['mode'], expect: {} });
@@ -31393,28 +31045,10 @@ function zmUpdateFromVersions(d) {
 	if (!it || !it.installed) return null;
 	return { current: it.installed, latest: it.latest || it.installed, newer: !!it.latest && it.latest !== it.installed };
 }
-var callMixomoStatus = zmDeclare({ object: 'zapret-manager', method: 'mixomo_status', expect: {} });
-var callMixomoAction = zmDeclare({ object: 'zapret-manager', method: 'mixomo_action', params: ['action'], expect: {} });
-var callMixomoConfigGet = zmDeclare({ object: 'zapret-manager', method: 'mixomo_config_get', expect: {} });
-var callMixomoConfigSet = zmDeclare({ object: 'zapret-manager', method: 'mixomo_config_set', params: ['content'], expect: {} });
-var callMixomoApplySubscription = zmDeclare({ object: 'zapret-manager', method: 'mixomo_subscription_set', params: ['url'], expect: {} });
-var callMixomoFilterSet = zmDeclare({ object: 'zapret-manager', method: 'mixomo_filter_set', params: ['value'], expect: {} });
-var callMixomoProxies = zmDeclare({ object: 'zapret-manager', method: 'mixomo_proxies', expect: {} });
-var callMixomoMagitrickleListSet = zmDeclare({ object: 'zapret-manager', method: 'mixomo_magitrickle_list_set', params: ['id'], expect: {} });
-var callMixomoAutorestartSet = zmDeclare({ object: 'zapret-manager', method: 'mixomo_autorestart_set', params: ['mode', 'value'], expect: {} });
-var callMixomoUiAction = zmDeclare({ object: 'zapret-manager', method: 'mixomo_ui_action', params: ['which'], expect: {} });
-var callMixomoWarpStatus = zmDeclare({ object: 'zapret-manager', method: 'mixomo_warp_status', expect: {} });
-var callMixomoWarpAction = zmDeclare({ object: 'zapret-manager', method: 'mixomo_warp_action', params: ['endpoint_mode'], expect: {} });
-var callMixomoWarpIntegrateAction = zmDeclare({ object: 'zapret-manager', method: 'mixomo_warp_integrate_action', expect: {} });
-var callMixomoWarpConfigSet = zmDeclare({ object: 'zapret-manager', method: 'mixomo_warp_config_set', params: ['content'], expect: {} });
 var callHealth = zmDeclare({ object: 'zapret-manager', method: 'health', expect: {} });
 var callSystemReboot = zmDeclare({ object: 'zapret-manager', method: 'system_reboot', expect: {} });
 var callRebootHintClear = zmDeclare({ object: 'zapret-manager', method: 'reboot_hint_clear', expect: {} });
 var callBoardInfo = rpc.declare({ object: 'system', method: 'info', expect: {} });
-var callForkopStatus = zmDeclare({ object: 'zapret-manager', method: 'forkop_status', expect: {} });
-var callForkopConfigGet = zmDeclare({ object: 'zapret-manager', method: 'forkop_config_get', expect: {} });
-var callForkopConfigSet = zmDeclare({ object: 'zapret-manager', method: 'forkop_config_set', params: ['content'], expect: {} });
-var callForkopAction = zmDeclare({ object: 'zapret-manager', method: 'forkop_action', params: ['action', 'mode'], expect: {} });
 var callJobsCancel = zmDeclare({ object: 'zapret-manager', method: 'jobs_cancel', params: ['job'], expect: {} });
 
 function parseSize(v) {
@@ -32094,35 +31728,6 @@ function busyToast(message, sub) {
 	};
 }
 
-function catalogWatch(before, done) {
-	if (_catWatching) return;
-	_catWatching = true;
-	before = before || {};
-	var tries = 0;
-	function about(c) { return (c.version ? 'версия ' + c.version + ', ' : '') + 'пунктов: ' + (parseInt(c.services, 10) || 0); }
-	function finish(c) {
-		_catWatching = false;
-		if (!c) toast('Роутер не ответил — обновился ли каталог списков, будет видно в его блоке', 'warning');
-		else if (c.busy) toast('Каталог списков всё ещё обновляется — результат появится в его блоке', 'warning');
-		else if (c.off) toast('Каталог списков выключен — обновлять нечего', 'warning');
-		else if (c.error) toast(c.version ? 'Каталог списков не обновился — проверьте доступ к GitHub. Работает прежний: ' + about(c) : 'Каталог списков не скачался — проверьте доступ к GitHub', 'error');
-		else if (before.version && String(before.version) === String(c.version) && String(before.services) === String(c.services)) toast('Каталог списков проверен — новой версии нет: ' + about(c), 'info');
-		else toast('Каталог списков обновлён: ' + about(c), 'info');
-		if (done) done();
-	}
-	(function step() {
-		setTimeout(function() {
-			tries++;
-			callSteerStatus().then(function(res) {
-				var c = (res && res.catalog) || null;
-				if ((!c || c.busy) && tries < 30) { step(); return; }
-				finish(c);
-			}).catch(function() {
-				if (tries < 30) step(); else finish(null);
-			});
-		}, tries ? 2000 : 1500);
-	})();
-}
 
 function notifyStrategyResult(res, okLabel) {
 	if (res.error) {
@@ -32602,90 +32207,6 @@ function steerOffloadAsk(mode) {
 		okText: 'Отключить поправку', cancelText: 'Оставить', danger: true
 	}).then(function(v) { return !!v; });
 }
-function sysFixCard(d, onChange, o) {
-	d = d || {}; o = o || {};
-	var mode = FLOW_MODE[d.flow_mode] ? d.flow_mode : 'off', fon = mode !== 'off', tpl = d.fw4_tpl !== false;
-	function refresh() { return callSystemStatus().then(function(s) { if (onChange) onChange(s || {}); try { window.dispatchEvent(new CustomEvent('zm:changed')); } catch (e) {} }); }
-	function run(start, call, done) {
-		if (sysFixBusy) { toast('Дождитесь завершения текущей операции', 'warning'); return; }
-		sysFixBusy = true;
-		toast(start, 'warning');
-		call().then(function(res) {
-			sysFixBusy = false;
-			if (!res || res.error) { toast((res && res.error) || 'Роутер не ответил', 'error'); return; }
-			toast(done(res), 'info');
-			refresh();
-		}).catch(function() { sysFixBusy = false; toast('Роутер не ответил', 'error'); });
-	}
-	function stBadge(on, okText, offText, quiet) {
-		return E('span', { 'class': 'zm-badge ' + (on ? 'zm-ok' : quiet ? 'zm-off' : 'zm-bad') }, [ E('span', { 'class': 'zm-dot' }), on ? okText : offText ]);
-	}
-	function btn(on, onText, offText, click) {
-		return E('div', { 'class': 'zm-sx-act' }, [ E('button', { 'class': on ? 'cbi-button cbi-button-remove' : 'cbi-button', 'click': click }, on ? onText : offText) ]);
-	}
-	function tile(cls, title, b, hint, act, extra) {
-		return E('div', { 'class': cls }, [
-			E('div', { 'class': 'zm-sx-head' }, [ E('span', { 'class': 'zm-sx-title' }, title), b ]),
-			E('p', { 'class': 'zm-hint' }, hint)
-		].concat(extra || [], [ E('div', { 'class': 'zm-sx-fill' }), act || E([]) ]));
-	}
-
-	var quic = tile('zm-sx-tile', 'Блокировка QUIC', stBadge(d.quic_blocked === true, 'включена', 'выключена'),
-		'Браузеры перейдут с QUIC (HTTP/3) на обычный HTTPS — его Zapret обрабатывает надёжнее.',
-		btn(d.quic_blocked === true, 'Выключить', 'Включить', function() {
-			run(d.quic_blocked ? 'Выключаем блокировку QUIC' : 'Включаем блокировку QUIC', function() { return callSystemToggleQuic(d.quic_blocked ? 'off' : 'on'); }, function(r) { return r.quic_blocked ? 'Блокировка QUIC включена' : 'Блокировка QUIC выключена'; });
-		}));
-	var v6 = tile('zm-sx-tile', 'IPv6 в Zapret', stBadge(d.ipv6_enabled === true, 'включён', 'выключен'),
-		'Zapret обрабатывает и трафик IPv6. Нужно, только если у провайдера есть IPv6.',
-		btn(d.ipv6_enabled === true, 'Выключить', 'Включить', function() {
-			run(d.ipv6_enabled ? 'Выключаем IPv6 в Zapret' : 'Включаем IPv6 в Zapret', function() { return callSystemToggleIpv6(d.ipv6_enabled ? 'off' : 'on'); }, function(r) { return r.ipv6_enabled ? 'IPv6 в Zapret включён' : 'IPv6 в Zapret выключен'; });
-		}));
-
-	var zf = d.flow_offloading_fix === true, sf = d.steer_offload_fix === true, auto = d.watch_off !== true, zIn = d.zapret_installed !== false;
-	var selfNote = auto ? ' Ставится сама, пока включён Flow Offloading.' : '';
-	var zSub = tile('zm-sx-sub', 'Поправка для Zapret', stBadge(zf, 'применена', d.zapret_fix_off ? 'отключена вручную' : 'не применена', !zIn),
-		'Первые 30 пакетов каждого соединения идут обычным путём — Zapret успевает их обработать. Дальше соединение ускоряется.' +
-			(d.zapret_fix_off && !zf ? ' Отключена вручную — сама не включится.' : !zIn ? ' Zapret не установлен — понадобится, если поставить его.' : selfNote),
-		tpl ? btn(zf, 'Отключить', 'Применить', function() {
-			run(zf ? 'Отключаем поправку для Zapret' : 'Применяем поправку для Zapret', function() { return callSystemToggleFlowOffloadingFix(zf ? 'off' : 'on'); }, function(r) { return r.flow_offloading_fix ? 'Поправка для Zapret применена' : 'Поправка для Zapret отключена'; });
-		}) : null);
-	var sSub = d.steer_installed
-		? tile('zm-sx-sub', 'Поправка для Steer', stBadge(sf, 'применена', d.steer_offload_off ? 'отключена вручную' : 'не применена'),
-			'Соединения, которые Steer ведёт в секции (VPN, WARP, туннели), не ускоряются — иначе по кабелю они перестают идти. Остальной трафик ускоряется как раньше.' +
-				(d.steer_offload_off && !sf ? ' Отключена вручную — сама не включится.' : selfNote),
-			tpl ? btn(sf, 'Отключить', 'Применить', function() {
-				(sf ? steerOffloadAsk(mode) : Promise.resolve(true)).then(function(go) {
-					if (!go) return;
-					run(sf ? 'Отключаем поправку для Steer' : 'Применяем поправку для Steer', function() { return callSystemToggleSteerOffloadFix(sf ? 'off' : 'on'); }, function(r) { return r.steer_offload_fix ? 'Поправка для Steer применена' : 'Поправка для Steer отключена'; });
-				});
-			}) : null)
-		: tile('zm-sx-sub', 'Поправка для Steer', E('span', { 'class': 'zm-badge zm-off' }, [ E('span', { 'class': 'zm-dot' }), 'Steer не установлен' ]),
-			'Понадобится, если поставить Steer.', null);
-	function offChip(text, start, call, done) {
-		return E('span', { 'class': 'zm-sx-offchip' }, [
-			E('span', { 'class': 'zm-badge zm-off' }, [ E('span', { 'class': 'zm-dot' }), text ]),
-			E('button', { 'class': 'zm-sx-unlink', 'type': 'button', 'title': 'Пока Flow Offloading выключен, поправка не нужна', 'click': function() { run(start, call, function() { return done; }); } }, 'убрать')
-		]);
-	}
-	var offList = [];
-	if (tpl && !fon && zf) offList.push(offChip('поправка для Zapret стоит', 'Убираем поправку для Zapret', function() { return callSystemToggleFlowOffloadingFix('off'); }, 'Поправка для Zapret убрана'));
-	if (tpl && !fon && sf) offList.push(offChip('поправка для Steer стоит', 'Убираем поправку для Steer', function() { return callSystemToggleSteerOffloadFix('off'); }, 'Поправка для Steer убрана'));
-	var flow = E('div', { 'class': 'zm-sx-tile zm-sx-wide' }, [
-		E('div', { 'class': 'zm-sx-head zm-sx-left' }, [ E('span', { 'class': 'zm-sx-title' }, 'Flow Offloading'),
-			E('span', { 'class': 'zm-badge ' + (fon ? 'zm-sx-info' : 'zm-off') }, [ E('span', { 'class': 'zm-dot' }), FLOW_MODE[mode] ]) ]),
-		E('p', { 'class': 'zm-hint' }, !tpl ? 'На роутере нет firewall4 — поправки для Flow Offloading недоступны.'
-			: (fon ? 'Ускорение маршрутизации/NAT (Сеть → Межсетевой экран): установленные соединения идут быстрым путём, мимо правил роутера. Для Zapret и Steer нужны свои поправки.'
-				: 'Ускорение маршрутизации/NAT сейчас выключено (Сеть → Межсетевой экран) — поправки для Zapret и Steer не нужны.' + (auto
-					? ' Если включите его, панель сама поставит нужные поправки.'
-					: ' Если включите его, поставьте поправки здесь: «Фоновые проверки» выключены, и сама панель их не поставит.'))),
-		tpl && fon ? E('div', { 'class': 'zm-sx-two' }, [ zSub, sSub ]) : offList.length ? E('div', { 'class': 'zm-sx-offfix' }, offList) : E([])
-	]);
-	return E('div', { 'class': 'zm-card' + (o.cls ? ' ' + o.cls : '') }, [
-		E('h3', {}, o.title || 'Система'),
-		o.intro ? E('p', { 'class': 'zm-hint', 'style': 'margin-top:-6px' }, o.intro) : E([]),
-		E('div', { 'class': 'zm-sx-grid' }, [ quic, v6, flow ])
-	]);
-}
 
 function alertBanners(h, done) {
 	var box = E('div', { 'class': 'zm-alerts' });
@@ -32707,7 +32228,6 @@ function alertBanners(h, done) {
 	}
 	if (h && h.reboot_hint) box.appendChild(rebootBanner(h.reboot_hint));
 	if (h && h.flow_warn) one('Включён Flow Offloading, а поправка для Zapret не применена — Zapret может работать с перебоями.', 'Применить поправку', 'flow_offloading_fix', callSystemToggleFlowOffloadingFix, 'Поправка для Zapret применена');
-	if (h && h.steer_flow_warn) one('Включён Flow Offloading, а поправка для Steer не применена — трафик секций Steer по кабелю может не идти.', 'Применить поправку', 'steer_offload_fix', callSystemToggleSteerOffloadFix, 'Поправка для Steer применена');
 	if (h && h.ipv6_warn) one('Роутер работает по IPv6, а в Zapret IPv6 выключен — часть сайтов может открываться без обхода.', 'Включить IPv6', 'ipv6_enabled', callSystemToggleIpv6, 'IPv6 в Zapret включён');
 	var ghHid = 0;
 	try { ghHid = parseInt(localStorage.getItem('zm.gh_warn_hide'), 10) || 0; } catch (e) {}
@@ -33342,23 +32862,9 @@ return baseclass.extend({
 	systemToggleQuic: callSystemToggleQuic,
 	systemToggleIpv6: callSystemToggleIpv6,
 	systemToggleFlowOffloadingFix: callSystemToggleFlowOffloadingFix,
-	systemToggleSteerOffloadFix: callSystemToggleSteerOffloadFix,
 	sysFixCard: sysFixCard,
 	steerOffloadAsk: steerOffloadAsk,
-	systemUninstallPanel: callSystemUninstallPanel,
-	zmCleanup: callZmCleanup,
-	zmAutoclean: callZmAutoclean,
 	ghProxy: callGhProxy,
-	purgeScan: callPurgeScan,
-	purgeRun: callPurgeRun,
-	backupList: callBackupList,
-	backupAction: callBackupAction,
-	backupUp: callBackupUp,
-	backupDown: callBackupDown,
-	sysinfoRun: callSysinfoRun,
-	sysinfoGet: callSysinfoGet,
-	mirrorStatus: callMirrorStatus,
-	mirrorSet: callMirrorSet,
 	exclusionsStatus: callExclusionsStatus,
 	exclusionsToggle: callExclusionsToggle,
 	exclusionsClear: callExclusionsClear,
@@ -33368,79 +32874,29 @@ return baseclass.extend({
 	zapretListSet: bigArg2(callZapretListSet),
 	zapretListRestore: callZapretListRestore,
 	nfqwsOptSet: bigText(callNfqwsOptSet),
-	tgStatus: callTgStatus,
-	tgAction: callTgAction,
-	tgRestartAll: callTgRestartAll,
-	tgwsStatus: callTgwsStatus,
-	tgwsAction: callTgwsAction,
 	hostsStatus: callHostsStatus,
 	hostsToggle: callHostsToggle,
 	hostsReplaceGeohide: callHostsReplaceGeohide,
 	hostsReset: callHostsReset,
 	hostsFileGet: callHostsFileGet,
 	hostsFileSet: bigText(callHostsFileSet),
-	dohStatus: callDohStatus,
-	dohCheck: callDohCheck,
-	dohProbe: callDohProbe,
-	dohInstall: callDohInstall,
-	dohRemove: callDohRemove,
-	dohSet: callDohSet,
-	dohBootstrapSet: callDohBootstrapSet,
-	dohForceSet: callDohForceSet,
-	dohFailoverSet: callDohFailoverSet,
-	dohOwnSet: callDohOwnSet,
-	dohPower: callDohPower,
-	dnsNetSet: callDnsNetSet,
 	testStatus: callTestStatus,
 	testAction: bigArg2(callTestAction),
 	zapretOptSet: callZapretOptSet,
-	systemTimeSet: callSystemTimeSet,
 	testResults: callTestResults,
 	zmUpdateStatus: callZmUpdateStatus,
 	changelogShow: changelogShow,
 	zmUpdateAction: callZmUpdateAction,
 	zmUpdateNotify: zmUpdateNotify,
 	zmUpdateFromVersions: zmUpdateFromVersions,
-	mixomoStatus: callMixomoStatus,
-	mixomoAction: callMixomoAction,
-	mixomoConfigGet: callMixomoConfigGet,
-	mixomoConfigSet: bigText(callMixomoConfigSet),
-	mixomoApplySubscription: callMixomoApplySubscription,
-	mixomoClearSubscription: function() { return callMixomoApplySubscription('clear'); },
-	mixomoFilterSet: callMixomoFilterSet,
-	mixomoProxies: callMixomoProxies,
-	mixomoMagitrickleListSet: callMixomoMagitrickleListSet,
-	mixomoAutorestartSet: callMixomoAutorestartSet,
-	mixomoUiAction: callMixomoUiAction,
-	mixomoWarpStatus: callMixomoWarpStatus,
-	mixomoWarpAction: callMixomoWarpAction,
-	mixomoWarpIntegrateAction: callMixomoWarpIntegrateAction,
-	mixomoWarpConfigSet: bigText(callMixomoWarpConfigSet),
 	health: callHealth,
-	awgStatus: callAwgStatus,
-	awgAction: bigArg2(callAwgAction),
 	termStatus: callTermStatus,
 	termAction: bigArg2(callTermAction),
-	tscStatus: callTscStatus,
-	tscAction: bigArg2(callTscAction),
-	monitor: callMonitor,
-	monitorProcs: callMonitorProcs,
-	monitorAction: callMonitorAction,
-	watchStatus: callWatchStatus,
-	watchSet: callWatchSet,
-	adblockStatus: callAdblockStatus,
-	adblockAction: bigArg2(callAdblockAction),
-	steerStatus: callSteerStatus,
 	catalogWatch: catalogWatch,
 	versions: callVersions,
 	versionsMode: callVersionsMode,
 	autoupd: callAutoupd,
-	steerAction: bigArg2(callSteerAction),
 	boardInfo: callBoardInfo,
-	forkopStatus: callForkopStatus,
-	forkopConfigGet: callForkopConfigGet,
-	forkopConfigSet: bigText(callForkopConfigSet),
-	forkopAction: bigArg2(callForkopAction),
 	dock: dock,
 	riCovers: riCovers,
 	svcPickToggle: svcPickToggle,
