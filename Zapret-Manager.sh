@@ -7,10 +7,13 @@ GREEN="\033[1;32m"; RED="\033[1;31m"; CYAN="\033[1;36m"; YELLOW="\033[1;33m"; MA
 
 MIRROR_BASE_URL="${ZAPRET_MANAGER_MIRROR:-https://mirror.51343.ru}"; MIRROR_BASE_URL="${MIRROR_BASE_URL%/}"
 MIRROR_PROXY="${MIRROR_BASE_URL}/zapret-manager/proxy"
-GH_RAW_HOST="${MIRROR_PROXY}/raw.githubusercontent.com"; GH_MAIN_HOST="${MIRROR_PROXY}/github.com"; GH_API_HOST="${MIRROR_PROXY}/api.github.com"
-GH_CHECK_URL="${GH_RAW_HOST}/Screamshow/Zapret-Manager/refs/heads/main/Zapret-Manager.sh"
-echo -e "${CYAN}Проверяем зеркало ${NC}${MIRROR_BASE_URL}"; if wget -q -T 8 -O /dev/null "$GH_CHECK_URL" 2>/dev/null; then GH_OK=1; GH_RAW="$GH_RAW_HOST"; GH_MAIN="$GH_MAIN_HOST"
-echo -e "${MIRROR_BASE_URL} ${GREEN}доступно!${NC}\n"; else echo -e "${MIRROR_BASE_URL} ${RED}недоступно!${NC}\n"; exit 1; fi
+GH_CHECK_URL="${MIRROR_PROXY}/raw.githubusercontent.com/Screamshow/Zapret-Manager/refs/heads/main/Zapret-Manager.sh"
+# SRC_PFX switches every download between the mirror and GitHub itself. The
+# repository stays Screamshow/Zapret-Manager in both cases.
+echo -e "${CYAN}Проверяем зеркало ${NC}${MIRROR_BASE_URL}"; if wget -q -T 8 -O /dev/null "$GH_CHECK_URL" 2>/dev/null; then GH_OK=1; SRC_PFX="${MIRROR_PROXY}/"
+echo -e "${MIRROR_BASE_URL} ${GREEN}доступно!${NC}\n"; else GH_OK=0; SRC_PFX="https://"
+echo -e "${MIRROR_BASE_URL} ${RED}недоступно${CYAN} — ${YELLOW}качаем напрямую с GitHub!${NC}\n"; fi
+GH_RAW="${SRC_PFX}raw.githubusercontent.com"; GH_MAIN="${SRC_PFX}github.com"; GH_API_HOST="${SRC_PFX}api.github.com"
 
 TGWS_BASE="https://gitlab.com/xyzmean/brb/-/raw/main"
 TGWS_INSTALL_URL="${TGWS_BASE}/install-tgws.sh"
@@ -219,10 +222,10 @@ echo -e "${CYAN}Устанавливаем ${NC}curl"; if ! $INSTALL libcurl cur
 
 get_zapret2_ver() {
     if [ "$PKG_IS_APK" -eq 1 ]; then
-        IDX_URL2="${MIRROR_PROXY}/packages.routerich.ru/25.12/mediatek/filogic/routerich/"
+        IDX_URL2="${SRC_PFX}packages.routerich.ru/25.12/mediatek/filogic/routerich/"
         PATTERN='zapret2-[0-9][^"]*\.apk'
     else
-        IDX_URL2="${MIRROR_PROXY}/packages.routerich.ru/24.10/mediatek/filogic/routerich/"
+        IDX_URL2="${SRC_PFX}packages.routerich.ru/24.10/mediatek/filogic/routerich/"
         PATTERN='zapret2_[0-9][^"]*_aarch64_cortex-a53\.ipk'
     fi
 
@@ -296,7 +299,7 @@ mkdir -p "$(dirname "$TS_WARN_FLAG")"; echo 1 > "$TS_WARN_FLAG"; echo -e "${YELL
 #ZAPRET2
 # ==========================================
 ZAPRET2_ARCH_SUFFIX="aarch64_cortex-a53"
-if [ "$PKG_IS_APK" -eq 1 ]; then ZAPRET2_BASE_URL="${MIRROR_PROXY}/packages.routerich.ru/25.12/mediatek/filogic/routerich/"; else ZAPRET2_BASE_URL="${MIRROR_PROXY}/packages.routerich.ru/24.10/mediatek/filogic/routerich/"; fi; ZAPRET2_TMP_DIR="/tmp/routerich"; ZAPRET2_CACHE_FILE="$ZAPRET2_TMP_DIR/index.html"
+if [ "$PKG_IS_APK" -eq 1 ]; then ZAPRET2_BASE_URL="${SRC_PFX}packages.routerich.ru/25.12/mediatek/filogic/routerich/"; else ZAPRET2_BASE_URL="${SRC_PFX}packages.routerich.ru/24.10/mediatek/filogic/routerich/"; fi; ZAPRET2_TMP_DIR="/tmp/routerich"; ZAPRET2_CACHE_FILE="$ZAPRET2_TMP_DIR/index.html"
 zapret2_update_cache() { mkdir -p "$ZAPRET2_TMP_DIR"; curl -L -s --connect-timeout 10 "$ZAPRET2_BASE_URL" -o "$ZAPRET2_CACHE_FILE"; }
 zapret2_remote_file() { [ -f "$ZAPRET2_CACHE_FILE" ] || zapret2_update_cache; if [ "$PKG_IS_APK" -eq 1 ]; then grep -o "zapret2-[0-9][^\"]*\.${RAZ}" "$ZAPRET2_CACHE_FILE" | head -n1; else grep -o "zapret2_[0-9][^\"]*_${ZAPRET2_ARCH_SUFFIX}\.${RAZ}" "$ZAPRET2_CACHE_FILE" | head -n1; fi; }
 zapret2_remote_luci_file() { [ -f "$ZAPRET2_CACHE_FILE" ] || zapret2_update_cache; if [ "$PKG_IS_APK" -eq 1 ]; then grep -o "luci-app-zapret2-[0-9][^\"]*\.${RAZ}" "$ZAPRET2_CACHE_FILE" | head -n1; else grep -o "luci-app-zapret2_[0-9][^\"]*_all\.${RAZ}" "$ZAPRET2_CACHE_FILE" | head -n1; fi; }
@@ -1137,7 +1140,7 @@ echo -e "\n${GREEN}===== Flow Offloading =====${NC}"; sw=$(uci -q get firewall.@
 if grep -q 'ct original packets ge 30' /usr/share/firewall4/templates/ruleset.uc 2>/dev/null; then dpi="${RED}yes${NC}"; else dpi="${GREEN}no${NC}"; fi; if [ "$hw" = "1" ]; then out="HW: ${RED}on${NC}"; elif [ "$sw" = "1" ]; then out="SW: ${RED}on${NC}"
 else out="SW: ${GREEN}off${NC} | HW: ${GREEN}off${NC}"; fi; out="$out | FIX: ${dpi}"; echo -e "$out"; if /etc/init.d/https-dns-proxy status >/dev/null 2>&1; then
 echo -e "\n${GREEN}===== Настройки DNS over HTTPS =====${NC}"; [ -f /etc/config/https-dns-proxy ] && sed -n "s/^[[:space:]]*option resolver_url '\([^']*\)'.*/\1/p" /etc/config/https-dns-proxy; else
-echo -e "\n${GREEN}===== Проверка GitHub через зеркало =====${NC}"; RATE=$(curl -s "${GH_API_HOST}/rate_limit" | grep '"remaining"' | head -1 | awk '{print $2}' | tr -d ,)
+echo -e "\n${GREEN}===== Проверка GitHub =====${NC}"; RATE=$(curl -s "${GH_API_HOST}/rate_limit" | grep '"remaining"' | head -1 | awk '{print $2}' | tr -d ,)
 [ -z "$RATE" ] && RATE_OUT="${RED}N/A${NC}" || RATE_OUT=$([ "$RATE" -eq 0 ] && echo -e "${RED}0${NC}" || echo -e "${GREEN}$RATE${NC}")
 echo -n "API: "; curl -Is --connect-timeout 3 "${GH_API_HOST}" >/dev/null 2>&1 && echo -e "${GREEN}ok${NC} | Limit: $RATE_OUT" || echo -e "${RED}fail${NC} | Limit: $RATE_OUT"; fi
 echo -e "\n${GREEN}===== Проверка IPv4 / IPv6 =====${NC}"; PROVIDER=$(curl -fsSL --connect-timeout 2 --max-time 3 "https://ipinfo.io/$IP/org" 2>/dev/null | sed -E 's/AS[0-9]+ ?//; s/\b(OJSC|PJSC|IROKO|JSC|LLC|Inc\.?|Ltd\.?)\b//g; s/[.,-]//g; s/  +/ /g; s/^ +| +$//g')
