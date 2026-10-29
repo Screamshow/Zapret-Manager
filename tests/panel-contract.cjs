@@ -67,6 +67,8 @@ console.log('PASS: payload syntax, five matching menus, page dependencies, upgra
 
 const backend = files.get('/opt/zapret-manager-luci/backend.sh.zm-new');
 assert(backend);
+assert(source.includes('# Forkop-Manager-Contract: five-section-v1\n'));
+assert(backend.includes('ZM_FLAVOR="forkop-five-section-v1"'));
 assert(!/^(_fk_|_st_|stl_|_ab_|_awg_|_tg_|_tsc_|_bk_|do_mixomo|do_bytetube|do_steer|do_tsc|adblock_|doh_|dns_net_).*\(\)/m.test(backend), 'retired component code remains');
 const consoleSource = fs.readFileSync(path.join(__dirname, '../Zapret-Manager.sh'), 'utf8');
 assert(!/STEER_MENU|MIXOMO_MENU|BYETUBE_MENU|PODKOP_menu|menu_TG|DoH_menu/.test(consoleSource));

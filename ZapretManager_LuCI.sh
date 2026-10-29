@@ -1,6 +1,7 @@
 #!/bin/sh
 read -r _ _ ZM_NEW_VER <<'ZM_VERSION_EOF'
 # Version: 4.71.1
+# Forkop-Manager-Contract: five-section-v1
 ZM_VERSION_EOF
 set -e
 
@@ -17,6 +18,8 @@ _zmi_has() {
 	else opkg list-installed 2>/dev/null | grep -q "^$1 "; fi
 }
 _zmi_pkg() {
+	# Forkop stages file rollback; package changes are a separate transaction.
+	if [ "${ZM_FORKOP_TRANSACTION:-0}" = 1 ]; then _zmi_has "$1"; return $?; fi
 	if _zmi_has "$1"; then _zmi_ok "Пакет $1 уже установлен"; return 0; fi
 	_zmi_step "Устанавливаем пакет $1"
 	$INSTALL "$1" >/dev/null 2>&1 || true
@@ -54,7 +57,7 @@ while [ -f /tmp/zm_uninstall_panel.sh ] && ps w 2>/dev/null | grep -q '[z]m_unin
 done
 _zmi_ok "Можно ставить"
 _zmi_say "Убираем файлы прежней версии панели"
-if [ -s /tmp/zapret-manager-luci/resolv.conf.zm-bak ]; then
+if [ "${ZM_FORKOP_TRANSACTION:-0}" != 1 ] && [ -s /tmp/zapret-manager-luci/resolv.conf.zm-bak ]; then
 	if [ -e /tmp/resolv.conf ]; then cat /tmp/zapret-manager-luci/resolv.conf.zm-bak > /tmp/resolv.conf 2>/dev/null || true
 	else cat /tmp/zapret-manager-luci/resolv.conf.zm-bak > /etc/resolv.conf 2>/dev/null || true; fi
 fi
@@ -75,6 +78,7 @@ umask 022
 
 CONF="/etc/config/zapret"
 ZM_VERSION="@ZM_VERSION@"
+ZM_FLAVOR="forkop-five-section-v1"
 ZM_SCRIPT_URL="https://raw.githubusercontent.com/Screamshow/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh"
 GH_RAW="https://raw.githubusercontent.com"
 GH_MAIN="https://github.com"
@@ -15430,6 +15434,7 @@ else
 	echo '*/2 * * * * /opt/zapret-manager-luci/backend.sh zm_watch >/dev/null 2>&1 # zm-rpcd-watch' >> /etc/crontabs/root 2>/dev/null || true
 fi
 ZM_NO_CRON_RESTART=1 /opt/zapret-manager-luci/backend.sh versions_cron_sync >/dev/null 2>&1 || true
+if [ "${ZM_FORKOP_TRANSACTION:-0}" != 1 ]; then
 case "$(uci -q get system.@system[0].cronloglevel)" in
 	''|5|8)
 	uci -q set system.@system[0].cronloglevel='9' && uci -q commit system ;;
@@ -15437,6 +15442,7 @@ esac
 if [ -x /etc/init.d/cron ]; then
 	/etc/init.d/cron enable >/dev/null 2>&1 || true
 	/etc/init.d/cron restart >/dev/null 2>&1 || true
+fi
 fi
 if [ -s /opt/zapret-manager-luci/state/ui.theme ]; then
 	cp -f /opt/zapret-manager-luci/state/ui.theme /www/zm/theme.txt 2>/dev/null || true
@@ -15487,7 +15493,9 @@ fi
 case "$(/opt/zapret-manager-luci/backend.sh zm_changelog_sync 2>/dev/null || true)" in
 	*'"ok":true'*) _zmi_ok "Список изменений версии $ZM_NEW_VER загружен — панель покажет его при входе" ;;
 esac
+if [ "${ZM_FORKOP_TRANSACTION:-0}" != 1 ]; then
 ( sleep 30; /opt/zapret-manager-luci/backend.sh zm_watch ) >/dev/null 2>&1 </dev/null &
+fi
 
 ZMW_PORT="$(uci -q get uhttpd.zmweb.listen_http | tr ' ' '\n' | head -n1 | sed 's/.*://')"
 ZMW_IP="$(/opt/zapret-manager-luci/backend.sh lan_ip 2>/dev/null || true)"

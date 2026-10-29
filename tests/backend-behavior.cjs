@@ -25,6 +25,11 @@ for (const script of [installer, backend, consoleSource]) {
 }
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-contract-'));
 try {
+  const packageHelper = extract(installer, '_zmi_pkg');
+  // Forkop owns the rollback archive. The integration mode must never
+  // install packages behind that archive, including when one is missing.
+  run(packageHelper + '\n_zmi_has() { return 0; }\nZM_FORKOP_TRANSACTION=1\n_zmi_pkg curl unused');
+  run(packageHelper + '\n_zmi_has() { return 1; }\nZM_FORKOP_TRANSACTION=1\nif _zmi_pkg missing unused; then exit 1; fi');
   const cache = path.join(dir, 'versions.json').replaceAll('\\', '/');
   fs.writeFileSync(cache, JSON.stringify({ items: [
     { name: 'Zapret Manager', installed: '4.71', latest: '4.71.1' },
