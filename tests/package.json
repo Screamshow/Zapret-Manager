@@ -1,0 +1,10 @@
+{
+  "name": "zapret-manager-tests",
+  "private": true,
+  "scripts": {
+    "test": "node panel-contract.cjs && node backend-behavior.cjs && node ui-render.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}
