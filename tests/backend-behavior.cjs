@@ -25,6 +25,20 @@ for (const script of [installer, backend, consoleSource]) {
 }
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-contract-'));
 try {
+  // Exercise the real built-ins through both candidate collection modes.
+  const definitions = backend.match(/^strategy_v\d+\(\).*$/gm) || [];
+  assert.equal(definitions.length, 10);
+  const candidates = path.join(dir, 'candidates');
+  const flowseal = path.join(dir, 'flowseal');
+  fs.writeFileSync(flowseal, '#general1\n--filter-tcp=80\n');
+  const helpers = definitions.join('\n') + '\n' + extract(backend, '_test_build_candidates');
+  for (const mode of ['v', 'v_flowseal']) {
+    run(helpers + `\n_flowseal_file() { echo '${flowseal}'; }\n_test_build_candidates ${mode} '${candidates}'`);
+    const output = fs.readFileSync(candidates, 'utf8');
+    assert.deepEqual(output.match(/^#v\d+$/gm), Array.from({length: 10}, (_, i) => '#v' + (i + 1)));
+    assert.equal((output.match(/^--filter-tcp=443$/gm) || []).length, 10);
+    assert.equal(output.includes('#general1'), mode === 'v_flowseal');
+  }
   const packageHelper = extract(installer, '_zmi_pkg');
   // Forkop owns the rollback archive. The integration mode must never
   // install packages behind that archive, including when one is missing.

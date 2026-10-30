@@ -61,7 +61,7 @@ assert(cleanup.includes('doh awg tailscale steer adblock mixomo system monitor t
 assert(!cleanup.includes('/etc/'), 'migration must preserve service configuration');
 assert(!cleanup.includes('rm -rf'), 'migration must remove only explicit panel assets');
 assert(source.indexOf('_zmi_say "Убираем страницы,') < source.indexOf('ZM_BUILD_ID='), 'cleanup must precede asset manifest');
-assert(source.includes('# Version: 4.71.1\n'));
+assert(source.includes('# Version: 4.71.2\n'));
 assert(source.includes('Screamshow/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh'));
 console.log('PASS: payload syntax, five matching menus, page dependencies, upgrade cleanup and update source');
 
