@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "profile": "openwrt-aarch64_cortex-a73",
+  "packages": [
+    {
+      "name": "luci-app-zapret",
+      "version": "72.20260307-r100",
+      "architecture": "noarch",
+      "file": "luci-app-zapret-72.20260307-r100.apk",
+      "size": 22553,
+      "sha256": "234917af2d3738c66651d23b31e90c37978df986818ff2b0acc742c918867980",
+      "source_url": "https://github.com/remittor/zapret-openwrt/releases/download/v72.20260307/zapret_v72.20260307_aarch64_generic.zip",
+      "source_sha256": "db61dc1ecbe27a80bfad1272d9db4526d1cd74070bf85524a14ec0b7e4b48f39",
+      "source_package_sha256": "6bdcc35f923b73f006f576e71a17b2b7076376a589bc7c2bd667d9a500a7a104",
+      "source_architecture": "noarch",
+      "elf_files": [],
+      "url": "https://mirror.51343.ru/zapret-manager/packages/a73/20261108/luci-app-zapret-72.20260307-r100.apk"
+    },
+    {
+      "name": "zapret",
+      "version": "72.20260307-r100",
+      "architecture": "aarch64_cortex-a73",
+      "file": "zapret-72.20260307-r100.apk",
+      "size": 198016,
+      "sha256": "0fa487dd649c4fa2da2251ed740c25f574ab58836b746758640908e4702d3a60",
+      "source_url": "https://github.com/remittor/zapret-openwrt/releases/download/v72.20260307/zapret_v72.20260307_aarch64_generic.zip",
+      "source_sha256": "db61dc1ecbe27a80bfad1272d9db4526d1cd74070bf85524a14ec0b7e4b48f39",
+      "source_package_sha256": "4183018b53435c2ae9cb0a23b95e8286ab21c9444284009e1cb28548e1417e4a",
+      "source_architecture": "aarch64_generic",
+      "elf_files": [
+        "opt/zapret/nfq/nfqws",
+        "opt/zapret/mdig/mdig",
+        "opt/zapret/ip2net/ip2net"
+      ],
+      "url": "https://mirror.51343.ru/zapret-manager/packages/a73/20261108/zapret-72.20260307-r100.apk"
+    },
+    {
+      "name": "zapret2",
+      "version": "1.0.5.2-r100",
+      "architecture": "aarch64_cortex-a73",
+      "file": "zapret2-1.0.5.2-r100.apk",
+      "size": 620861,
+      "sha256": "f50f40fc237d15e563b33c8ed2856bc9b03742c6e81f4f4af1bb45b1f152e3a0",
+      "source_url": "https://packages.routerich.ru/25.12/mediatek/filogic/routerich/zapret2-1.0.5.2-r15.apk",
+      "source_sha256": "7d93fb4e6003e23690dbe3ea59af3720fd77ee8d7d96fc3e3e41b21aa2276545",
+      "source_package_sha256": "7d93fb4e6003e23690dbe3ea59af3720fd77ee8d7d96fc3e3e41b21aa2276545",
+      "source_architecture": "aarch64_cortex-a53",
+      "elf_files": [
+        "opt/zapret2/zapret2-finder",
+        "opt/zapret2/nfq2/nfqws2",
+        "opt/zapret2/mdig/mdig",
+        "usr/bin/zapret2"
+      ],
+      "url": "https://mirror.51343.ru/zapret-manager/packages/a73/20261108/zapret2-1.0.5.2-r100.apk"
+    },
+    {
+      "name": "luci-app-zapret2",
+      "version": "1.0.5.2-r100",
+      "architecture": "noarch",
+      "file": "luci-app-zapret2-1.0.5.2-r100.apk",
+      "size": 47195,
+      "sha256": "d5dd30fcc9a472a52012f33ccaaa7145a0b2f881da3ca08bda61fb6b6ac39171",
+      "source_url": "https://packages.routerich.ru/25.12/mediatek/filogic/routerich/luci-app-zapret2-1.0.5.2-r15.apk",
+      "source_sha256": "01854d2f25c1abbce6de33e956aface1d5092206f7062affab8dd29f27c27cf7",
+      "source_package_sha256": "01854d2f25c1abbce6de33e956aface1d5092206f7062affab8dd29f27c27cf7",
+      "source_architecture": "noarch",
+      "elf_files": [],
+      "url": "https://mirror.51343.ru/zapret-manager/packages/a73/20261108/luci-app-zapret2-1.0.5.2-r100.apk"
+    }
+  ],
+  "state": "published"
+}

@@ -25,11 +25,16 @@ for (const script of [installer, backend, consoleSource]) {
 }
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-contract-'));
 try {
-  const unifiedHelper = extract(backend, '_zm_unified_aarch64');
+  const archFile = path.join(dir, 'apk-arch');
+  const apkArch = extract(backend, '_zm_apk_arch').replaceAll('/etc/apk/arch', archFile);
+  const unifiedHelper = apkArch + '\n' + extract(backend, '_zm_managed_arm64');
+  fs.writeFileSync(archFile, 'aarch64_cortex-a73\n');
+  assert.equal(run(unifiedHelper + '\napk() { echo aarch64; }\n_zm_apk_arch').trim(), 'aarch64_cortex-a73');
+  fs.unlinkSync(archFile);
   const archHelper = unifiedHelper + '\n' + extract(backend, '_zapret_archive_arch');
-  for (const arch of ['aarch64', 'aarch64_cortex-a53', 'x86_64']) {
-    const result = run(unifiedHelper + `\nPKG=apk\napk() { echo ${arch}; }\nif _zm_unified_aarch64; then echo yes; else echo no; fi`);
-    assert.equal(result.trim(), arch === 'aarch64' ? 'yes' : 'no');
+  for (const arch of ['aarch64', 'aarch64_cortex-a73', 'aarch64_cortex-a53', 'x86_64']) {
+    const result = run(unifiedHelper + `\nPKG=apk\napk() { echo ${arch}; }\nif _zm_managed_arm64; then echo yes; else echo no; fi`);
+    assert.equal(result.trim(), ['aarch64', 'aarch64_cortex-a73'].includes(arch) ? 'yes' : 'no');
   }
   const z2Support = unifiedHelper + '\n' + extract(backend, '_z2_supported');
   run(z2Support + '\nPKG=apk\napk() { echo aarch64; }\n_z2_arch() { echo aarch64_cortex-a73; }\n_z2_supported');
@@ -38,20 +43,21 @@ try {
   const crypto = require('node:crypto');
   const fixtureDir = path.join(dir, 'packages');
   fs.mkdirSync(fixtureDir);
-  let armPackageHelper = extract(backend, '_zm_aarch64_packages');
+  let armPackageHelper = extract(backend, '_zm_arm64_packages');
   armPackageHelper = armPackageHelper.replace(/([\w.-]+\.apk):(\d+):([a-f0-9]{64})/g, (_, name) => {
     const data = Buffer.from('fixture ' + name);
     fs.writeFileSync(path.join(fixtureDir, name), data);
     return name + ':' + data.length + ':' + crypto.createHash('sha256').update(data).digest('hex');
   });
-  for (const component of ['zapret', 'zapret2']) {
+  for (const arch of ['aarch64', 'aarch64_cortex-a73']) for (const component of ['zapret', 'zapret2']) {
     for (const mode of ['ok', 'corrupt', 'missing', 'dependencies']) {
-      const destination = path.join(dir, component + '-' + mode);
-      const simulation = path.join(dir, component + '-' + mode + '-simulate');
+      const destination = path.join(dir, arch + '-' + component + '-' + mode);
+      const simulation = path.join(dir, arch + '-' + component + '-' + mode + '-simulate');
       const result = run(armPackageHelper + `
-_zm_get() { ${mode === 'missing' ? 'return 1' : `cp '${fixtureDir}/'"\$\{1##*/\}" "$2"`} ; ${mode === 'corrupt' ? 'echo corruption >> "$2"' : ':'}; }
+_zm_apk_arch() { echo ${arch}; }
+_zm_get() { case "$1" in *"/${arch === 'aarch64' ? 'unified-aarch64' : 'a73'}/"*) ;; *) return 1 ;; esac; ${mode === 'missing' ? 'return 1' : `cp '${fixtureDir}/'"\$\{1##*/\}" "$2"`} ; ${mode === 'corrupt' ? 'echo corruption >> "$2"' : ':'}; }
 apk() { touch '${simulation}'; ${mode === 'dependencies' ? 'return 1' : 'return 0'}; }
-if _zm_aarch64_packages ${component} '${destination}'; then echo RESULT_OK; else echo RESULT_FAIL; fi
+if _zm_arm64_packages ${component} '${destination}'; then echo RESULT_OK; else echo RESULT_FAIL; fi
 `);
       assert(result.includes(mode === 'ok' ? 'RESULT_OK' : 'RESULT_FAIL'), result);
       assert.equal(fs.existsSync(simulation), ['ok', 'dependencies'].includes(mode));

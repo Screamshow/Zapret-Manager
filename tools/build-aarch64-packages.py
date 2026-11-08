@@ -51,12 +51,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apk", required=True)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--arch", choices=("aarch64", "aarch64_cortex-a73"), default="aarch64")
     args = parser.parse_args()
     if os.geteuid() != 0:
         raise RuntimeError("Run as root or under unshare -r to preserve package root ownership")
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    manifest = {"schema": 1, "profile": "openwrt-unified-aarch64", "packages": []}
+    manifest = {"schema": 1, "profile": "openwrt-" + args.arch, "packages": []}
     with tempfile.TemporaryDirectory(prefix="zms-aarch64-") as temporary:
         work = Path(temporary)
         inputs = []
@@ -112,7 +113,7 @@ def main():
             if not name.startswith("luci-") and not elf:
                 raise RuntimeError(f"Missing ARM64 executable: {name}")
             version = re.sub(r"-r\d+$", "-r100", info["version"])
-            arch = "noarch" if name.startswith("luci-") else "aarch64"
+            arch = "noarch" if name.startswith("luci-") else args.arch
             target = output / f"{name}-{version}.apk"
             command = [args.apk, "mkpkg", "--files", str(root), "--output", str(target)]
             for field in ("name", "description", "license", "origin", "maintainer", "url", "depends", "provides", "replaces", "install-if", "provider-priority", "layer"):
