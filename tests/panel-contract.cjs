@@ -4,6 +4,10 @@ const vm = require('node:vm');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname, '../ZapretManager_LuCI.sh'), 'utf8').replace(/\r\n/g, '\n');
+const packageManifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../packages/unified-aarch64/20261108/manifest.json'), 'utf8'));
+for (const p of packageManifest.packages) {
+  assert(source.includes('"' + p.file + ':' + p.size + ':' + p.sha256 + '"'), 'APK integrity pin differs from manifest: ' + p.file);
+}
 const files = new Map();
 for (const m of source.matchAll(/cat > '([^']+)' << 'ZM_INSTALLER_EOF'\n([\s\S]*?)\nZM_INSTALLER_EOF/g)) files.set(m[1], m[2]);
 assert(files.size > 10, 'installer payload extraction failed');
@@ -61,7 +65,7 @@ assert(cleanup.includes('doh awg tailscale steer adblock mixomo system monitor t
 assert(!cleanup.includes('/etc/'), 'migration must preserve service configuration');
 assert(!cleanup.includes('rm -rf'), 'migration must remove only explicit panel assets');
 assert(source.indexOf('_zmi_say "Убираем страницы,') < source.indexOf('ZM_BUILD_ID='), 'cleanup must precede asset manifest');
-assert(source.includes('# Version: 4.71.2\n'));
+assert(source.includes('# Version: 4.71.3\n'));
 assert(source.includes('Screamshow/Zapret-Manager/refs/heads/main/ZapretManager_LuCI.sh'));
 console.log('PASS: payload syntax, five matching menus, page dependencies, upgrade cleanup and update source');
 

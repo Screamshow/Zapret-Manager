@@ -25,6 +25,65 @@ for (const script of [installer, backend, consoleSource]) {
 }
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-contract-'));
 try {
+  const unifiedHelper = extract(backend, '_zm_unified_aarch64');
+  const archHelper = unifiedHelper + '\n' + extract(backend, '_zapret_archive_arch');
+  for (const arch of ['aarch64', 'aarch64_cortex-a53', 'x86_64']) {
+    const result = run(unifiedHelper + `\nPKG=apk\napk() { echo ${arch}; }\nif _zm_unified_aarch64; then echo yes; else echo no; fi`);
+    assert.equal(result.trim(), arch === 'aarch64' ? 'yes' : 'no');
+  }
+  const z2Support = unifiedHelper + '\n' + extract(backend, '_z2_supported');
+  run(z2Support + '\nPKG=apk\napk() { echo aarch64; }\n_z2_arch() { echo aarch64_cortex-a73; }\n_z2_supported');
+  run(z2Support + '\nPKG=opkg\n_z2_arch() { echo aarch64_cortex-a53; }\n_z2_supported');
+  run(z2Support + '\nPKG=opkg\n_z2_arch() { echo aarch64_cortex-a73; }\nif _z2_supported; then exit 1; fi');
+  const crypto = require('node:crypto');
+  const fixtureDir = path.join(dir, 'packages');
+  fs.mkdirSync(fixtureDir);
+  let armPackageHelper = extract(backend, '_zm_aarch64_packages');
+  armPackageHelper = armPackageHelper.replace(/([\w.-]+\.apk):(\d+):([a-f0-9]{64})/g, (_, name) => {
+    const data = Buffer.from('fixture ' + name);
+    fs.writeFileSync(path.join(fixtureDir, name), data);
+    return name + ':' + data.length + ':' + crypto.createHash('sha256').update(data).digest('hex');
+  });
+  for (const component of ['zapret', 'zapret2']) {
+    for (const mode of ['ok', 'corrupt', 'missing', 'dependencies']) {
+      const destination = path.join(dir, component + '-' + mode);
+      const simulation = path.join(dir, component + '-' + mode + '-simulate');
+      const result = run(armPackageHelper + `
+_zm_get() { ${mode === 'missing' ? 'return 1' : `cp '${fixtureDir}/'"\$\{1##*/\}" "$2"`} ; ${mode === 'corrupt' ? 'echo corruption >> "$2"' : ':'}; }
+apk() { touch '${simulation}'; ${mode === 'dependencies' ? 'return 1' : 'return 0'}; }
+if _zm_aarch64_packages ${component} '${destination}'; then echo RESULT_OK; else echo RESULT_FAIL; fi
+`);
+      assert(result.includes(mode === 'ok' ? 'RESULT_OK' : 'RESULT_FAIL'), result);
+      assert.equal(fs.existsSync(simulation), ['ok', 'dependencies'].includes(mode));
+    }
+  }
+  assert.equal(run(archHelper + '\nPKG=apk\napk() { echo aarch64_cortex-a53; }\n_zapret_archive_arch aarch64_cortex-a73').trim(), 'aarch64_cortex-a53');
+  assert.equal(run(archHelper + '\nPKG=opkg\nopkg() { printf "arch all 1\\narch aarch64_cortex-a53 10\\narch aarch64_cortex-a73 20\\n"; }\n_zapret_archive_arch aarch64_cortex-a73').trim(), 'aarch64_cortex-a53');
+  for (const pm of ['apk', 'opkg']) {
+    run(archHelper + `\nPKG=${pm}\napk() { echo aarch64_cortex-a73; }\nopkg() { printf 'arch all 1\\narch aarch64_cortex-a53 0\\narch aarch64_cortex-a73 10\\n'; }\nif _zapret_archive_arch aarch64_cortex-a73; then exit 1; fi`);
+  }
+  assert.equal(run(archHelper + '\n_zapret_archive_arch x86_64').trim(), 'x86_64');
+  // Execute the installer with isolated paths and failed downloads. A running
+  // service must never be stopped, and missing assets must not be retried.
+  const installCore = extract(backend, '_do_install_zapret_core')
+    .replaceAll('/etc/init.d/zapret', dir + '/service-zapret')
+    .replaceAll('/etc/openwrt_release', dir + '/openwrt_release');
+  fs.writeFileSync(path.join(dir, 'openwrt_release'), "DISTRIB_ARCH='x86_64'\n");
+  const stopped = path.join(dir, 'stopped');
+  fs.writeFileSync(path.join(dir, 'service-zapret'), `#!/bin/sh\ntouch '${stopped}'\n`);
+  fs.chmodSync(path.join(dir, 'service-zapret'), 0o755);
+  for (const code of [404, 504]) {
+    const output = run(archHelper + '\n' + installCore + `
+_ensure_deps() { :; }
+_zm_fetch() { echo FETCH; ZM_FETCH_ERR='ошибка (HTTP ${code})'; return 1; }
+unzip() { return 1; }
+PKG=opkg; UPDATE=true; ZAPRET_VER=72.20260307; GH_MAIN=https://github.com
+JOBS_DIR='${dir}'
+if _do_install_zapret_core; then exit 1; fi
+`);
+    assert.equal((output.match(/^FETCH$/gm) || []).length, code === 404 ? 1 : 5);
+    assert(!fs.existsSync(stopped), 'download failure stopped running zapret');
+  }
   // Exercise the real built-ins through both candidate collection modes.
   const definitions = backend.match(/^strategy_v\d+\(\).*$/gm) || [];
   assert.equal(definitions.length, 10);

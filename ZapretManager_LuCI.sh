@@ -1,6 +1,6 @@
 #!/bin/sh
 read -r _ _ ZM_NEW_VER <<'ZM_VERSION_EOF'
-# Version: 4.71.2
+# Version: 4.71.3
 # Forkop-Manager-Contract: five-section-v1
 ZM_VERSION_EOF
 set -e
@@ -1172,34 +1172,97 @@ _z2_luci_path() {
 		awk '{ print length($0) "\t" $0 }' | sort -n | head -n 1 | cut -f 2
 }
 
+_zm_unified_aarch64() {
+	[ "$PKG" = apk ] && [ "$(apk --print-arch 2>/dev/null)" = aarch64 ]
+}
+
+_zm_aarch64_packages() {
+	local component="$1" dir="$2" file size hash actual
+	local base="$ZM_MIR_BASE/zapret-manager/packages/unified-aarch64/20261108"
+	mkdir -p "$dir" || return 1
+	case "$component" in
+		zapret) set -- \
+			"zapret-72.20260307-r100.apk:197999:ccbd66a1af15a3124e6f04f06a43b6af8b82f50fcdf280a72c6ea873f7e5cb81" \
+			"luci-app-zapret-72.20260307-r100.apk:22552:bfc2c63de23e1d8549ba27f4620108cd3f7890c9be0538a65090622b357e18b3" ;;
+		zapret2) set -- \
+			"zapret2-1.0.5.2-r100.apk:620861:a6dee5cb00b89ac8a23c6664cca2dee6928387caff217f9f2947d867473d4ee4" \
+			"luci-app-zapret2-1.0.5.2-r100.apk:47198:7c18b7462b7e00787e6e9b0d54f97962fde7c3b324568b4769d538f401ec89e7" ;;
+		*) return 1 ;;
+	esac
+	command -v sha256sum >/dev/null 2>&1 || { echo "ОШИБКА: для проверки пакетов нужен sha256sum"; return 1; }
+	for actual; do
+		file="${actual%%:*}"; actual="${actual#*:}"; size="${actual%%:*}"; hash="${actual#*:}"
+		echo "==> Скачиваем $file (aarch64/noarch)"
+		_zm_get "$base/$file" "$dir/$file" "" 120 || return 1
+		actual="$(sha256sum "$dir/$file")"; actual="${actual%% *}"
+		if [ "$(wc -c < "$dir/$file" | tr -d ' ')" != "$size" ] || [ "$actual" != "$hash" ]; then
+			rm -f "$dir/$file"
+			echo "ОШИБКА: размер или SHA-256 пакета $file не совпадает. Установка отменена"
+			return 1
+		fi
+	done
+	# Resolve dependencies with the real architecture before package scripts can
+	# stop a working service. Do not override --arch or rewrite repositories.
+	echo "==> Проверяем совместимость пакетов и зависимостей"
+	apk add --simulate --allow-untrusted --force-non-repository "$dir/"*.apk || return 1
+}
+
+_zapret_archive_arch() {
+	local arch="$1" accepted candidate
+	# This pinned release has no A73 asset. Never force a foreign package
+	# architecture: only use an alternative explicitly accepted by the PM.
+	case "$arch" in
+		aarch64_cortex-a73)
+			if [ "$PKG" = apk ]; then
+				accepted="$(apk --print-arch 2>/dev/null)"
+			else
+				accepted="$(opkg print-architecture 2>/dev/null | awk '$1 == "arch" && $3 > 0 {print $2}')"
+			fi
+			for candidate in aarch64_cortex-a53 aarch64_generic; do
+				if printf '%s\n' "$accepted" | grep -qx "$candidate"; then
+					printf '%s\n' "$candidate"; return 0
+				fi
+			done
+			return 1 ;;
+	esac
+	printf '%s\n' "$arch"
+}
+
 _do_install_zapret_core() {
 	_ensure_deps
 	if [ -f /etc/init.d/zapret2 ] && [ ! -f "$EXPERT_MODE_FILE" ]; then
 		echo "ОШИБКА: установлен Zapret2, он несовместим с Zapret — сначала удалите Zapret2"
 		return 1
 	fi
-	local ver="$ZAPRET_VER" arch url tmp
+	local ver="$ZAPRET_VER" arch archive_arch url tmp
 	echo "==> Ставим Zapret $ver"
 	arch="$(awk -F\' '/DISTRIB_ARCH/ {print $2}' /etc/openwrt_release)"
-	url="${GH_MAIN}/remittor/zapret-openwrt/releases/download/v${ver}/zapret_v${ver}_${arch}.zip"
+	if _zm_unified_aarch64; then archive_arch=aarch64
+	else archive_arch="$(_zapret_archive_arch "$arch")" || {
+		echo "ОШИБКА: нет совместимой сборки Zapret $ver для $arch: пакетный менеджер не принимает доступные ARM64-сборки. Установка отменена"
+		return 1
+	}
+	fi
+	[ "$archive_arch" = "$arch" ] || echo "==> Для $arch используем принимаемую пакетным менеджером сборку $archive_arch"
+	url="${GH_MAIN}/remittor/zapret-openwrt/releases/download/v${ver}/zapret_v${ver}_${archive_arch}.zip"
 	tmp="$JOBS_DIR/install_tmp"; rm -rf "$tmp"; mkdir -p "$tmp"; cd "$tmp" || return 1
 
 	echo "==> Обновляем список пакетов"
 	$UPDATE
 
-	if [ -f /etc/init.d/zapret ]; then
-		echo "==> Останавливаем текущий Zapret"
-		/etc/init.d/zapret stop >/dev/null 2>&1
-		for p in $(pgrep -f "/opt/zapre[t]/" 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
-	fi
-
+	if _zm_unified_aarch64; then
+		_zm_aarch64_packages zapret "$tmp/apk" || return 1
+	else
 	echo "==> Скачиваем $url"
 	local attempt=1 max_attempts=5
 	while [ "$attempt" -le "$max_attempts" ]; do
 		rm -f zapret.zip
 		if ! _zm_fetch "$url" zapret.zip 300; then
 			echo "!! Попытка $attempt из $max_attempts: архив не скачался — $ZM_FETCH_ERR"
-			case "$ZM_FETCH_ERR" in *"(HTTP 404)"*|*"(HTTP 410)"*) attempt=$max_attempts ;; esac
+			case "$ZM_FETCH_ERR" in *"(HTTP 404)"*|*"(HTTP 410)"*)
+				echo "ОШИБКА: сборка Zapret $ver для $archive_arch отсутствует на сервере. Установка отменена"
+				return 1 ;;
+			esac
 		fi
 		command -v unzip >/dev/null 2>&1 || { echo "==> Устанавливаем unzip"; $INSTALL unzip >&2; }
 		if [ -s zapret.zip ] && unzip -tq zapret.zip >/dev/null 2>&1; then
@@ -1216,10 +1279,24 @@ _do_install_zapret_core() {
 		echo "ОШИБКА: не удалось скачать целый архив за $max_attempts попыток — проверьте соединение с GitHub"
 		return 1
 	fi
-	unzip -o zapret.zip >/dev/null 2>&1
+	unzip -o zapret.zip >/dev/null 2>&1 || { echo "ОШИБКА: не удалось распаковать архив Zapret"; return 1; }
+	fi
+	# Validate payload before stopping an existing installation.
+	if [ "$PKG" = apk ]; then set -- apk/zapret-*.apk; else set -- zapret_*.ipk; fi
+	[ -f "$1" ] || { echo "ОШИБКА: в архиве нет пакета Zapret для $PKG"; return 1; }
+	if [ -f /etc/init.d/zapret ]; then
+		echo "==> Останавливаем текущий Zapret"
+		/etc/init.d/zapret stop >/dev/null 2>&1
+		for p in $(pgrep -f "/opt/zapre[t]/" 2>/dev/null); do kill -9 "$p" 2>/dev/null; done
+	fi
 
 	echo "==> Устанавливаем пакеты"
 	if [ "$PKG" = "apk" ]; then
+		# APK 3 requires explicit acceptance of local non-repository packages.
+		if _zm_unified_aarch64; then
+			local PKG_ADD="apk add --allow-untrusted --force-non-repository"
+			$INSTALL ./apk/*.apk >&2 || { echo "ОШИБКА: установка пакетов Zapret"; return 1; }
+		else
 		for p in apk/zapret*; do
 			[ -f "$p" ] || continue
 			echo "$p" | grep -q luci && continue
@@ -1229,6 +1306,7 @@ _do_install_zapret_core() {
 			[ -f "$p" ] || continue
 			echo "  - $(basename "$p")"; $INSTALL "$p" >&2
 		done
+		fi
 	else
 		for p in zapret_*.ipk; do
 			[ -f "$p" ] || continue
@@ -1338,11 +1416,12 @@ zapret_action() {
 }
 
 _z2_arch() { awk -F\' '/DISTRIB_ARCH/ {print $2}' /etc/openwrt_release 2>/dev/null; }
+_z2_supported() { _zm_unified_aarch64 || [ "$(_z2_arch)" = aarch64_cortex-a53 ]; }
 _do_install_zapret2_core() {
 	local arch
 	arch="$(_z2_arch)"
-	if [ "$arch" != "aarch64_cortex-a53" ]; then
-		echo "ОШИБКА: Zapret2 поддерживает только архитектуру aarch64_cortex-a53 (у вас: $arch)"
+	if ! _z2_supported; then
+		echo "ОШИБКА: Zapret2 поддерживает APK aarch64 и архитектуру aarch64_cortex-a53 (у вас: $arch)"
 		return 1
 	fi
 	if [ -f /etc/init.d/zapret ] && [ ! -f "$EXPERT_MODE_FILE" ]; then
@@ -1360,6 +1439,12 @@ _do_install_zapret2_core() {
 
 	local tmp="$JOBS_DIR/install_z2_tmp"; rm -rf "$tmp"; mkdir -p "$tmp"; cd "$tmp" || return 1
 
+	if _zm_unified_aarch64; then
+		echo "==> Обновляем список пакетов"
+		$UPDATE
+		_zm_aarch64_packages zapret2 "$tmp" || return 1
+		local PKG_ADD="apk add --allow-untrusted --force-non-repository"
+	else
 	echo "==> Ищем актуальный пакет Zapret2 в $base_url"
 	ZM_FETCH_ANY=1
 	_zm_fetch "$base_url" index.html 15 || { ZM_FETCH_ANY=""; echo "ОШИБКА: не удалось получить список пакетов — $ZM_FETCH_ERR"; return 1; }
@@ -1384,6 +1469,7 @@ _do_install_zapret2_core() {
 
 	echo "==> Обновляем список пакетов"
 	$UPDATE
+	fi
 
 	echo "==> Устанавливаем"
 	$INSTALL ./*."$raz" || { echo "ОШИБКА установки"; return 1; }
@@ -1438,8 +1524,8 @@ zapret2_action() {
 			if [ ! -f /etc/init.d/zapret2 ] && [ -f /etc/init.d/zapret ] && [ ! -f "$EXPERT_MODE_FILE" ]; then
 				echo '{"error":"Стоит Zapret — он несовместим с Zapret2. Чтобы поставить Zapret2, удалите Zapret."}'; return 1
 			fi
-			if [ "$action" = install ] && [ "$(_z2_arch)" != "aarch64_cortex-a53" ]; then
-				printf '{"error":"%s"}\n' "$(esc "Zapret2 работает только на роутерах с архитектурой aarch64_cortex-a53, у этого роутера — $(_z2_arch)")"; return 1
+			if [ "$action" = install ] && ! _z2_supported; then
+				printf '{"error":"%s"}\n' "$(esc "Zapret2 поддерживает APK aarch64 и архитектуру aarch64_cortex-a53, у этого роутера — $(_z2_arch)")"; return 1
 			fi
 			job_start install_zapret2 do_install_zapret2 ;;
 		remove)         job_start remove_zapret2  do_remove_zapret2 ;;
@@ -11355,7 +11441,7 @@ return view.extend({
 			var z2Block = d.zapret2 !== 'installed' && d.zapret === 'installed' && !d.expert;
 
 			if (z2Block) {
-				cards.appendChild(zm.blockCard(E('div', { 'class': 'zm-card' }), 'Zapret2', 'Только для архитектуры aarch64_cortex-a53. Несовместим с основным Zapret.', 'Стоит Zapret — он несовместим с Zapret2. Чтобы поставить Zapret2, удалите Zapret.'));
+				cards.appendChild(zm.blockCard(E('div', { 'class': 'zm-card' }), 'Zapret2', 'Поддерживает APK aarch64 и aarch64_cortex-a53. Несовместим с основным Zapret.', 'Стоит Zapret — он несовместим с Zapret2. Чтобы поставить Zapret2, удалите Zapret.'));
 				return;
 			}
 			var z2Card = E('div', { 'class': 'zm-card' }, [
@@ -11366,7 +11452,7 @@ return view.extend({
 						? zm.badge(d.zapret2_running === true, 'запущен', 'остановлен')
 						: zm.badge(false, '', 'не установлен')
 				]),
-				E('p', { 'class': 'zm-hint' }, 'Только для архитектуры aarch64_cortex-a53. Несовместим с основным Zapret.'),
+				E('p', { 'class': 'zm-hint' }, 'Поддерживает APK aarch64 и aarch64_cortex-a53. Несовместим с основным Zapret.'),
 				E('div', { 'class': 'zm-actions' }, z2Actions)
 			]);
 
