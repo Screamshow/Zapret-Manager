@@ -1085,6 +1085,89 @@ ui_flag_set() {
 	printf '{"ok":true}\n'
 }
 
+_zm_transport_guard() {
+    [ -f /usr/lib/forkop/service/proxy_transport.uc ] || return 0
+    ucode /usr/lib/forkop/service/proxy_transport.uc "$1" "$$" || return 1
+    case "$1" in hold) ZM_TRANSPORT_HELD=1 ;; release) ZM_TRANSPORT_HELD=0 ;; esac
+}
+
+_zm_transport_record_owned() {
+    # Called only after an explicit successful core package installation, never
+    # by panel upgrade, status detection or discovery of an existing directory.
+    local component="$1" binary helper bin_hash helper_hash dir stage
+    case "$component" in
+        zapret) binary=/opt/zapret/nfq/nfqws ;;
+        zapret2) binary=/opt/zapret2/nfq2/nfqws2 ;;
+        *) return 1 ;;
+    esac
+    helper="/opt/$component/common/nft.sh"
+    [ -f "$binary" ] && [ -f "$helper" ] && [ ! -L "$binary" ] && [ ! -L "$helper" ] || return 1
+    bin_hash=$(sha256sum "$binary" | awk '{print $1}')
+    helper_hash=$(sha256sum "$helper" | awk '{print $1}')
+    printf '%s\n%s\n' "$bin_hash" "$helper_hash" | grep -Eq '^[0-9a-f]{64}$' || return 1
+    dir="$ZM_STATE_DIR/transport-ownership"
+    mkdir -p "$dir" && chmod 0700 "$dir" || return 1
+    stage=$(mktemp "$dir/$component.XXXXXX") || return 1
+    printf '{"schema":1,"owner":"forkop-zms-v1","component":"%s","binary_sha256":"%s","helper_sha256":"%s"}\n' \
+        "$component" "$bin_hash" "$helper_hash" > "$stage" && chmod 0600 "$stage" && mv -f "$stage" "$dir/$component.json"
+}
+
+_zm_transport_preload_deps() {
+    [ -f /usr/lib/forkop/service/proxy_transport.uc ] || return 0
+    local work file metadata names deps dep name
+    work=$(mktemp -d) || return 1
+    names="$work/names"; deps="$work/deps"
+    : > "$names"; : > "$deps"
+    for file in "$@"; do
+        [ -f "$file" ] || continue
+        metadata="$work/info"
+        case "$file" in
+            *.apk)
+                if apk adbdump "$file" > "$metadata" 2>/dev/null; then
+                    sed -n 's/^  name: //p' "$metadata" >> "$names"
+                    awk '/^  depends:/ { d=1; next } d && /^  [^ ]/ { d=0 } d && /^    - / { sub(/^    - /, ""); print }' "$metadata" >> "$deps"
+                else
+                    tar -xzOf "$file" .PKGINFO > "$metadata" 2>/dev/null || { rm -rf "$work"; return 1; }
+                    sed -n 's/^pkgname = //p' "$metadata" >> "$names"
+                    sed -n 's/^depend = //p' "$metadata" >> "$deps"
+                fi ;;
+            *.ipk)
+                tar -xzOf "$file" ./control.tar.gz > "$work/control" 2>/dev/null || { rm -rf "$work"; return 1; }
+                tar -xzOf "$work/control" ./control > "$metadata" 2>/dev/null || { rm -rf "$work"; return 1; }
+                sed -n 's/^Package: //p' "$metadata" >> "$names"
+                sed -n 's/^Depends: //p' "$metadata" | tr ',' '\n' | sed 's/([^)]*)//g; s/^ *//; s/ *$//' >> "$deps" ;;
+            *) rm -rf "$work"; return 1 ;;
+        esac
+    done
+    [ -s "$names" ] || { rm -rf "$work"; return 1; }
+    sort -u "$deps" > "$work/unique"
+    set --
+    while IFS= read -r dep; do
+        case "$dep" in ''|'!'*) continue ;; esac
+        name=$(printf '%s\n' "$dep" | sed 's/[<>=~].*//')
+        grep -Fxq -e "$name" "$names" && continue
+        # Never install an NFQUEUE producer as a dependency outside the hold.
+        case "$name" in zapret|zapret2|luci-app-zapret|luci-app-zapret2) rm -rf "$work"; return 1 ;; esac
+        set -- "$@" "$dep"
+    done < "$work/unique"
+    rm -rf "$work"
+    # Dependencies are acquired while Connection still works. Package commit
+    # under the hold must not depend on downloading through that Connection.
+    [ "$#" = 0 ] || $INSTALL "$@"
+}
+
+_zm_zapret_service() {
+    local name="$1" action="$2"
+    case "$name:$action" in zapret:start|zapret:restart|zapret2:start|zapret2:restart) ;; *) return 1 ;; esac
+    if [ -f /usr/lib/forkop/service/proxy_transport.uc ]; then
+        ucode /usr/lib/forkop/service/proxy_transport.uc prepare || {
+            logger -t zapret-manager 'Connection transport protection failed; refusing to start NFQUEUE processing'
+            return 1
+        }
+    fi
+    "/etc/init.d/$name" "$action"
+}
+
 zapret_restart() {
 	[ -n "$ZM_NO_RESTART" ] && return 0
 	[ -s "$ZC_FILE" ] && _zc_drop
@@ -1095,7 +1178,7 @@ zapret_restart() {
 	fi
 	chmod -R a+rX /opt/zapret/ipset /opt/zapret/files 2>/dev/null
 	[ -x /opt/zapret/sync_config.sh ] && /opt/zapret/sync_config.sh >/dev/null 2>&1
-	/etc/init.d/zapret restart >/dev/null 2>&1
+	_zm_zapret_service zapret restart >/dev/null 2>&1
 }
 
 _strat_label() {
@@ -1304,6 +1387,9 @@ _do_install_zapret_core() {
 	# Validate payload before stopping an existing installation.
 	if [ "$PKG" = apk ]; then set -- apk/zapret-*.apk; else set -- zapret_*.ipk; fi
 	[ -f "$1" ] || { echo "ОШИБКА: в архиве нет пакета Zapret для $PKG"; return 1; }
+	if [ "$PKG" = apk ]; then _zm_transport_preload_deps ./apk/*.apk || return 1
+	else _zm_transport_preload_deps ./*.ipk || return 1; fi
+	_zm_transport_guard hold || return 1
 	if [ -f /etc/init.d/zapret ]; then
 		echo "==> Останавливаем текущий Zapret"
 		/etc/init.d/zapret stop >/dev/null 2>&1
@@ -1338,6 +1424,10 @@ _do_install_zapret_core() {
 		done
 	fi
 
+	# Package postinst may have recreated queues. Repair them before any
+	# subsequent downloads, which may themselves use a Connection section.
+	_zm_transport_record_owned zapret || return 1
+	_zm_transport_guard release || return 1
 	_nochange_restore zapret
 	echo "==> Добавляем домены в исключения"
 	_nochange_fetch /opt/zapret/ipset/zapret-hosts-user-exclude.txt "$EXCLUDE_URL" || echo "!! Список исключений не скачался — оставлен прежний"
@@ -1353,20 +1443,22 @@ _do_install_zapret_core() {
 }
 
 do_install_zapret() {
-	local rc
+	local rc ZM_TRANSPORT_HELD=0
 	_nochange_save zapret /opt/zapret/ipset "$CONF"
 	_do_install_zapret_core; rc=$?
 	_nochange_restore zapret
 	_ft_zapret_sync
+	if [ "$ZM_TRANSPORT_HELD" = 1 ]; then _zm_transport_guard release || return 1; fi
 	return $rc
 }
 
 do_install_zapret2() {
-	local rc
+	local rc ZM_TRANSPORT_HELD=0
 	_nochange_save zapret2 /opt/zapret2/ipset /etc/config/zapret2
 	_do_install_zapret2_core; rc=$?
 	_nochange_restore zapret2
 	_ft_zapret_sync
+	if [ "$ZM_TRANSPORT_HELD" = 1 ]; then _zm_transport_guard release || return 1; fi
 	return $rc
 }
 
@@ -1421,7 +1513,7 @@ zapret_action() {
 			job_start install_zapret do_install_zapret_full ;;
 		update)         job_start install_zapret do_install_zapret ;;
 		remove)         job_start remove_zapret  do_remove_zapret ;;
-		start)          /etc/init.d/zapret start >/dev/null 2>&1; zapret_restart; status ;;
+		start)          _zm_zapret_service zapret start >/dev/null 2>&1; zapret_restart; status ;;
 		restart)
 			[ -x /etc/init.d/zapret ] || { echo '{"error":"Zapret не установлен"}'; return 1; }
 			zapret_restart
@@ -1492,7 +1584,11 @@ _do_install_zapret2_core() {
 	fi
 
 	echo "==> Устанавливаем"
+	_zm_transport_preload_deps ./*."$raz" || return 1
+	_zm_transport_guard hold || return 1
 	$INSTALL ./*."$raz" || { echo "ОШИБКА установки"; return 1; }
+	_zm_transport_record_owned zapret2 || return 1
+	_zm_transport_guard release || return 1
 	_nochange_restore zapret2
 
 	echo "==> Добавляем домены в исключения"
@@ -1513,7 +1609,7 @@ _do_install_zapret2_core() {
 
 	echo "==> Запускаем Zapret2"
 	/etc/init.d/zapret2 enable >/dev/null 2>&1
-	/etc/init.d/zapret2 restart >/dev/null 2>&1
+	_zm_zapret_service zapret2 restart >/dev/null 2>&1
 
 	cd /; rm -rf "$tmp"
 	echo "==> Готово, Zapret2 установлен"
@@ -1549,11 +1645,11 @@ zapret2_action() {
 			fi
 			job_start install_zapret2 do_install_zapret2 ;;
 		remove)         job_start remove_zapret2  do_remove_zapret2 ;;
-		start)          /etc/init.d/zapret2 start >/dev/null 2>&1; status ;;
+		start)          _zm_zapret_service zapret2 start >/dev/null 2>&1; status ;;
 		stop)           /etc/init.d/zapret2 stop >/dev/null 2>&1; status ;;
 		restart)
 			[ -x /etc/init.d/zapret2 ] || { echo '{"error":"Zapret2 не установлен"}'; return 1; }
-			/etc/init.d/zapret2 restart >/dev/null 2>&1
+			_zm_zapret_service zapret2 restart >/dev/null 2>&1
 			for p in 1 2 3 4 5; do /etc/init.d/zapret2 status >/dev/null 2>&1 && break; sleep 1; done
 			status ;;
 		*) echo '{"error":"неизвестное действие"}' ;;
@@ -4200,7 +4296,7 @@ _do_test_run_core() {
 	echo "==> Контрольный тест: Zapret выключен"
 	/etc/init.d/zapret stop >/dev/null 2>&1
 	_test_run_set "$urls" "Контрольный тест (Zapret выключен)" "$results" "$detail"
-	/etc/init.d/zapret start >/dev/null 2>&1
+	_zm_zapret_service zapret start >/dev/null 2>&1
 	ZT_CTRL="$(tail -n 1 "$results" | sed -n 's/.*→ \([0-9]*\)\/\([0-9]*\)$/\1 \2/p')"
 	set -- $ZT_CTRL
 	if [ "${2:-0}" -gt 0 ] && [ $(( ${1:-0} * 100 )) -ge $(( $2 * 80 )) ]; then
@@ -4502,7 +4598,7 @@ _zo_doh_follow() {
 	pgrep -f "/opt/zapre[t]/" >/dev/null 2>&1 || return 0
 	chmod -R a+rX /opt/zapret/ipset /opt/zapret/files 2>/dev/null
 	[ -x /opt/zapret/sync_config.sh ] && /opt/zapret/sync_config.sh >/dev/null 2>&1
-	/etc/init.d/zapret restart >/dev/null 2>&1
+	_zm_zapret_service zapret restart >/dev/null 2>&1
 	return 0
 }
 
