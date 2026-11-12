@@ -18,6 +18,31 @@ function run(script) {
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zm-proxy-transport-'));
 try {
   const guard = path.join(dir, 'guard.uc'); fs.writeFileSync(guard, 'fixture');
+  const transportGuard = extract('_zm_transport_guard').replaceAll('/usr/lib/forkop/service/proxy_transport.uc', guard);
+  // Match job_start: $$ is inherited from the launcher, but /proc/self is
+  // opened by the live background worker. Release must use the hold identity.
+  assert.deepEqual(run(`${transportGuard}
+ucode() {
+  read -r actual rest < /proc/self/stat
+  test "$3" = "$actual" || return 1
+  test "$3" != "$$" || return 1
+  case "$2" in hold) held="$3" ;; release) test "$3" = "$held" || return 1 ;; esac
+}
+(
+  _zm_transport_guard hold || exit 1
+  test "$ZM_TRANSPORT_HELD" = 1 || exit 1
+  _zm_transport_guard release || exit 1
+  test "$ZM_TRANSPORT_HELD" = 0 || exit 1
+  echo WORKER_OWNER_OK
+) &
+wait $!`), ['WORKER_OWNER_OK']);
+  assert.deepEqual(run(`${transportGuard}
+ucode() { echo UNEXPECTED; }
+if _zm_transport_guard release; then exit 1; fi
+ucode() { return 1; }
+if _zm_transport_guard hold; then exit 1; fi
+test "\${ZM_TRANSPORT_HELD:-0}" = 0
+echo FAILED_GUARD_NOT_HELD`), ['FAILED_GUARD_NOT_HELD']);
   for (const name of ['zapret','zapret2']) fs.writeFileSync(path.join(dir,name), '#!/bin/sh\necho service:$1\n', {mode:0o700});
   const service = extract('_zm_zapret_service').replaceAll('/usr/lib/forkop/service/proxy_transport.uc', guard).replaceAll('/etc/init.d/', dir + '/');
   for (const name of ['zapret','zapret2']) {

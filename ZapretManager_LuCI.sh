@@ -1,6 +1,6 @@
 #!/bin/sh
 read -r _ _ ZM_NEW_VER <<'ZM_VERSION_EOF'
-# Version: 4.71.6
+# Version: 4.71.7
 # Forkop-Manager-Contract: five-section-v1
 ZM_VERSION_EOF
 set -e
@@ -1094,8 +1094,22 @@ ui_flag_set() {
 }
 
 _zm_transport_guard() {
+    local owner rest
     [ -f /usr/lib/forkop/service/proxy_transport.uc ] || return 0
-    ucode /usr/lib/forkop/service/proxy_transport.uc "$1" "$$" || return 1
+    # $$ remains the original shell PID inside job_start's background subshell.
+    # Open procfs with the shell builtin so self identifies the actual worker.
+    case "$1" in
+        hold)
+            read -r owner rest < /proc/self/stat || return 1
+            case "$owner" in ''|*[!0-9]*) return 1 ;; esac
+            ZM_TRANSPORT_OWNER="$owner"
+            ;;
+        release)
+            owner="${ZM_TRANSPORT_OWNER:-}"
+            case "$owner" in ''|*[!0-9]*) return 1 ;; esac
+            ;;
+    esac
+    ucode /usr/lib/forkop/service/proxy_transport.uc "$1" "$owner" || return 1
     case "$1" in hold) ZM_TRANSPORT_HELD=1 ;; release) ZM_TRANSPORT_HELD=0 ;; esac
 }
 
