@@ -2,7 +2,7 @@
   "name": "zapret-manager-tests",
   "private": true,
   "scripts": {
-    "test": "node panel-contract.cjs && node backend-behavior.cjs && node proxy-transport.cjs && node ui-render.cjs"
+    "test": "node panel-contract.cjs && node backend-behavior.cjs && node proxy-transport.cjs && node legacy-transport.cjs && node ui-render.cjs"
   },
   "devDependencies": {
     "jsdom": "26.1.0"

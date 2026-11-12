@@ -1,6 +1,6 @@
 #!/bin/sh
 read -r _ _ ZM_NEW_VER <<'ZM_VERSION_EOF'
-# Version: 4.71.5
+# Version: 4.71.6
 # Forkop-Manager-Contract: five-section-v1
 ZM_VERSION_EOF
 set -e
@@ -72,6 +72,14 @@ _zmi_say "Записываем файлы панели"
 mkdir -p /opt/zapret-manager-luci
 chmod 0755 /opt/zapret-manager-luci
 _zm_old_ver="$(sed -n 's/^ZM_VERSION="\([0-9][0-9.]*\)"$/\1/p' /opt/zapret-manager-luci/backend.sh 2>/dev/null | head -n 1)"
+_zm_previous_managed=0
+if [ ! -L /opt/zapret-manager-luci ] && [ ! -L /opt/zapret-manager-luci/backend.sh ] &&
+   [ "$(grep -c '^ZM_FLAVOR=' /opt/zapret-manager-luci/backend.sh 2>/dev/null)" = 1 ] &&
+   [ "$(grep -c '^ZM_SCRIPT_URL=' /opt/zapret-manager-luci/backend.sh 2>/dev/null)" = 1 ] &&
+   grep -qx 'ZM_FLAVOR="forkop-five-section-v1"' /opt/zapret-manager-luci/backend.sh 2>/dev/null &&
+   grep -Eq '^ZM_SCRIPT_URL="https://raw\.githubusercontent\.com/Screamshow/Zapret-Manager/(refs/heads/)?main/ZapretManager_LuCI\.sh"$' /opt/zapret-manager-luci/backend.sh 2>/dev/null; then
+    _zm_previous_managed=1
+fi
 cat > '/opt/zapret-manager-luci/backend.sh.zm-new' << 'ZM_INSTALLER_EOF'
 #!/bin/sh
 umask 022
@@ -1092,8 +1100,7 @@ _zm_transport_guard() {
 }
 
 _zm_transport_record_owned() {
-    # Called only after an explicit successful core package installation, never
-    # by panel upgrade, status detection or discovery of an existing directory.
+    # Explicit installation, or verified legacy migration with pinned hashes.
     local component="$1" binary helper bin_hash helper_hash dir stage
     case "$component" in
         zapret) binary=/opt/zapret/nfq/nfqws ;;
@@ -1104,12 +1111,117 @@ _zm_transport_record_owned() {
     [ -f "$binary" ] && [ -f "$helper" ] && [ ! -L "$binary" ] && [ ! -L "$helper" ] || return 1
     bin_hash=$(sha256sum "$binary" | awk '{print $1}')
     helper_hash=$(sha256sum "$helper" | awk '{print $1}')
+    [ -z "${2:-}" ] || [ "$bin_hash:$helper_hash" = "$2:${3:-}" ] || return 1
     printf '%s\n%s\n' "$bin_hash" "$helper_hash" | grep -Eq '^[0-9a-f]{64}$' || return 1
     dir="$ZM_STATE_DIR/transport-ownership"
     mkdir -p "$dir" && chmod 0700 "$dir" || return 1
     stage=$(mktemp "$dir/$component.XXXXXX") || return 1
     printf '{"schema":1,"owner":"forkop-zms-v1","component":"%s","binary_sha256":"%s","helper_sha256":"%s"}\n' \
         "$component" "$bin_hash" "$helper_hash" > "$stage" && chmod 0600 "$stage" && mv -f "$stage" "$dir/$component.json"
+}
+
+_zm_transport_legacy_known() {
+    # Generated from digest-verified release payloads; never trust version alone.
+    case "$1" in
+        zapret2:apk:1.0.5.2-r100:36be8acaf41758f81fc213f70337c47622911711bfd047feab9b3ff659cab9e1:5d726b060c6d2af150c1d486d16591dcd00297a0effe56cb4aa0f73aaa9090c8) return 0 ;;
+        zapret2:apk:1.0.5.2-r15:36be8acaf41758f81fc213f70337c47622911711bfd047feab9b3ff659cab9e1:5d726b060c6d2af150c1d486d16591dcd00297a0effe56cb4aa0f73aaa9090c8) return 0 ;;
+        zapret:apk:72.20260307-r100:9688b545c810a942824026449b156db8eebac838e3618125f818302815245214:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:093818a2b86f81ad9a9f01379fee11fd06b934aad74e1bed056db38fedd01078:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:0c2c9b6fab2bd7992c62e7116c05181d32627260f2b62f6b758277f8bc1a89de:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:1ae87070f554ac6d0158d661f3a5a6211e2818073148ebcf3b18f3dcf037a2f6:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:1e9af5a5aafa0e20519dea3c84cdbb1a4f29ca7349523a7cbb25feb85b056c42:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:24ceaa8c261d5e32fc18b2b2b103086b94a84af51f8176308008c465cde810d0:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:380294c845fbb4467d727370c8fac5c9ce3ab01488d24be6ca71b6ea2594d6c6:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:38ec632ed59d02fe78975a5e0d65b84036426fbdb22fcd30081d2cc00d26964e:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:397b372d4d0fe17325e520ea63f81fc2e6662553bb43b4cc462f2a766fefc47f:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:44d3377c9cd95644199c436c715a60196c54723f63894c98535b6e85da02efc4:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:4b9f500aa54a153f90dafcf9827e46e2512b152ac86aa4bdfcc90a09268da23c:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:4c2bf153aa30ec7c0739d2c89f6ccc95977d40e787b9499c600b0883b65922fa:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:4dee06525a3766c17c12a4eca39bf0231298812e691b1190bae5a7dde86c328e:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:88c60406d949fb537d714946effbf4cce7515ace220f95a3d8bc7216f47e172e:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:8bbddfa9b986e35a85b286301686c855c9d7fd628b82381faf682491eecf2d36:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:93d8e7efe57891143146356d3fa6e91de0bf8ba512243f0ae0453e2aae7cf142:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:9688b545c810a942824026449b156db8eebac838e3618125f818302815245214:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:9ad663b4e4506f62295068d4e76af851718467486bafe085773b7d15b6a9532e:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:9f1292101dadb4d355bc98893b39b597a8f73743ef5c1e4c032d35af273dc638:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:a71c54b0cf551a1a397bec775d66e867888bbeeb9ed38193299fceea3ec9d500:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:baab3ab382eff48d490c6aeea6404719810d102f8e715495dfd72b398c2c9af6:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:c296ff5be6999f35458d63d159204959f1e3500ba0967def6c433b0d00a3b628:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:d3203fadf032f5a4181cb5db608ca1ed7c59ae76cbc67ad183015545663159a7:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:ed87e6256d51469e3a6e925c38a72f7e6d9de217d56b66f1e6148fd32e500d21:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:apk:72.20260307-r1:fa0021f64a0b683a8bfc5ef225a1eafa6d3be230662ad6c771396dafd4e54e4b:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:15b9c31c3b0cd75da15353d3286a6d1252368d31786d3b15795862c31bc6ad6f:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:1f1ff7ddb491c27f35e4472173d4dd50178cf55e57675b028c3d8c4333e89d9f:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:1fdefbb3ef1c94d3a3ee7f80f0d3ff5f4e5289f6bc7307162de527922377751c:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:308440d38d4da014ebe7de2e42f8442b3f92e62a61ed9c0acc21e5426e6bafb5:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:339be420d7e77427fa9e82fe596980ee34245c16ff301b9afcbe9e7be379d00b:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:382dbeff7a633809f865bdd384109c8bbd01e9afc5446246fa99a8fa3e0e285f:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:46ec2fdada4b169fc3c60ab3f1cde3d2365a8e34d5c7cca9f79e4a5676092b0f:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:4eb14b7d06399ccb89510aa7300db97f2cd90a896f57a7595ed1f87deedb448c:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:67c5c2f825413064a3ee8bd19aa70c4e4ef3f48130229339d224657cf51a20a5:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:6f8beb459904495d1bb6a06cfee9e2d6596a60a4c00af4c9bc5621873f2ef725:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:6fbcbcd81875d2a3d9a5bc19dff12bf797b51d9571ef3555b116d69f9d5eb1ae:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:7554fb2978dd54c6b6a9717dc715f4f46a8c2fb3fc65a3c39067e5005d9b30eb:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:7f79b4caf40cc7be8c9fc2bb44fbc9c967788166eba70c8c231fe63fda8de4ca:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:85da5b767a398a99f330c3ed0bee11e43934a8281027b68c4d0ba71cb0880bf9:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:95f08c493634c6efc715c46367bfbbb53fce56dc14ee7380d99702fd877115db:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:967cd2d5ebd8d17ec2c4666651714d5c3e1275d074ecd15b4ae6e14309a29635:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:9bc315eb23bdd7a4f4e567dc0c80c2df63d71834e0f4edb99452d01f454e89cc:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:b3d32c0c5d44f41fa7da077fab510e259e3a478f5017bbb279c2bc709bebea2d:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:c1bc43645587585320f6fd0f87bc4f3ff4172cfd937fae2a9edf7adff8333135:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:d2a69df5b734cdbf68883c23e17d1d700ffae20cc0ffe4d05f913e56979e4042:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:d34cee3db8b493ad3402f0d47389902d73f4b4b192736818ab733fee7f65c064:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:e0f43f33605107ee967584d087a4edcd169089d106172cc0cccf44a4ef387b30:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:f796f639696580799bdde04d0dcf0f1864b87b9efa48373a97bdaaebfb18723a:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+        zapret:opkg:72.20260307-r1:fb558abc442e6f7200c30ca528779e93ff9b42cb1e6dc2e1f9ffa915f0be7706:3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba) return 0 ;;
+    esac
+    return 1
+}
+
+_zm_transport_migrate_one() {
+    local component="$1" binary helper version bin_hash helper_hash path
+    case "$component" in
+        zapret) binary=/opt/zapret/nfq/nfqws ;;
+        zapret2) binary=/opt/zapret2/nfq2/nfqws2 ;;
+        *) return 1 ;;
+    esac
+    helper="/opt/$component/common/nft.sh"
+    # Existing receipts (including mismatches) must never be silently renewed.
+    [ ! -e "$ZM_STATE_DIR/transport-ownership/$component.json" ] || return 0
+    [ ! -L "$ZM_STATE_DIR/transport-ownership/$component.json" ] || return 0
+    for path in "/opt/$component" "/opt/$component/common" "${binary%/*}" "$binary" "$helper" \
+        "$ZM_STATE_DIR" "$ZM_STATE_DIR/transport-ownership" "$ZM_STATE_DIR/transport-ownership/$component.nft.before"; do
+        [ ! -L "$path" ] || return 0
+    done
+    [ -f "$binary" ] && [ -f "$helper" ] || return 0
+    if [ "$PKG" = apk ]; then version=$(_apk_ver "$component")
+    else version=$(_opkg_ver "$component"); fi
+    [ -n "$version" ] || return 0
+    for path in "$binary" "$helper"; do
+        if [ "$PKG" = apk ]; then
+            apk info -W "$path" 2>/dev/null | grep -Fxq "$path is owned by $component-$version" || return 0
+        else
+            opkg search "$path" 2>/dev/null | grep -Fxq "$component - $path" || return 0
+        fi
+    done
+    bin_hash=$(sha256sum "$binary" | awk '{print $1}')
+    helper_hash=$(sha256sum "$helper" | awk '{print $1}')
+    _zm_transport_legacy_known "$component:$PKG:$version:$bin_hash:$helper_hash" || return 0
+    # Only the producer is changed by Forkop. Preserve its exact pre-migration copy.
+    mkdir -p "$ZM_STATE_DIR/transport-ownership" || return 1
+    chmod 0700 "$ZM_STATE_DIR/transport-ownership" || return 1
+    cp -p "$helper" "$ZM_STATE_DIR/transport-ownership/$component.nft.before" || return 1
+    _zm_transport_record_owned "$component" "$bin_hash" "$helper_hash"
+}
+
+_zm_transport_migrate_legacy() {
+    [ -f /usr/lib/forkop/service/proxy_transport.uc ] || return 0
+    # Installer passes this only when the previous panel had our exact contract.
+    [ "$1" = verified-panel-upgrade ] || return 1
+    _zm_transport_migrate_one zapret && _zm_transport_migrate_one zapret2 || return 1
+    # No service restart, strategy rewrite, package install or firewall reload.
+    # Keep a failed migration retryable; never report protection as applied.
+    _zm_transport_guard prepare || return 1
 }
 
 _zm_transport_preload_deps() {
@@ -5932,6 +6044,7 @@ case "$cmd" in
 esac
 _zm_run_cmd() {
 case "$cmd" in
+	transport_migrate_legacy) _zm_transport_migrate_legacy "$1" ;;
 	status)                  status ;;
 	system_info)             system_info ;;
 	job_status)               job_status "$1" ;;
@@ -15698,6 +15811,13 @@ fi
 
 
 
+
+if [ "$_zm_previous_managed" = 1 ]; then
+    if ! /opt/zapret-manager-luci/backend.sh transport_migrate_legacy verified-panel-upgrade; then
+        _zmi_warn "Не удалось применить защиту Connection. Обновление панели нужно повторить; настройки Zapret сохранены."
+        exit 1
+    fi
+fi
 
 if [ -n "$_zm_old_ver" ] && [ "$_zm_old_ver" != "$ZM_NEW_VER" ]; then
 	mkdir -p /opt/zapret-manager-luci/state

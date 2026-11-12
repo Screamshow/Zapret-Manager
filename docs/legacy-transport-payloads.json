@@ -1,0 +1,505 @@
+[
+  {
+    "archive": "zapret_v72.20260307_aarch64_cortex-a53.zip",
+    "archive_sha256": "sha256:fda00483a87071555e4bf3ae40ee815ee6c7f6a386f2860b646ce7e9347572dd",
+    "binary": "967cd2d5ebd8d17ec2c4666651714d5c3e1275d074ecd15b4ae6e14309a29635",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_aarch64_cortex-a72.zip",
+    "archive_sha256": "sha256:128a59c77d6e76142e14b22c80973d5361c186236f8ab1307d84e0d7aab6e25f",
+    "binary": "9bc315eb23bdd7a4f4e567dc0c80c2df63d71834e0f4edb99452d01f454e89cc",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_aarch64_cortex-a76.zip",
+    "archive_sha256": "sha256:8671235e0d59f9360947a4708787d9a184fb8556517c165abac4cc874be7d09c",
+    "binary": "9bc315eb23bdd7a4f4e567dc0c80c2df63d71834e0f4edb99452d01f454e89cc",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_aarch64_generic.zip",
+    "archive_sha256": "sha256:db61dc1ecbe27a80bfad1272d9db4526d1cd74070bf85524a14ec0b7e4b48f39",
+    "binary": "9bc315eb23bdd7a4f4e567dc0c80c2df63d71834e0f4edb99452d01f454e89cc",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_arm1176jzf-s_vfp.zip",
+    "archive_sha256": "sha256:22d44e5f0a944516d2a6eb1b82633db08728b2d52e8b5c3309648e5399e7fddf",
+    "binary": "4eb14b7d06399ccb89510aa7300db97f2cd90a896f57a7595ed1f87deedb448c",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_arm926ej-s.zip",
+    "archive_sha256": "sha256:a0f47270032239c1b9d927420c601ceca7b5e74fcf95ac1459cc7c134dab5113",
+    "binary": "46ec2fdada4b169fc3c60ab3f1cde3d2365a8e34d5c7cca9f79e4a5676092b0f",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a15_neon-vfpv4.zip",
+    "archive_sha256": "sha256:41674e89cd5756e6afd03b4801ea60957158f8f3215721e046e48c450a0bed36",
+    "binary": "6f8beb459904495d1bb6a06cfee9e2d6596a60a4c00af4c9bc5621873f2ef725",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a5_vfpv4.zip",
+    "archive_sha256": "sha256:78774fcb4fc45de1ba1ef355cce43279ddc3b8aa832d9135756103515cc21ef2",
+    "binary": "85da5b767a398a99f330c3ed0bee11e43934a8281027b68c4d0ba71cb0880bf9",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a7.zip",
+    "archive_sha256": "sha256:fb74f9e417bd6200ce23091d783b44b7347aa765301a1632640af1f2aa328845",
+    "binary": "f796f639696580799bdde04d0dcf0f1864b87b9efa48373a97bdaaebfb18723a",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a7_neon-vfpv4.zip",
+    "archive_sha256": "sha256:ec716a170851991293aae5cd6d18bd643158c7f28528826a87ae237f33014a61",
+    "binary": "339be420d7e77427fa9e82fe596980ee34245c16ff301b9afcbe9e7be379d00b",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a7_vfpv4.zip",
+    "archive_sha256": "sha256:0f10c63e84df72030cd0dfdd35fdef35e9ffb9dceb955e4b3b4cd88b50306eee",
+    "binary": "95f08c493634c6efc715c46367bfbbb53fce56dc14ee7380d99702fd877115db",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a8_vfpv3.zip",
+    "archive_sha256": "sha256:1a0a5ec79a643a438a5abaecbd6dc8d4c140f59e407b6ce0aadd5b7aeb6d9b57",
+    "binary": "fb558abc442e6f7200c30ca528779e93ff9b42cb1e6dc2e1f9ffa915f0be7706",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a9.zip",
+    "archive_sha256": "sha256:d29dcf6229ba356ae6c15022e626126a1b20acd740f0c1ef127a0b27a3c9033e",
+    "binary": "308440d38d4da014ebe7de2e42f8442b3f92e62a61ed9c0acc21e5426e6bafb5",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a9_neon.zip",
+    "archive_sha256": "sha256:1fa007f7ece51b0e25fa2e18428b2c1db6f98dd415bbf20319d845baadea612d",
+    "binary": "c1bc43645587585320f6fd0f87bc4f3ff4172cfd937fae2a9edf7adff8333135",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_cortex-a9_vfpv3-d16.zip",
+    "archive_sha256": "sha256:8f6a3a20c63d29f8d152b5ebd23c4752febbf09f7bf60a34ea54720f5d6661ea",
+    "binary": "7f79b4caf40cc7be8c9fc2bb44fbc9c967788166eba70c8c231fe63fda8de4ca",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_fa526.zip",
+    "archive_sha256": "sha256:306c045506bf3b1ec38c4c7bf9fe6794285a807571d915d821a9bc230cbb44e8",
+    "binary": "e0f43f33605107ee967584d087a4edcd169089d106172cc0cccf44a4ef387b30",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_arm_xscale.zip",
+    "archive_sha256": "sha256:d3cc11118e57933793e86d15ca5db51265834cd1379b55daf984df6aaeb17793",
+    "binary": "7554fb2978dd54c6b6a9717dc715f4f46a8c2fb3fc65a3c39067e5005d9b30eb",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mips64_octeonplus.zip",
+    "archive_sha256": "sha256:76526b68b6dcc2eb7ca70c38c7a8b97d1a0f8c63bfe59c6fd6b814f62e717630",
+    "binary": "67c5c2f825413064a3ee8bd19aa70c4e4ef3f48130229339d224657cf51a20a5",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mipsel_24kc.zip",
+    "archive_sha256": "sha256:40a01bdd9a851efc4f77277bf560d53aa3a282a2ce0883040f44b7f923d0db13",
+    "binary": "15b9c31c3b0cd75da15353d3286a6d1252368d31786d3b15795862c31bc6ad6f",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mipsel_24kc_24kf.zip",
+    "archive_sha256": "sha256:323122b3b78628798e3f7823869761ec303304084adb9daa6b420a912b88b0c2",
+    "binary": "b3d32c0c5d44f41fa7da077fab510e259e3a478f5017bbb279c2bc709bebea2d",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mipsel_74kc.zip",
+    "archive_sha256": "sha256:fe24db643aea7f1eafc088e4bad600b6c8b88e4be9723e5fd9853dcf78643881",
+    "binary": "382dbeff7a633809f865bdd384109c8bbd01e9afc5446246fa99a8fa3e0e285f",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mipsel_mips32.zip",
+    "archive_sha256": "sha256:e7fa27f9283776fd432469c4bfeef559b8357bd0cda35b1dcb18b786ababafa2",
+    "binary": "6fbcbcd81875d2a3d9a5bc19dff12bf797b51d9571ef3555b116d69f9d5eb1ae",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mips_24kc.zip",
+    "archive_sha256": "sha256:5eb41827c605dafcb8fa19a60ea0959fa10d4835721e9487faf9227f84ef7546",
+    "binary": "1f1ff7ddb491c27f35e4472173d4dd50178cf55e57675b028c3d8c4333e89d9f",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mips_4kec.zip",
+    "archive_sha256": "sha256:3917192760773d14153cc33f6f59298222f588d3507e009b4c7f344a3e82a853",
+    "binary": "d2a69df5b734cdbf68883c23e17d1d700ffae20cc0ffe4d05f913e56979e4042",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_mips_mips32.zip",
+    "archive_sha256": "sha256:97720ab3e8ade3d29146bd42517a504a1b5e9c85c1b17f681bfa78908d045967",
+    "binary": "d34cee3db8b493ad3402f0d47389902d73f4b4b192736818ab733fee7f65c064",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "archive": "zapret_v72.20260307_x86_64.zip",
+    "archive_sha256": "sha256:d8ccd228020f91661fa826714b9b70278b4852b19f163962143f60ca987ba0e8",
+    "binary": "1fdefbb3ef1c94d3a3ee7f80f0d3ff5f4e5289f6bc7307162de527922377751c",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "ipk"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_aarch64_cortex-a53.zip",
+    "binary": "9ad663b4e4506f62295068d4e76af851718467486bafe085773b7d15b6a9532e",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:fda00483a87071555e4bf3ae40ee815ee6c7f6a386f2860b646ce7e9347572dd"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_aarch64_cortex-a72.zip",
+    "binary": "1ae87070f554ac6d0158d661f3a5a6211e2818073148ebcf3b18f3dcf037a2f6",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:128a59c77d6e76142e14b22c80973d5361c186236f8ab1307d84e0d7aab6e25f"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_aarch64_cortex-a76.zip",
+    "binary": "1ae87070f554ac6d0158d661f3a5a6211e2818073148ebcf3b18f3dcf037a2f6",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:8671235e0d59f9360947a4708787d9a184fb8556517c165abac4cc874be7d09c"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_aarch64_generic.zip",
+    "binary": "9688b545c810a942824026449b156db8eebac838e3618125f818302815245214",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:db61dc1ecbe27a80bfad1272d9db4526d1cd74070bf85524a14ec0b7e4b48f39"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_arm1176jzf-s_vfp.zip",
+    "binary": "24ceaa8c261d5e32fc18b2b2b103086b94a84af51f8176308008c465cde810d0",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:22d44e5f0a944516d2a6eb1b82633db08728b2d52e8b5c3309648e5399e7fddf"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_arm926ej-s.zip",
+    "binary": "1e9af5a5aafa0e20519dea3c84cdbb1a4f29ca7349523a7cbb25feb85b056c42",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:a0f47270032239c1b9d927420c601ceca7b5e74fcf95ac1459cc7c134dab5113"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a15_neon-vfpv4.zip",
+    "binary": "8bbddfa9b986e35a85b286301686c855c9d7fd628b82381faf682491eecf2d36",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:41674e89cd5756e6afd03b4801ea60957158f8f3215721e046e48c450a0bed36"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a5_vfpv4.zip",
+    "binary": "fa0021f64a0b683a8bfc5ef225a1eafa6d3be230662ad6c771396dafd4e54e4b",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:78774fcb4fc45de1ba1ef355cce43279ddc3b8aa832d9135756103515cc21ef2"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a7.zip",
+    "binary": "a71c54b0cf551a1a397bec775d66e867888bbeeb9ed38193299fceea3ec9d500",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:fb74f9e417bd6200ce23091d783b44b7347aa765301a1632640af1f2aa328845"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a7_neon-vfpv4.zip",
+    "binary": "9f1292101dadb4d355bc98893b39b597a8f73743ef5c1e4c032d35af273dc638",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:ec716a170851991293aae5cd6d18bd643158c7f28528826a87ae237f33014a61"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a7_vfpv4.zip",
+    "binary": "093818a2b86f81ad9a9f01379fee11fd06b934aad74e1bed056db38fedd01078",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:0f10c63e84df72030cd0dfdd35fdef35e9ffb9dceb955e4b3b4cd88b50306eee"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a8_vfpv3.zip",
+    "binary": "c296ff5be6999f35458d63d159204959f1e3500ba0967def6c433b0d00a3b628",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:1a0a5ec79a643a438a5abaecbd6dc8d4c140f59e407b6ce0aadd5b7aeb6d9b57"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a9.zip",
+    "binary": "ed87e6256d51469e3a6e925c38a72f7e6d9de217d56b66f1e6148fd32e500d21",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:d29dcf6229ba356ae6c15022e626126a1b20acd740f0c1ef127a0b27a3c9033e"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_cortex-a9_neon.zip",
+    "binary": "44d3377c9cd95644199c436c715a60196c54723f63894c98535b6e85da02efc4",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:1fa007f7ece51b0e25fa2e18428b2c1db6f98dd415bbf20319d845baadea612d"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_fa526.zip",
+    "binary": "38ec632ed59d02fe78975a5e0d65b84036426fbdb22fcd30081d2cc00d26964e",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:306c045506bf3b1ec38c4c7bf9fe6794285a807571d915d821a9bc230cbb44e8"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_arm_xscale.zip",
+    "binary": "baab3ab382eff48d490c6aeea6404719810d102f8e715495dfd72b398c2c9af6",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:d3cc11118e57933793e86d15ca5db51265834cd1379b55daf984df6aaeb17793"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mips64_octeonplus.zip",
+    "binary": "88c60406d949fb537d714946effbf4cce7515ace220f95a3d8bc7216f47e172e",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:76526b68b6dcc2eb7ca70c38c7a8b97d1a0f8c63bfe59c6fd6b814f62e717630"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mipsel_24kc.zip",
+    "binary": "4c2bf153aa30ec7c0739d2c89f6ccc95977d40e787b9499c600b0883b65922fa",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:40a01bdd9a851efc4f77277bf560d53aa3a282a2ce0883040f44b7f923d0db13"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mipsel_24kc_24kf.zip",
+    "binary": "380294c845fbb4467d727370c8fac5c9ce3ab01488d24be6ca71b6ea2594d6c6",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:323122b3b78628798e3f7823869761ec303304084adb9daa6b420a912b88b0c2"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mipsel_74kc.zip",
+    "binary": "d3203fadf032f5a4181cb5db608ca1ed7c59ae76cbc67ad183015545663159a7",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:fe24db643aea7f1eafc088e4bad600b6c8b88e4be9723e5fd9853dcf78643881"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mipsel_mips32.zip",
+    "binary": "4dee06525a3766c17c12a4eca39bf0231298812e691b1190bae5a7dde86c328e",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:e7fa27f9283776fd432469c4bfeef559b8357bd0cda35b1dcb18b786ababafa2"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mips_24kc.zip",
+    "binary": "0c2c9b6fab2bd7992c62e7116c05181d32627260f2b62f6b758277f8bc1a89de",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:5eb41827c605dafcb8fa19a60ea0959fa10d4835721e9487faf9227f84ef7546"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_mips_mips32.zip",
+    "binary": "4b9f500aa54a153f90dafcf9827e46e2512b152ac86aa4bdfcc90a09268da23c",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:97720ab3e8ade3d29146bd42517a504a1b5e9c85c1b17f681bfa78908d045967"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_riscv64_generic.zip",
+    "binary": "93d8e7efe57891143146356d3fa6e91de0bf8ba512243f0ae0453e2aae7cf142",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r1",
+    "format": "apk",
+    "archive": "zapret_v72.20260307_x86_64.zip",
+    "binary": "397b372d4d0fe17325e520ea63f81fc2e6662553bb43b4cc462f2a766fefc47f",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "archive_sha256": "sha256:d8ccd228020f91661fa826714b9b70278b4852b19f163962143f60ca987ba0e8"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r100",
+    "format": "apk",
+    "archive": "packages/zapret-72.20260307-r100.apk",
+    "binary": "9688b545c810a942824026449b156db8eebac838e3618125f818302815245214",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "package_sha256": "0fa487dd649c4fa2da2251ed740c25f574ab58836b746758640908e4702d3a60"
+  },
+  {
+    "component": "zapret2",
+    "version": "1.0.5.2-r100",
+    "format": "apk",
+    "archive": "packages/zapret2-1.0.5.2-r100.apk",
+    "binary": "36be8acaf41758f81fc213f70337c47622911711bfd047feab9b3ff659cab9e1",
+    "helper": "5d726b060c6d2af150c1d486d16591dcd00297a0effe56cb4aa0f73aaa9090c8",
+    "package_sha256": "f50f40fc237d15e563b33c8ed2856bc9b03742c6e81f4f4af1bb45b1f152e3a0"
+  },
+  {
+    "component": "zapret",
+    "version": "72.20260307-r100",
+    "format": "apk",
+    "archive": "a73/zapret-72.20260307-r100.apk",
+    "binary": "9688b545c810a942824026449b156db8eebac838e3618125f818302815245214",
+    "helper": "3474434485a677785efd62053e95baaadbcc32b0aaaad58c952e7dea093fb4ba",
+    "package_sha256": "0fa487dd649c4fa2da2251ed740c25f574ab58836b746758640908e4702d3a60"
+  },
+  {
+    "component": "zapret2",
+    "version": "1.0.5.2-r100",
+    "format": "apk",
+    "archive": "a73/zapret2-1.0.5.2-r100.apk",
+    "binary": "36be8acaf41758f81fc213f70337c47622911711bfd047feab9b3ff659cab9e1",
+    "helper": "5d726b060c6d2af150c1d486d16591dcd00297a0effe56cb4aa0f73aaa9090c8",
+    "package_sha256": "f50f40fc237d15e563b33c8ed2856bc9b03742c6e81f4f4af1bb45b1f152e3a0"
+  },
+  {
+    "component": "zapret2",
+    "version": "1.0.5.2-r15",
+    "format": "apk",
+    "archive": "https://packages.routerich.ru/25.12/mediatek/filogic/routerich/zapret2-1.0.5.2-r15.apk",
+    "binary": "36be8acaf41758f81fc213f70337c47622911711bfd047feab9b3ff659cab9e1",
+    "helper": "5d726b060c6d2af150c1d486d16591dcd00297a0effe56cb4aa0f73aaa9090c8",
+    "archive_sha256": "7d93fb4e6003e23690dbe3ea59af3720fd77ee8d7d96fc3e3e41b21aa2276545"
+  }
+]
