@@ -1,6 +1,6 @@
 #!/bin/sh
 read -r _ _ ZM_NEW_VER <<'ZM_VERSION_EOF'
-# Version: 4.71.4
+# Version: 4.71.5
 # Forkop-Manager-Contract: five-section-v1
 ZM_VERSION_EOF
 set -e
